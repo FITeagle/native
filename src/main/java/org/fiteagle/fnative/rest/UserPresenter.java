@@ -1,86 +1,88 @@
 package org.fiteagle.fnative.rest;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
-//import javax.ws.rs.Consumes;
-//import javax.ws.rs.DELETE;
-//import javax.ws.rs.GET;
-//import javax.ws.rs.POST;
-//import javax.ws.rs.PUT;
-//import javax.ws.rs.Path;
-//import javax.ws.rs.PathParam;
-//import javax.ws.rs.Produces;
-//import javax.ws.rs.QueryParam;
-//import javax.ws.rs.WebApplicationException;
-//import javax.ws.rs.core.MediaType;
-//import javax.ws.rs.core.Response;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-
-
-
-import javax.ejb.EJB;
-
+import org.fiteagle.api.FiteagleUser;
+import org.fiteagle.api.FiteagleUserPublicKey;
 import org.fiteagle.api.User;
 import org.fiteagle.api.UserDB;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.fiteagle.api.UserDB.DuplicateEmailException;
+import org.fiteagle.api.UserDB.DuplicatePublicKeyException;
+import org.fiteagle.api.UserDB.DuplicateUsernameException;
+import org.fiteagle.api.UserDB.UserNotFoundException;
+import org.fiteagle.api.UserPublicKey;
+import org.fiteagle.core.aaa.authentication.KeyManagement;
 
-//import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
+import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
 
-//@Path("v1/user")
+
+@Path("/user")
 public class UserPresenter{
   
-  private static Logger log = LoggerFactory.getLogger(UserPresenter.class);
+//  private static Logger log = LoggerFactory.getLogger(UserPresenter.class);
   
-  @EJB
-  private static UserDB manager;
+  //@EJB
+  private UserDB manager;
   
-//  @Inject
-//  public UserPresenter(final UserManagerBoundary manager){
-//    this.manager = manager;
-//  }
-  
-//  @GET
-//  @Path("{username}")
-//  @Produces(MediaType.APPLICATION_JSON)
-  public User getUser(/*@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie*/) {
-//	try {
-      return manager.get("test");
-//    } catch (UserNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }   
+  public UserPresenter() throws NamingException{
+    final Context context = new InitialContext();
+    manager = (UserDB) context.lookup("java:global/persistence/JPAUserDB!org.fiteagle.api.UserDB");
   }
-//  
-//  @PUT
-//  @Path("{username}")
-//  @Consumes(MediaType.APPLICATION_JSON)
-//  public Response addUser(@PathParam("username") String username, NewUser user) {
-//    user.setUsername(username);
-//    try {
-//      manager.add(createUser(user));
-//    } catch (DuplicateUsernameException e) {
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (DuplicateEmailException e) {
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (DuplicatePublicKeyException e){
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
+  
+  @GET
+  @Path("{username}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
+	try {
+      return manager.get(username);
+    } catch (UserNotFoundException e) {
+      throw new FiteagleWebApplicationException(404, e.getMessage());
 //    } catch (DatabaseException e) {
 //      log.error(e.getMessage());
 //      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    } catch (User.NotEnoughAttributesException | User.InValidAttributeException e) {
-//      throw new FiteagleWebApplicationException(422, e.getMessage());
-//    }
-//    return Response.status(201).build();
-//  }
+    }   
+  }
+  
+  @PUT
+  @Path("{username}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response addUser(@PathParam("username") String username, NewUser user) {
+    user.setUsername(username);
+    try {
+      manager.add(createUser(user));
+    } catch (DuplicateUsernameException e) {
+      throw new FiteagleWebApplicationException(409, e.getMessage());
+    } catch (DuplicateEmailException e) {
+      throw new FiteagleWebApplicationException(409, e.getMessage());
+    } catch (DuplicatePublicKeyException e){
+      throw new FiteagleWebApplicationException(409, e.getMessage());
+//    } catch (DatabaseException e) {
+//      log.error(e.getMessage());
+//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+    } catch (User.NotEnoughAttributesException | User.InValidAttributeException e) {
+      throw new FiteagleWebApplicationException(422, e.getMessage());
+    }
+    return Response.status(201).build();
+  }
 //
 //  @POST
 //  @Path("{username}")
@@ -172,17 +174,17 @@ public class UserPresenter{
 //    return Response.status(200).build();
 //  }
 //  
-//  @DELETE
-//  @Path("{username}")
-//  public Response deleteUser(@PathParam("username") String username) {
+  @DELETE
+  @Path("{username}")
+  public Response deleteUser(@PathParam("username") String username) {
 //    try {
-//      manager.delete(username);
+      manager.delete(username);
 //    } catch (DatabaseException e) {
 //      log.error(e.getMessage());
 //      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 //    }
-//    return Response.status(200).build();
-//  }
+    return Response.status(200).build();
+  }
 //  
 //  @POST
 //  @Path("{username}/certificate")
@@ -226,34 +228,34 @@ public class UserPresenter{
 //    }
 //  }
 //
-//  private User createUser(NewUser newUser){
-//    List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
-//    return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
-//  }
-//  
-//  private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {
-//    if(keys == null){
-//      return null;
-//    }
-//    ArrayList<UserPublicKey> publicKeys = new ArrayList<>();
-//    for(NewPublicKey key : keys){
-//      try {
-//        publicKeys.add(new UserPublicKey(key.getPublicKeyString(), key.getDescription()));
+  private User createUser(NewUser newUser){
+    List<FiteagleUserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
+    return new FiteagleUser(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
+  }
+  
+  private ArrayList<FiteagleUserPublicKey> createPublicKeys(List<UserPublicKey> keys) {
+    if(keys == null){
+      return null;
+    }
+    ArrayList<FiteagleUserPublicKey> publicKeys = new ArrayList<>();
+    for(UserPublicKey key : keys){
+      try {
+        publicKeys.add(new FiteagleUserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
 //      } catch (CouldNotParse e) {
 //        throw new FiteagleWebApplicationException(422, e.getMessage());
-//      } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
 //        log.error(e.getMessage());
-//        throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//      }
-//    }
-//    return publicKeys;
-//  }
-//  
-//  public static class FiteagleWebApplicationException extends WebApplicationException {  
-//    private static final long serialVersionUID = 5823637635206011675L;
-//    public FiteagleWebApplicationException(int status, String message){
-//      super(new ResponseBuilderImpl().status(status).entity(message).build()); 
-//    }   
-//  }   
+        throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+      }
+    }
+    return publicKeys;
+  }
+  
+  public static class FiteagleWebApplicationException extends WebApplicationException {  
+    private static final long serialVersionUID = 5823637635206011675L;
+    public FiteagleWebApplicationException(int status, String message){
+      super(new ResponseBuilderImpl().status(status).entity(message).build()); 
+    }   
+  }   
   
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<name>FITeagle :: Native</name>
@@ -28,7 +29,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<fiteagle.version>${project.version}</fiteagle.version>
 		<github.global.server>github</github.global.server>
 	</properties>
@@ -79,14 +80,14 @@
 				<version>1.0.4</version>
 				<scope>provided</scope>
 			</dependency>
-						
-            <dependency>
-                <groupId>org.jboss.bom</groupId>
-                <artifactId>jboss-javaee-6.0-with-osgi</artifactId>
-                <version>1.0.7.Final</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
+
+			<dependency>
+				<groupId>org.jboss.bom</groupId>
+				<artifactId>jboss-javaee-6.0-with-osgi</artifactId>
+				<version>1.0.7.Final</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -127,7 +128,7 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- General FITeagle dependencies -->
 		<dependency>
 			<groupId>org.wildfly</groupId>
@@ -136,115 +137,122 @@
 			<scope>provided</scope>
 			<type>pom</type>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.fiteagle</groupId>
+			<artifactId>api</artifactId>
+			<version>0.1-SNAPSHOT</version>
+		</dependency>
 		<dependency>
       <groupId>org.fiteagle</groupId>
-      <artifactId>api</artifactId>
+      <artifactId>aaa</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
-    <dependency>
-      <groupId>org.jboss.spec.javax.ejb</groupId>
-      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
-      <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.ejb</groupId>
+			<artifactId>jboss-ejb-api_3.1_spec</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>1.18</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-json</artifactId>
+			<version>1.18</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.sun.jersey.contribs</groupId> -->
+<!-- 			<artifactId>jersey-guice</artifactId> -->
+<!-- 			<version>1.18</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.google.inject</groupId> -->
+<!-- 			<artifactId>guice</artifactId> -->
+<!-- 			<version>3.0</version> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>3.0-alpha-1</version>
+		</dependency>
 
 	</dependencies>
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>2.0.1</version>
-            </plugin>
-            <plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>2.0.1</version>
+			</plugin>
+			<plugin>
 				<groupId>org.wildfly.plugins</groupId>
 				<artifactId>wildfly-maven-plugin</artifactId>
 				<version>1.0.1.Final</version>
 				<configuration>
-                    <skip>true</skip>
-                </configuration>
+					<skip>false</skip>
+					<filename>${project.build.finalName}.war</filename>
+				</configuration>
 			</plugin>
-			            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
-            </plugin>
-     <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <instrumentation>
-            <includes>
-              <include>org/fiteagle/**/*.class</include>
-            </includes>
-                    <excludes>
-              <exclude>org/fiteagle/**/osgi/*.class</exclude>
-        </excludes>
-          </instrumentation>
-          <formats>
-          <format>xml</format>
-          <format>html</format>
-          </formats>
-          <maxmem>256m</maxmem>
-          <aggregate>true</aggregate>
-        </configuration>
-    <executions>
-      <execution>
-        <id>clean</id>
-        <phase>pre-site</phase>
-        <goals>
-          <goal>clean</goal>
-        </goals>
-      </execution>
-      <execution>
-        <id>instrument</id>
-        <phase>site</phase>
-        <goals>
-          <goal>instrument</goal>
-          <goal>cobertura</goal>
-        </goals>
-      </execution>
-    </executions>
-      </plugin>
-      
-<!--
 			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.6.3.201306030806</version>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.1.1</version>
 				<configuration>
-					<includes>
-						<include>**/*</include>
-					</includes>
-					<destfile>${basedir}/target/coverage-reports/jacoco-unit.exec</destfile>
-					<datafile>${basedir}/target/coverage-reports/jacoco-unit.exec</datafile>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<instrumentation>
+						<includes>
+							<include>org/fiteagle/**/*.class</include>
+						</includes>
+						<excludes>
+							<exclude>org/fiteagle/**/osgi/*.class</exclude>
+						</excludes>
+					</instrumentation>
+					<formats>
+						<format>xml</format>
+						<format>html</format>
+					</formats>
+					<maxmem>256m</maxmem>
+					<aggregate>true</aggregate>
 				</configuration>
 				<executions>
 					<execution>
-						<id>jacoco-initialize</id>
+						<id>clean</id>
+						<phase>pre-site</phase>
 						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-                	<execution>
-						<id>prepare-agent</id>
-						<goals>
-							<goal>prepare-agent</goal>
+							<goal>clean</goal>
 						</goals>
 					</execution>
 					<execution>
-						<id>jacoco-site</id>
-						<phase>package</phase>
+						<id>instrument</id>
+						<phase>site</phase>
 						<goals>
-							<goal>report</goal>
+							<goal>instrument</goal>
+							<goal>cobertura</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
--->
+
+			<!-- <plugin> <groupId>org.jacoco</groupId> <artifactId>jacoco-maven-plugin</artifactId> 
+				<version>0.6.3.201306030806</version> <configuration> <includes> <include>**/*</include> 
+				</includes> <destfile>${basedir}/target/coverage-reports/jacoco-unit.exec</destfile> 
+				<datafile>${basedir}/target/coverage-reports/jacoco-unit.exec</datafile> 
+				</configuration> <executions> <execution> <id>jacoco-initialize</id> <goals> 
+				<goal>prepare-agent</goal> </goals> </execution> <execution> <id>prepare-agent</id> 
+				<goals> <goal>prepare-agent</goal> </goals> </execution> <execution> <id>jacoco-site</id> 
+				<phase>package</phase> <goals> <goal>report</goal> </goals> </execution> 
+				</executions> </plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -268,10 +276,10 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.14</version>
 				<configuration>
-          <systemPropertyVariables>
-            <org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>true</org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>
-          </systemPropertyVariables>
-        </configuration>
+					<systemPropertyVariables>
+						<org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>true</org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>
+					</systemPropertyVariables>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -281,7 +289,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 
 		</plugins>
 		<pluginManagement>
@@ -331,7 +339,7 @@
 						<argLine>-XX:-UseSplitVerifier ${argLine}</argLine>
 						<argLine>-Djava.security.egd=file:/dev/./urandom</argLine>
 						<systemPropertyVariables>
-						  <org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>true</org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>
+							<org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>true</org.fiteagle.core.userdatabase.UserDBManager.skipCreateFirstAdminUser>
 						</systemPropertyVariables>
 					</configuration>
 				</plugin>
@@ -378,7 +386,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 
@@ -484,20 +492,20 @@
 				<artifactId>maven-pmd-plugin</artifactId> <version>2.7.1</version> <configuration> 
 				<sourceEncoding>utf-8</sourceEncoding> <minimumTokens>100</minimumTokens> 
 				<targetJdk>1.7</targetJdk> <aggregate>true</aggregate> </configuration> </plugin> -->
-      <plugin>
-    <!-- use mvn cobertura:cobertura to generate cobertura reports -->
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>cobertura-maven-plugin</artifactId>
-    <version>2.6</version>
-    <configuration>
-      <formats>
-        <format>html</format>
-        <format>xml</format>
-      </formats>
-      <aggregate>true</aggregate>
-     </configuration>
-      </plugin>
-    </plugins>    
+			<plugin>
+				<!-- use mvn cobertura:cobertura to generate cobertura reports -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<formats>
+						<format>html</format>
+						<format>xml</format>
+					</formats>
+					<aggregate>true</aggregate>
+				</configuration>
+			</plugin>
+		</plugins>
 	</reporting>
 </project>
 
