@@ -6,6 +6,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ejb.EJBException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -24,6 +25,8 @@ import javax.ws.rs.core.Response;
 import org.fiteagle.api.FiteagleUser;
 import org.fiteagle.api.FiteagleUserPublicKey;
 import org.fiteagle.api.User;
+import org.fiteagle.api.User.InValidAttributeException;
+import org.fiteagle.api.User.NotEnoughAttributesException;
 import org.fiteagle.api.UserDB;
 import org.fiteagle.api.UserDB.DuplicateEmailException;
 import org.fiteagle.api.UserDB.DuplicatePublicKeyException;
@@ -32,15 +35,12 @@ import org.fiteagle.api.UserDB.UserNotFoundException;
 import org.fiteagle.api.UserPublicKey;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
 
-import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
-
 
 @Path("/user")
 public class UserPresenter{
   
 //  private static Logger log = LoggerFactory.getLogger(UserPresenter.class);
   
-  //@EJB
   private UserDB manager;
   
   public UserPresenter() throws NamingException{
@@ -54,8 +54,11 @@ public class UserPresenter{
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
 	try {
       return manager.get(username);
-    } catch (UserNotFoundException e) {
-      throw new FiteagleWebApplicationException(404, e.getMessage());
+    } catch (EJBException e) {
+    	if(e.getCausedByException() instanceof UserNotFoundException){
+    	  throw new FiteagleWebApplicationException(404, e.getMessage());
+    	}
+    	return null;
 //    } catch (DatabaseException e) {
 //      log.error(e.getMessage());
 //      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -69,17 +72,22 @@ public class UserPresenter{
     user.setUsername(username);
     try {
       manager.add(createUser(user));
-    } catch (DuplicateUsernameException e) {
-      throw new FiteagleWebApplicationException(409, e.getMessage());
-    } catch (DuplicateEmailException e) {
-      throw new FiteagleWebApplicationException(409, e.getMessage());
-    } catch (DuplicatePublicKeyException e){
-      throw new FiteagleWebApplicationException(409, e.getMessage());
+    } catch(EJBException e){
+    	if(e.getCausedByException() instanceof DuplicateUsernameException){
+		  throw new FiteagleWebApplicationException(409, e.getMessage());
+      	}
+    	else if(e.getCausedByException() instanceof DuplicateEmailException){
+    	  throw new FiteagleWebApplicationException(409, e.getMessage());
+    	}
+    	else if(e.getCausedByException() instanceof DuplicatePublicKeyException){
+    	  throw new FiteagleWebApplicationException(409, e.getMessage());
+    	}
+    	else if(e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof InValidAttributeException){
+          throw new FiteagleWebApplicationException(422, e.getMessage());
+    	}
 //    } catch (DatabaseException e) {
 //      log.error(e.getMessage());
 //      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-    } catch (User.NotEnoughAttributesException | User.InValidAttributeException e) {
-      throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(201).build();
   }
@@ -254,7 +262,7 @@ public class UserPresenter{
   public static class FiteagleWebApplicationException extends WebApplicationException {  
     private static final long serialVersionUID = 5823637635206011675L;
     public FiteagleWebApplicationException(int status, String message){
-      super(new ResponseBuilderImpl().status(status).entity(message).build()); 
+      super(Response.status(status).entity(message).build()); 
     }   
   }   
   
