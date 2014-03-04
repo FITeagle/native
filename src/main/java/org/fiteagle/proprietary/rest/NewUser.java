@@ -1,4 +1,4 @@
-package org.fiteagle.fnative.rest;
+package org.fiteagle.proprietary.rest;
 
 import java.util.Date;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.fiteagle.fnative.rest;
+package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;

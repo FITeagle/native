@@ -1,3 +1,4 @@
+package org.fiteagle.proprietary.rest;
 //package org.fiteagle.fnative.rest;
 //
 //import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
