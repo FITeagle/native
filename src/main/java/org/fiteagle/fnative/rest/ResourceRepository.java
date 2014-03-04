@@ -9,6 +9,8 @@ import javax.jms.JMSConsumer;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.JMSProducer;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.naming.Context;
@@ -24,7 +26,7 @@ import org.fiteagle.api.core.IResourceRepository.Serialization;
 @Path("/repo")
 public class ResourceRepository {
 
-	private static Logger log = Logger.getLogger(ResourceRepository.class
+	private static Logger LOGGER = Logger.getLogger(ResourceRepository.class
 			.toString());
 	private IResourceRepository repo;
 	@Inject
@@ -42,7 +44,7 @@ public class ResourceRepository {
 	@Path("/resources.rdf")
 	@Produces("application/rdf+xml")
 	public String listResourcesXML() {
-		log.log(Level.INFO, "Getting resources as RDF...");
+		LOGGER.log(Level.INFO, "Getting resources as RDF...");
 		return repo.listResources(Serialization.XML);
 	}
 
@@ -50,26 +52,21 @@ public class ResourceRepository {
 	@Path("/resources.ttl")
 	@Produces("text/turtle")
 	public String listResourcesTTL() {
-		log.log(Level.INFO, "Getting resources as TTL...");
+		LOGGER.log(Level.INFO, "Getting resources as TTL...");
 		return repo.listResources(Serialization.TTL);
 	}
 
 	@GET
 	@Path("/async/resources.rdf")
 	@Produces("application/rdf+xml")
-	public String listResourcesXMLviaMDB() throws JMSException {
-		String text = "timeout";
-		
-		log.log(Level.INFO, "Getting resources as RDF via MDB...");
+	public String listResourcesXMLviaMDB() throws JMSException, InterruptedException {		
+		LOGGER.log(Level.INFO, "Getting resources as RDF via MDB...");
 		JMSProducer producer = context.createProducer();
-		producer.send(topic, "test");
-		JMSConsumer consumer = context.createConsumer(topic);
-		
-		TextMessage result = (TextMessage) consumer.receive(3000);
-		if (null != result)
-			text = result.getText();
-		
-		return text;
+		JMSConsumer consumer = context.createConsumer(topic, "foo = bar");
+		Message message = context.createMessage();
+		message.setStringProperty("method", "listResources");
+		producer.send(topic, message);
+		Message result = consumer.receive(1000);
+		return result.getStringProperty("result");
 	}
-
 }
