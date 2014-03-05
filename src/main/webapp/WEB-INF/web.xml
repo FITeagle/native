@@ -4,22 +4,9 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
     version="2.4">
   
-<!--   <filter> -->
-<!--     <filter-name>guiceFilter</filter-name> -->
-<!--     <filter-class>com.google.inject.servlet.GuiceFilter</filter-class> -->
-<!--   </filter> -->
-  
-<!--   <filter-mapping> -->
-<!--     <filter-name>guiceFilter</filter-name> -->
-<!--     <url-pattern>/native/v1/*</url-pattern> -->
-<!--   </filter-mapping> -->
-  
-<!--   <listener> -->
-<!--    <listener-class>org.fiteagle.fnative.rest.ServletConfig</listener-class> -->
-<!--   </listener> -->
     <servlet-mapping>
         <servlet-name>javax.ws.rs.core.Application</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
   
 </web-app>
