@@ -81,7 +81,7 @@ public class ResourceRepositoryServlet {
 		Message message = context.createMessage();
 		message.setStringProperty(IMessageBus.TYPE_REQUEST,
 				IResourceRepository.LIST_RESOURCES);
-		
+
 		message.setStringProperty(IResourceRepository.PROP_SERIALIZATION,
 				serialization);
 

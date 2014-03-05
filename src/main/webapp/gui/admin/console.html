@@ -140,10 +140,10 @@
             <div class="alert alert-success alert-dismissable">
                 <form action="">
                 <input onclick="send_message()" value="Send" type="button">
-                <input id="textID" name="message" value="getVersion" type="text"><br>
+                <input id="textID" name="message" value="listResources" type="text"><br>
                 </form>
             </div>
-            
+            <h2>Message Bus <small>live-view</small></h2>
             <div class="alert alert-info console" id="output"></div>
           </div>
 
@@ -153,10 +153,11 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     
             <script language="javascript" type="text/javascript">
-            var wsUri = getRootUri() + "/ws/log";
+            var wsUri = getRootUri() + "/native/api/bus/logger";
+
             websocket = new WebSocket(wsUri);
                 websocket.onopen = function(evt) {
                     onOpen(evt)
