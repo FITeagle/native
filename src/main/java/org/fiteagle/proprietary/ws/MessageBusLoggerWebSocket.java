@@ -29,33 +29,10 @@ import org.fiteagle.api.core.IMessageBus;
 		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 public class MessageBusLoggerWebSocket implements MessageListener {
 
-	@Inject
-	private JMSContext jmsContext;
-	@Resource(mappedName = "java:/topic/core")
-	private Topic topic;
-
 	private static final Logger LOGGER = Logger
 			.getLogger(MessageBusLoggerWebSocket.class.getName());
 
 	private Session wsSession;
-
-	@OnMessage
-	public String onMessage(final String command) throws JMSException,
-			InterruptedException {
-		LOGGER.log(Level.INFO, "Received WebSocket message: " + command);
-
-		JMSProducer jmsProducer = jmsContext.createProducer();
-
-		final Message jmsMessage = this.jmsContext.createMessage();
-		jmsMessage.setStringProperty(IMessageBus.TYPE_REQUEST, command);
-
-		LOGGER.log(Level.INFO, "Submitting command '" + command
-				+ "' via JMS...");
-
-		jmsProducer.send(topic, jmsMessage);
-
-		return "OK";
-	}
 
 	@OnOpen
 	public void onOpen(final Session wsSession, final EndpointConfig config)

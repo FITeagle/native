@@ -154,54 +154,6 @@
     <!-- Bootstrap core JavaScript -->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    
-            <script language="javascript" type="text/javascript">
-            var wsUri = getRootUri() + "/native/api/bus/logger";
-
-            websocket = new WebSocket(wsUri);
-                websocket.onopen = function(evt) {
-                    onOpen(evt)
-                };
-                websocket.onmessage = function(evt) {
-                    onMessage(evt)
-                };
-                websocket.onerror = function(evt) {
-                    onError(evt)
-                };
-            writeToScreen("Connected to Endpoint!");
-            
-            function getRootUri() {
-                return "ws://" + (document.location.hostname == "" ? "localhost" : document.location.hostname) + ":" +
-                        (document.location.port == "" ? "8080" : document.location.port);
-            }
-            function init() {
-                output = document.getElementById("output");
-            }
-            function send_message() {
-                doSend(textID.value);
-            }
-            function onOpen(evt) {
-                
-            }
-            function onMessage(evt) {
-                writeToScreen("Message Received: " + evt.data);
-            }
-            function onError(evt) {
-                writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
-            }
-            function doSend(message) {
-                writeToScreen("Message Sent: " + message);
-                websocket.send(message);
-            }
-            function writeToScreen(message) {
-                var pre = document.createElement("p");
-                pre.style.wordWrap = "break-word";
-                pre.innerHTML = message;
-                 
-                output.appendChild(pre);
-            }
-            window.addEventListener("load", init, false);
-        </script>
-
+    <script src="js/fiteagle.js"></script>
   </body>
 </html>
