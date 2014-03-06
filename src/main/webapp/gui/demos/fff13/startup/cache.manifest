@@ -1,0 +1,33 @@
+CACHE MANIFEST
+#Created at Mi 27 Nov 2013 14:34:37 CET
+
+CACHE:
+./admin.html
+./apple-touch-icon-114x114-precomposed.png
+./apple-touch-icon-144x144-precomposed.png
+./apple-touch-icon-57x57-precomposed.png
+./apple-touch-icon-72x72-precomposed.png
+./apple-touch-icon-precomposed.png
+./apple-touch-icon.png
+./css/bootstrap.css
+./css/fiteagle.css
+./css/sb-admin.css
+./favicon.ico
+./font-awesome/css/font-awesome.css
+./font-awesome/css/font-awesome.min.css
+./font-awesome/fonts/fontawesome-webfont.eot
+./font-awesome/fonts/fontawesome-webfont.svg
+./font-awesome/fonts/fontawesome-webfont.ttf
+./font-awesome/fonts/fontawesome-webfont.woff
+./font-awesome/fonts/FontAwesome.otf
+./img/icon_fiteagle.png
+./index.html
+./js/bootstrap.js
+./js/fiteagle.js
+./js/fiteagle.ws.js
+./js/jquery.min.js
+./js/snippet.js
+./startup.png
+
+NETWORK:
+/ws

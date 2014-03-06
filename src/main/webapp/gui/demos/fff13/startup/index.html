@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" manifest="./cache.manifest">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon-precomposed" href="./apple-touch-icon-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="./apple-touch-icon-144x144-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="./apple-touch-icon-114x114-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="./apple-touch-icon-72x72-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="./apple-touch-icon-57x57-precomposed.png" />         
+    <link rel="apple-touch-startup-image" href="./startup.png" />
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+
+    <title>FIT4FUSECO</title>
+
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <noscript>
+    <link href="css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/fiteagle.css">
+    </noscript>
+  </head>
+
+  <body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html"><img src="img/icon_fiteagle.png" id="logo" alt="logo"> FFF 2013 Demo</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav side-nav">
+            <li class="active"><a href="index.html"><i class="fa fa-dashboard"></i> Demo</a></li>
+            <li><a href="http://fiteagle.org"><i class="fa fa-desktop"></i> Info</a></li>
+          </ul>
+
+        </div><!-- /.navbar-collapse -->
+      </nav>
+
+      <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <h1>Video <small>Dashboard</small></h1>
+            <ol class="breadcrumb">
+              <li class="active"><i class="fa fa-dashboard"></i> LTE Video Stream</li>
+            </ol>
+            <div id="output" class="alert alert-info alert-dismissable">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              Welcome to the FIT4FUSECO page!
+            </div>
+          </div>
+        </div><!-- /.row -->
+        <div class="row">
+        
+          <div class="col-lg-12">
+
+            <form role="form" onsubmit="location.href='rtsp://192.168.1.30:1235/test.sdp'; return false;" >
+<button type="submit" class="btn btn-danger" onclick="location.href='rtsp://192.168.1.30:1235/test.sdp';">Start Video</button>
+            </form>
+          </div>
+
+        
+          <div id="results"></div>
+        </div><!-- /.row -->
+      </div><!-- /#page-wrapper -->
+    </div><!-- /#wrapper -->
+    
+<script type="text/html" id="item_tmpl">
+          <div class="col-lg-3">
+            <div class="panel panel-<%=resource_status_name%>">
+              <div class="panel-heading">
+                <div class="row">
+                  <div class="col-xs-6">
+                    <i class="fa fa-<%=resource_status_logo%> fa-5x"></i>
+                  </div>
+                  <div class="col-xs-6 text-right">
+                    <p class="announcement-heading"></p>
+                    <p class="announcement-text"><%=resource_name%></p>
+                  </div>
+                </div>
+              </div>
+              <a href="#">
+                <div class="panel-footer announcement-bottom">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      More info
+                    </div>
+                    <div class="col-xs-6 text-right">
+                      <i class="fa fa-arrow-circle-right"></i>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+</script>
+
+    <script>
+        stylesheet = document.createElement('link'); stylesheet.rel = 'stylesheet';
+        stylesheet.href = 'css/sb-admin.css'; document.getElementsByTagName('head')[0].appendChild(stylesheet);
+        stylesheet = document.createElement('link'); stylesheet.rel = 'stylesheet';
+        stylesheet.href = 'font-awesome/css/font-awesome.min.css'; document.getElementsByTagName('head')[0].appendChild(stylesheet);
+        stylesheet = document.createElement('link'); stylesheet.rel = 'stylesheet';
+        stylesheet.href = 'css/fiteagle.css'; document.getElementsByTagName('head')[0].appendChild(stylesheet);
+     </script>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.js"></script>
+  </body>
+</html>
