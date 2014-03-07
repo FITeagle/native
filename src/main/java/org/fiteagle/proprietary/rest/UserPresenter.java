@@ -22,8 +22,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.FiteagleUser;
-import org.fiteagle.api.FiteagleUserPublicKey;
 import org.fiteagle.api.User;
 import org.fiteagle.api.User.InValidAttributeException;
 import org.fiteagle.api.User.NotEnoughAttributesException;
@@ -53,7 +51,7 @@ public class UserPresenter{
   @Produces(MediaType.APPLICATION_JSON)
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
 	try {
-      return manager.get(username);
+	      return manager.get(username);
     } catch (EJBException e) {
     	if(e.getCausedByException() instanceof UserNotFoundException){
     	  throw new FiteagleWebApplicationException(404, e.getMessage());
@@ -237,18 +235,18 @@ public class UserPresenter{
 //  }
 //
   private User createUser(NewUser newUser){
-    List<FiteagleUserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
-    return new FiteagleUser(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
+    List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
+    return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
   }
   
-  private ArrayList<FiteagleUserPublicKey> createPublicKeys(List<UserPublicKey> keys) {
+  private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {
     if(keys == null){
       return null;
     }
-    ArrayList<FiteagleUserPublicKey> publicKeys = new ArrayList<>();
-    for(UserPublicKey key : keys){
+    ArrayList<UserPublicKey> publicKeys = new ArrayList<>();
+    for(NewPublicKey key : keys){
       try {
-        publicKeys.add(new FiteagleUserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
+        publicKeys.add(new UserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
 //      } catch (CouldNotParse e) {
 //        throw new FiteagleWebApplicationException(422, e.getMessage());
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {

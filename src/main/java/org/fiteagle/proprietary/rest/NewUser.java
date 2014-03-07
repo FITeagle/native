@@ -1,16 +1,12 @@
 package org.fiteagle.proprietary.rest;
 
-import java.util.Date;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.fiteagle.api.User;
-import org.fiteagle.api.UserPublicKey;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NewUser implements User {
+public class NewUser{
   
-  private static final long serialVersionUID = -1830926707750453582L;
   private String username;
   private String firstName;
   private String lastName;
@@ -56,7 +52,7 @@ public class NewUser implements User {
     this.affiliation = affiliation;
   }
 
-  public String getPassword() {
+  protected String getPassword() {
     return password;
   }
 
@@ -64,86 +60,12 @@ public class NewUser implements User {
     this.password = password;
   }
   
-  @SuppressWarnings("unchecked")
-  public List<UserPublicKey> getPublicKeys() {
-    return (List<UserPublicKey>) (List<?>) publicKeys;
+  public List<NewPublicKey> getPublicKeys() {
+    return publicKeys;
   }
 
   public void setPublicKeys(List<NewPublicKey> publicKeys) {
     this.publicKeys = publicKeys;
-  }
-
-  @Override
-  public void updateAttributes(String firstName, String lastName, String email, String affiliation, String password,
-      List<UserPublicKey> publicKeys) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void addPublicKey(UserPublicKey publicKey) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void deletePublicKey(String description) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void renamePublicKey(String description, String newDescription) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public UserPublicKey getPublicKey(String description) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public Role getRole() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public void setRole(Role role) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public Date getCreated() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public Date getLastModified() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public String getPasswordHash() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public String getPasswordSalt() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public boolean hasKeyWithDescription(String description) {
-    // TODO Auto-generated method stub
-    return false;
   }
  
 }
