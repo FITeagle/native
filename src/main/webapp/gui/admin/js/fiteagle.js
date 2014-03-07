@@ -26,7 +26,7 @@ function doSend(message) {
 }
 
 
-var wsUriLogger = getRootUri() + "/native/api/bus/logger";
+var wsUriLogger = getRootUri() + "/bus/api/logger";
 websocketLogger = new WebSocket(wsUriLogger);
 
 websocketLogger.onerror = function(evt) {
@@ -39,7 +39,7 @@ websocketLogger.onmessage = function(evt) {
 	writeToScreen(evt.data);
 };
 
-var wsUriCommand = getRootUri() + "/native/api/bus/command";
+var wsUriCommand = getRootUri() + "/bus/api/commander";
 websocketCommand = new WebSocket(wsUriCommand);
 websocketCommand.onopen = function(evt) {
 	writeToScreen("Sender: connected to endpoint.");
