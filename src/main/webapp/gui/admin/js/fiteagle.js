@@ -12,7 +12,7 @@ function getRootUri() {
 function writeToScreen(message) {
 	var pre = document.createElement("p");
 	pre.style.wordWrap = "break-word";
-	pre.innerHTML = message;
+	pre.innerHTML = message.replace(/\n/g, "<br />");
 
 	output.appendChild(pre);
 }
@@ -22,7 +22,6 @@ function send_message() {
 }
 
 function doSend(message) {
-	writeToScreen("Sending message '" + message + "'");
 	websocketCommand.send(message);
 }
 

@@ -4,18 +4,12 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
 import javax.jms.JMSException;
-import javax.jms.JMSProducer;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import javax.jms.Topic;
 import javax.websocket.EndpointConfig;
-import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
@@ -45,19 +39,26 @@ public class MessageBusLoggerWebSocket implements MessageListener {
 		try {
 			LOGGER.log(Level.INFO, "Logging JMS message...");
 			if (null != this.wsSession && this.wsSession.isOpen()) {
-				String request = message
-						.getStringProperty(IMessageBus.TYPE_REQUEST);
-				this.wsSession.getAsyncRemote().sendText(
-						"Request: " + request + "\n");
-				String result = message
-						.getStringProperty(IMessageBus.TYPE_RESULT);
-				this.wsSession.getAsyncRemote().sendText(
-						"Result: " + result + "\n");
+				String result = messageToString(message);
+				this.wsSession.getAsyncRemote().sendText(result);				
 			} else {
 				LOGGER.log(Level.INFO, "No client to talk to");
 			}
 		} catch (JMSException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage());
 		}
+	}
+
+	private String messageToString(Message message) throws JMSException {
+		String result = "";
+		
+		result += "Message ID: " + message.getJMSMessageID() + "\n";
+		result += "  * Reply-To: " + message.getJMSReplyTo() + "\n";
+		result += "  * Request: " + message
+				.getStringProperty(IMessageBus.TYPE_REQUEST) + "\n";
+		result += "  * Result: " + message
+				.getStringProperty(IMessageBus.TYPE_RESULT) + "\n";
+		
+		return result;
 	}
 }

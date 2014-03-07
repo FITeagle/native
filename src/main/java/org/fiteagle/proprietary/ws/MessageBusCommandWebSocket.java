@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.jms.JMSContext;
+import javax.inject.Named;
 import javax.jms.JMSException;
-import javax.jms.JMSProducer;
 import javax.jms.Message;
-import javax.jms.Topic;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
@@ -18,39 +15,31 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import org.fiteagle.api.core.IMessageBus;
+import org.fiteagle.proprietary.messagebus.MessageBusSenderSessionBean;
 
+@Named
 @ServerEndpoint("/api/bus/command")
 public class MessageBusCommandWebSocket {
 
-	@Inject
-	private JMSContext jmsContext;
-	@Resource(mappedName = "topic/core")
-	private Topic topic;
-	
 	private static final Logger LOGGER = Logger
 			.getLogger(MessageBusCommandWebSocket.class.getName());
 
+	private MessageBusSenderSessionBean senderBean;
+
+	@Inject
+	public MessageBusCommandWebSocket(MessageBusSenderSessionBean senderBean) {
+		this.senderBean = senderBean;
+	}
+
 	@OnMessage
-	public String onMessage(final String command) throws JMSException,
-			InterruptedException {
-		LOGGER.log(Level.INFO, "Received WebSocket message: " + command);
+	public String onMessage(final String command) throws JMSException {
+		LOGGER.log(Level.INFO, "Received WebSocket message3: " + command);
+		
+		final Message message = senderBean.createMessage();
+		message.setStringProperty(IMessageBus.TYPE_REQUEST, command);
 
-		JMSProducer jmsProducer = jmsContext.createProducer();
-
-		final Message jmsMessage = this.jmsContext.createMessage();
-		jmsMessage.setStringProperty(IMessageBus.TYPE_REQUEST, command);
-
-		LOGGER.log(Level.INFO, "Submitting command '" + command
-				+ "' via JMS...");
-
-		if (null != topic)
-			jmsProducer.send(topic, jmsMessage);
-		else
-			LOGGER.log(Level.SEVERE, "No topic found! Debug me!");
-
-		LOGGER.log(Level.INFO, "...done.");
-
-		return "OK";
+		senderBean.sendRequest(message);
+		return "";
 	}
 
 	@OnOpen
