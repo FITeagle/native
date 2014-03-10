@@ -164,27 +164,12 @@
 			<artifactId>jersey-json</artifactId>
 			<version>1.18</version>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>com.sun.jersey.contribs</groupId> -->
-<!-- 			<artifactId>jersey-guice</artifactId> -->
-<!-- 			<version>1.18</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>com.google.inject</groupId> -->
-<!-- 			<artifactId>guice</artifactId> -->
-<!-- 			<version>3.0</version> -->
-<!-- 		</dependency> -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>3.0-alpha-1</version>
 		</dependency>
 
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>7.0</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<finalName>${project.artifactId}</finalName>
