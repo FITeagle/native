@@ -1,7 +1,10 @@
 package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +16,7 @@ import javax.naming.NamingException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -22,16 +26,18 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.User;
-import org.fiteagle.api.User.InValidAttributeException;
-import org.fiteagle.api.User.NotEnoughAttributesException;
-import org.fiteagle.api.UserDB;
-import org.fiteagle.api.UserDB.DuplicateEmailException;
-import org.fiteagle.api.UserDB.DuplicatePublicKeyException;
-import org.fiteagle.api.UserDB.DuplicateUsernameException;
-import org.fiteagle.api.UserDB.UserNotFoundException;
-import org.fiteagle.api.UserPublicKey;
+import org.fiteagle.api.usermanagement.User;
+import org.fiteagle.api.usermanagement.UserManager;
+import org.fiteagle.api.usermanagement.UserPublicKey;
+import org.fiteagle.api.usermanagement.User.InValidAttributeException;
+import org.fiteagle.api.usermanagement.User.NotEnoughAttributesException;
+import org.fiteagle.api.usermanagement.User.PublicKeyNotFoundException;
+import org.fiteagle.api.usermanagement.UserManager.DuplicateEmailException;
+import org.fiteagle.api.usermanagement.UserManager.DuplicatePublicKeyException;
+import org.fiteagle.api.usermanagement.UserManager.DuplicateUsernameException;
+import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
+import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 
 
 @Path("/user")
@@ -39,11 +45,11 @@ public class UserPresenter{
   
 //  private static Logger log = LoggerFactory.getLogger(UserPresenter.class);
   
-  private UserDB manager;
+  private UserManager manager;
   
   public UserPresenter() throws NamingException{
     final Context context = new InitialContext();
-    manager = (UserDB) context.lookup("java:global/persistence/JPAUserDB!org.fiteagle.api.UserDB");
+    manager = (UserManager) context.lookup("java:global/persistence/JPAUserDB!org.fiteagle.api.UserDB");
   }
   
   @GET
@@ -51,7 +57,7 @@ public class UserPresenter{
   @Produces(MediaType.APPLICATION_JSON)
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
 	try {
-	      return manager.get(username);
+      return manager.get(username);
     } catch (EJBException e) {
     	if(e.getCausedByException() instanceof UserNotFoundException){
     	  throw new FiteagleWebApplicationException(404, e.getMessage());
@@ -73,7 +79,7 @@ public class UserPresenter{
     } catch(EJBException e){
     	if(e.getCausedByException() instanceof DuplicateUsernameException){
 		  throw new FiteagleWebApplicationException(409, e.getMessage());
-      	}
+    	}
     	else if(e.getCausedByException() instanceof DuplicateEmailException){
     	  throw new FiteagleWebApplicationException(409, e.getMessage());
     	}
@@ -83,35 +89,34 @@ public class UserPresenter{
     	else if(e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof InValidAttributeException){
           throw new FiteagleWebApplicationException(422, e.getMessage());
     	}
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }
     return Response.status(201).build();
   }
-//
-//  @POST
-//  @Path("{username}")
-//  @Consumes(MediaType.APPLICATION_JSON)
-//  public Response updateUser(@PathParam("username") String username, NewUser user) {
-//    try {
-//      List<UserPublicKey> publicKeys = createPublicKeys(user.getPublicKeys());  
-//      manager.update(username, user.getFirstName(), user.getLastName(), user.getEmail(), user.getAffiliation(), user.getPassword(), publicKeys);
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);  
-//    } catch (UserNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (DuplicateEmailException e) {
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (DuplicatePublicKeyException e){
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (User.NotEnoughAttributesException | User.InValidAttributeException e) {
-//      throw new FiteagleWebApplicationException(422, e.getMessage());
-//    }
-//    return Response.status(200).build();
-//  }
-//
+
+  @POST
+  @Path("{username}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response updateUser(@PathParam("username") String username, NewUser user) {
+    try {
+      List<UserPublicKey> publicKeys = createPublicKeys(user.getPublicKeys());  
+      manager.update(username, user.getFirstName(), user.getLastName(), user.getEmail(), user.getAffiliation(), user.getPassword(), publicKeys);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof DuplicateEmailException){
+        throw new FiteagleWebApplicationException(409, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
+        throw new FiteagleWebApplicationException(409, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof InValidAttributeException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+    }
+    return Response.status(200).build();
+  }
+
 //  @POST
 //  @Path("{username}/role/{role}")
 //  public Response setRole(@PathParam("username") String username, @PathParam("role") Role role) {
@@ -126,72 +131,76 @@ public class UserPresenter{
 //    return Response.status(200).build();
 //  }
 //  
-//  @POST
-//  @Path("{username}/pubkey/")
-//  @Consumes(MediaType.APPLICATION_JSON)
-//  public Response addPublicKey(@PathParam("username") String username, NewPublicKey pubkey) {    
-//	try {
-//      manager.addKey(username, new UserPublicKey(pubkey.getPublicKeyString(), pubkey.getDescription()));
-//    } catch (CouldNotParse | User.InValidAttributeException | User.NotEnoughAttributesException e){
-//      throw new FiteagleWebApplicationException(422, e.getMessage());
-//    } catch (UserNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (DuplicatePublicKeyException e){
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);    
-//    }
-//    return Response.status(200).build();
-//  }
-//  
-//  @DELETE
-//  @Path("{username}/pubkey/{description}")
-//  public Response deletePublicKey(@PathParam("username") String username, @PathParam("description") String description) {
-//    try {
-//      manager.deleteKey(username, decode(description));
-//    } catch (User.InValidAttributeException e){
-//      throw new FiteagleWebApplicationException(422, e.getMessage());
-//    } catch (UserNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }
-//    return Response.status(200).build();
-//  }
-//  
-//  @POST
-//  @Path("{username}/pubkey/{description}/description")
-//  @Consumes(MediaType.TEXT_PLAIN)
-//  public Response renamePublicKey(@PathParam("username") String username, @PathParam("description") String description, String newDescription) {    
-//    try {
-//      manager.renameKey(username, decode(description), newDescription);
-//    } catch (User.InValidAttributeException e){
-//      throw new FiteagleWebApplicationException(422, e.getMessage());
-//    } catch (DuplicatePublicKeyException e){
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//    } catch (UserNotFoundException | PublicKeyNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }
-//    return Response.status(200).build();
-//  }
-//  
+  @POST
+  @Path("{username}/pubkey/")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response addPublicKey(@PathParam("username") String username, NewPublicKey pubkey) {    
+    PublicKey key;
+    try {
+      key = KeyManagement.getInstance().decodePublicKey(pubkey.getPublicKeyString());
+    } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e1) {
+      throw new FiteagleWebApplicationException(422, e1.getMessage());
+    }
+  
+    try {
+      manager.addKey(username, new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof CouldNotParse || e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
+        throw new FiteagleWebApplicationException(409, e.getMessage());
+      }
+    }
+    return Response.status(200).build();
+  }
+  
+  @DELETE
+  @Path("{username}/pubkey/{description}")
+  public Response deletePublicKey(@PathParam("username") String username, @PathParam("description") String description) {
+    try {
+      manager.deleteKey(username, decode(description));
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof InValidAttributeException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+    }
+    return Response.status(200).build();
+  }
+  
+  @POST
+  @Path("{username}/pubkey/{description}/description")
+  @Consumes(MediaType.TEXT_PLAIN)
+  public Response renamePublicKey(@PathParam("username") String username, @PathParam("description") String description, String newDescription) {    
+    try {
+      manager.renameKey(username, decode(description), newDescription);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof InValidAttributeException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof UserNotFoundException || e.getCausedByException() instanceof PublicKeyNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
+        throw new FiteagleWebApplicationException(409, e.getMessage());
+      }
+    }
+    return Response.status(200).build();
+  }
+  
   @DELETE
   @Path("{username}")
   public Response deleteUser(@PathParam("username") String username) {
-//    try {
-      manager.delete(username);
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }
+    manager.delete(username);
     return Response.status(200).build();
   }
-//  
+  
 //  @POST
 //  @Path("{username}/certificate")
 //  @Consumes(MediaType.TEXT_PLAIN)
@@ -224,16 +233,15 @@ public class UserPresenter{
 //    UserAuthenticationFilter.getInstance().deleteCookie(username);
 //    return Response.status(200).build();
 //  }
-//  
-//  private String decode(String string){    
-//    try {
-//      return URLDecoder.decode(string, "UTF-8");
-//    } catch (UnsupportedEncodingException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }
-//  }
-//
+  
+  private String decode(String string){    
+    try {
+      return URLDecoder.decode(string, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   private User createUser(NewUser newUser){
     List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
     return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
@@ -247,10 +255,9 @@ public class UserPresenter{
     for(NewPublicKey key : keys){
       try {
         publicKeys.add(new UserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
-//      } catch (CouldNotParse e) {
-//        throw new FiteagleWebApplicationException(422, e.getMessage());
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
-//        log.error(e.getMessage());
+      } catch (CouldNotParse e) {
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
         throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
       }
     }
