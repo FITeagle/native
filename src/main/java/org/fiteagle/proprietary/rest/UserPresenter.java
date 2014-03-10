@@ -201,31 +201,31 @@ public class UserPresenter{
     return Response.status(200).build();
   }
   
-//  @POST
-//  @Path("{username}/certificate")
-//  @Consumes(MediaType.TEXT_PLAIN)
-//  public String createUserCertAndPrivateKey(@PathParam("username") String username, String passphrase) {  
-//    try {      
-//      return manager.createUserKeyPairAndCertificate(username, decode(passphrase));
-//    } catch (Exception e) {
+  @POST
+  @Path("{username}/certificate")
+  @Consumes(MediaType.TEXT_PLAIN)
+  public String createUserCertAndPrivateKey(@PathParam("username") String username, String passphrase) {  
+    try {      
+      return manager.createUserKeyPairAndCertificate(username, decode(passphrase));
+    } catch (Exception e) {
 //      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }    
-//  }
-//  
-//  @GET
-//  @Path("{username}/pubkey/{description}/certificate")
-//  @Produces(MediaType.TEXT_PLAIN)
-//  public String getUserCertificateForPublicKey(@PathParam("username") String username, @PathParam("description") String description) {
-//    try {
-//      return manager.createUserCertificateForPublicKey(username, decode(description));
-//    } catch (PublicKeyNotFoundException e){
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    } catch (Exception e) {
+      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+    }    
+  }
+  
+  @GET
+  @Path("{username}/pubkey/{description}/certificate")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getUserCertificateForPublicKey(@PathParam("username") String username, @PathParam("description") String description) {
+    try {
+      return manager.createUserCertificateForPublicKey(username, decode(description));
+    } catch (PublicKeyNotFoundException e){
+      throw new FiteagleWebApplicationException(404, e.getMessage());
+    } catch (Exception e) {
 //      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//    }    
-//  } 
+      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+    }    
+  } 
 //  
 //  @DELETE
 //  @Path("{username}/cookie")
