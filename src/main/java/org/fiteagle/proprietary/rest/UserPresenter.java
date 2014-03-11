@@ -86,9 +86,11 @@ public class UserPresenter{
     	else if(e.getCausedByException() instanceof DuplicatePublicKeyException){
     	  throw new FiteagleWebApplicationException(409, e.getMessage());
     	}
-    	else if(e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof InValidAttributeException){
-          throw new FiteagleWebApplicationException(422, e.getMessage());
-    	}
+    	if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+    } catch(NotEnoughAttributesException | InValidAttributeException e){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(201).build();
   }
@@ -110,9 +112,11 @@ public class UserPresenter{
       if(e.getCausedByException() instanceof DuplicatePublicKeyException){
         throw new FiteagleWebApplicationException(409, e.getMessage());
       }
-      if(e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof InValidAttributeException){
+      if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
         throw new FiteagleWebApplicationException(422, e.getMessage());
       }
+    } catch(NotEnoughAttributesException | InValidAttributeException e){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(200).build();
   }
@@ -145,15 +149,17 @@ public class UserPresenter{
     try {
       manager.addKey(username, new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));
     } catch(EJBException e){
-      if(e.getCausedByException() instanceof CouldNotParse || e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
       if(e.getCausedByException() instanceof UserNotFoundException){
         throw new FiteagleWebApplicationException(404, e.getMessage());
       }
       if(e.getCausedByException() instanceof DuplicatePublicKeyException){
         throw new FiteagleWebApplicationException(409, e.getMessage());
       }
+      if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof CouldNotParse){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+    } catch(NotEnoughAttributesException | InValidAttributeException | CouldNotParse e){
+      throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(200).build();
   }
@@ -164,12 +170,14 @@ public class UserPresenter{
     try {
       manager.deleteKey(username, decode(description));
     } catch(EJBException e){
-      if(e.getCausedByException() instanceof InValidAttributeException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
       if(e.getCausedByException() instanceof UserNotFoundException){
         throw new FiteagleWebApplicationException(404, e.getMessage());
       }
+      if(e.getCausedByException() instanceof InValidAttributeException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+    } catch(InValidAttributeException e){
+      throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(200).build();
   }
@@ -181,15 +189,17 @@ public class UserPresenter{
     try {
       manager.renameKey(username, decode(description), newDescription);
     } catch(EJBException e){
-      if(e.getCausedByException() instanceof InValidAttributeException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
       if(e.getCausedByException() instanceof UserNotFoundException || e.getCausedByException() instanceof PublicKeyNotFoundException){
         throw new FiteagleWebApplicationException(404, e.getMessage());
       }
       if(e.getCausedByException() instanceof DuplicatePublicKeyException){
         throw new FiteagleWebApplicationException(409, e.getMessage());
       }
+      if(e.getCausedByException() instanceof InValidAttributeException){
+        throw new FiteagleWebApplicationException(422, e.getMessage());
+      }
+    } catch(InValidAttributeException e){
+      throw new FiteagleWebApplicationException(422, e.getMessage());
     }
     return Response.status(200).build();
   }
