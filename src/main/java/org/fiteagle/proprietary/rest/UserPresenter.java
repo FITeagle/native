@@ -49,7 +49,7 @@ public class UserPresenter{
   
   public UserPresenter() throws NamingException{
     final Context context = new InitialContext();
-    manager = (UserManager) context.lookup("java:global/persistence/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
+    manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
   }
   
   @GET
