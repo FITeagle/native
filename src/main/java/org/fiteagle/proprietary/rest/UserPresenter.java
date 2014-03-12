@@ -43,8 +43,6 @@ import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 @Path("/user")
 public class UserPresenter{
   
-//  private static Logger log = LoggerFactory.getLogger(UserPresenter.class);
-  
   private UserManager manager;
   
   public UserPresenter() throws NamingException{
@@ -218,7 +216,6 @@ public class UserPresenter{
     try {      
       return manager.createUserKeyPairAndCertificate(username, decode(passphrase));
     } catch (Exception e) {
-//      log.error(e.getMessage());
       throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }    
   }
@@ -232,7 +229,6 @@ public class UserPresenter{
     } catch (PublicKeyNotFoundException e){
       throw new FiteagleWebApplicationException(404, e.getMessage());
     } catch (Exception e) {
-//      log.error(e.getMessage());
       throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }    
   } 
