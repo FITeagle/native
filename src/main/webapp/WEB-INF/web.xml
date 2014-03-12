@@ -3,10 +3,28 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
     version="2.4">
+
+	<servlet-mapping>
+		<servlet-name>javax.ws.rs.core.Application</servlet-name>
+		<url-pattern>/api/*</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>AuthenticationFilter</filter-name>
+		<filter-class>org.fiteagle.proprietary.rest.UserAuthenticationFilter</filter-class>
+	</filter>
+	<filter-mapping>
+    <filter-name>AuthenticationFilter</filter-name>
+    <url-pattern>/api/*</url-pattern>
+  </filter-mapping>
   
-    <servlet-mapping>
-        <servlet-name>javax.ws.rs.core.Application</servlet-name>
-        <url-pattern>/api/*</url-pattern>
-    </servlet-mapping>
+	<filter>
+    <filter-name>AuthorizationFilter</filter-name>
+    <filter-class>org.fiteagle.proprietary.rest.UserAuthorizationFilter</filter-class>
+  </filter>
+	<filter-mapping>
+    <filter-name>AuthorizationFilter</filter-name>
+    <url-pattern>/api/*</url-pattern>
+  </filter-mapping>
   
 </web-app>

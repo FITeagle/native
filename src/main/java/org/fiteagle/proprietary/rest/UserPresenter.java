@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.usermanagement.User;
+import org.fiteagle.api.usermanagement.User.Role;
 import org.fiteagle.api.usermanagement.UserManager;
 import org.fiteagle.api.usermanagement.UserPublicKey;
 import org.fiteagle.api.usermanagement.User.InValidAttributeException;
@@ -119,20 +120,19 @@ public class UserPresenter{
     return Response.status(200).build();
   }
 
-//  @POST
-//  @Path("{username}/role/{role}")
-//  public Response setRole(@PathParam("username") String username, @PathParam("role") Role role) {
-//    try {
-//      manager.setRole(username, role);
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);  
-//    } catch (UserNotFoundException e) {
-//      throw new FiteagleWebApplicationException(404, e.getMessage());
-//    }
-//    return Response.status(200).build();
-//  }
-//  
+  @POST
+  @Path("{username}/role/{role}")
+  public Response setRole(@PathParam("username") String username, @PathParam("role") Role role) {
+    try {
+      manager.setRole(username, role);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+    }
+    return Response.status(200).build();
+  }
+  
   @POST
   @Path("{username}/pubkey/")
   @Consumes(MediaType.APPLICATION_JSON)
