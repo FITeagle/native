@@ -51,6 +51,8 @@ public class UserAuthenticationFilter implements Filter{
  
   private UserManager manager;
   
+  private static UserAuthenticationFilter instance;
+  
   protected HashMap<String, Cookie> cookies = new HashMap<>();
   
   @Override
@@ -65,7 +67,7 @@ public class UserAuthenticationFilter implements Filter{
     if(!databaseContainsAdminUser()){
       createFirstAdminUser();
     }
-
+    instance = this;
   }
   
   private void createFirstAdminUser() {
@@ -82,6 +84,10 @@ public class UserAuthenticationFilter implements Filter{
       }
     }
     return false;
+  }
+  
+  public static UserAuthenticationFilter getInstance(){
+    return instance;
   }
   
   @Override
@@ -247,7 +253,6 @@ public class UserAuthenticationFilter implements Filter{
     String authToken = createRandomAuthToken("-username:"+username);
     Cookie cookie = new Cookie(COOKIE_NAME, authToken);
     cookie.setSecure(true);
-//  TODO:  cookie.setHttpOnly(true);
     cookie.setMaxAge(365 * 24 * 60 * 60);
     cookie.setPath("/");
     cookies.put(username, cookie);
