@@ -54,7 +54,7 @@ public class UserPresenter{
   @GET
   @Path("{username}")
   @Produces(MediaType.APPLICATION_JSON)
-  public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
+  public User get(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
 	try {
       return manager.get(username);
     } catch (EJBException e) {
@@ -71,7 +71,7 @@ public class UserPresenter{
   @PUT
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response addUser(@PathParam("username") String username, NewUser user) {
+  public Response add(@PathParam("username") String username, NewUser user) {
     user.setUsername(username);
     try {
       manager.add(createUser(user));
@@ -97,7 +97,7 @@ public class UserPresenter{
   @POST
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response updateUser(@PathParam("username") String username, NewUser user) {
+  public Response update(@PathParam("username") String username, NewUser user) {
     try {
       List<UserPublicKey> publicKeys = createPublicKeys(user.getPublicKeys());  
       manager.update(username, user.getFirstName(), user.getLastName(), user.getEmail(), user.getAffiliation(), user.getPassword(), publicKeys);
@@ -204,7 +204,7 @@ public class UserPresenter{
   
   @DELETE
   @Path("{username}")
-  public Response deleteUser(@PathParam("username") String username) {
+  public Response delete(@PathParam("username") String username) {
     manager.delete(username);
     return Response.status(200).build();
   }
@@ -238,6 +238,13 @@ public class UserPresenter{
   public Response deleteCookie(@PathParam("username") String username){
     UserAuthenticationFilter.getInstance().deleteCookie(username);
     return Response.status(200).build();
+  }
+  
+  @GET
+  @Path("")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<User> getAllUsers(){
+    return manager.getAllUsers();
   }
   
   private String decode(String string){    

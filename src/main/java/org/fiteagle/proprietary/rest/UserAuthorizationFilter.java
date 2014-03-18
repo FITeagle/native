@@ -66,7 +66,10 @@ public class UserAuthorizationFilter implements Filter {
   }
 
   private Boolean requiresAdminRights(HttpServletRequest request) {
-    if(request.getRequestURI().endsWith("/role/ADMIN")){
+    if(request.getRequestURI().endsWith("/role/ADMIN") || request.getRequestURI().endsWith("/role/TBOWNER")){
+      return true;
+    }
+    if(request.getRequestURI().endsWith("/api/user/")){
       return true;
     }
     return false;
