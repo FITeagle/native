@@ -51,8 +51,9 @@ public class UserAuthorizationFilter implements Filter {
     }
     Boolean isAuthenticated = (Boolean) request.getAttribute(UserAuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
     Boolean requiresAdminRights = requiresAdminRights(request);
+    Boolean requiresTBOwnerRights = requiresTBOwnerRights(request);
     
-    if(!policyEnforcementPoint.isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), isAuthenticated, requiresAdminRights)){
+    if(!policyEnforcementPoint.isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), isAuthenticated, requiresAdminRights, requiresTBOwnerRights)){
       if(isAuthenticated){
         response.sendError(Response.Status.FORBIDDEN.getStatusCode());
       }
@@ -69,6 +70,10 @@ public class UserAuthorizationFilter implements Filter {
     if(request.getRequestURI().endsWith("/role/ADMIN") || request.getRequestURI().endsWith("/role/TBOWNER")){
       return true;
     }
+    return false;
+  }
+  
+  private Boolean requiresTBOwnerRights(HttpServletRequest request) {
     if(request.getRequestURI().endsWith("/api/user/")){
       return true;
     }
