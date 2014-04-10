@@ -7,6 +7,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -71,6 +72,13 @@ private UserManager manager;
 //    }
     long id = manager.add(course).getId();
     return id;
+  }
+  
+  @DELETE
+  @Path("{id}")
+  public Response delete(@PathParam("id") long id) {
+    manager.delete(id);
+    return Response.status(200).build();
   }
   
   @GET
