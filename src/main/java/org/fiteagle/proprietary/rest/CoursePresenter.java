@@ -49,9 +49,10 @@ private UserManager manager;
   @PUT
   @Path("")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response add(Course course) {
+  @Produces(MediaType.TEXT_PLAIN)
+  public long add(Course course) {
 //    try {
-      manager.add(course);
+      
 //    } catch(EJBException e){
 //      if(e.getCausedByException() instanceof DuplicateUsernameException){
 //      throw new FiteagleWebApplicationException(409, e.getMessage());
@@ -68,7 +69,8 @@ private UserManager manager;
 //    } catch(NotEnoughAttributesException | InValidAttributeException e){
 //        throw new FiteagleWebApplicationException(422, e.getMessage());
 //    }
-    return Response.status(201).build();
+    long id = manager.add(course).getId();
+    return id;
   }
   
   @GET
