@@ -17,18 +17,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.usermanagement.Course;
+import org.fiteagle.api.usermanagement.Class;
 import org.fiteagle.api.usermanagement.UserManager;
 import org.fiteagle.api.usermanagement.UserManager.CourseNotFoundException;
 import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
 
-@Path("/course")
-public class CoursePresenter {
+@Path("/class")
+public class ClassPresenter {
   
 private UserManager manager;
   
-  public CoursePresenter() throws NamingException{
+  public ClassPresenter() throws NamingException{
     final Context context = new InitialContext();
     manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
   }
@@ -36,7 +36,7 @@ private UserManager manager;
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Course get(@PathParam("id") long id) {
+  public Class get(@PathParam("id") long id) {
   try {
       return manager.get(id);
     } catch (EJBException e) {
@@ -51,7 +51,7 @@ private UserManager manager;
   @Path("")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
-  public long add(Course course) {
+  public long add(Class targetClass) {
 //    try {
       
 //    } catch(EJBException e){
@@ -70,7 +70,7 @@ private UserManager manager;
 //    } catch(NotEnoughAttributesException | InValidAttributeException e){
 //        throw new FiteagleWebApplicationException(422, e.getMessage());
 //    }
-    long id = manager.add(course).getId();
+    long id = manager.add(targetClass).getId();
     return id;
   }
   
@@ -84,8 +84,8 @@ private UserManager manager;
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Course> getAllCourses(){
-    return manager.getAllCourses();
+  public List<Class> getAllClasses(){
+    return manager.getAllClasses();
   }
   
   @POST
