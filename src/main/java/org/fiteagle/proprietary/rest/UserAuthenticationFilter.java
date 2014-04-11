@@ -79,7 +79,7 @@ public class UserAuthenticationFilter implements Filter{
   private boolean databaseContainsAdminUser() {
     List<User> users = manager.getAllUsers();
     for (User u : users) {
-      if (u.getRole().equals(Role.ADMIN)) {
+      if (u.getRole().equals(Role.FEDERATION_ADMIN)) {
         return true;
       }
     }

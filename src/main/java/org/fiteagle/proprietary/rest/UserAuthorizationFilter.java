@@ -48,7 +48,7 @@ public class UserAuthorizationFilter implements Filter {
     String subjectUsername = (String) request.getAttribute(UserAuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
     String resourceUsername = (String) request.getAttribute(UserAuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
     String action = (String) request.getAttribute(UserAuthenticationFilter.ACTION_ATTRIBUTE);
-    Role role = Role.USER;
+    Role role = Role.STUDENT;
     if(subjectUsername != null && !action.equals("PUT")){
       try {
         role = manager.get(subjectUsername).getRole();
@@ -60,7 +60,7 @@ public class UserAuthorizationFilter implements Filter {
     }
     Boolean isAuthenticated = (Boolean) request.getAttribute(UserAuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
     Boolean requiresAdminRights = requiresAdminRights(request);
-    Boolean requiresTBOwnerRights = requiresTBOwnerRights(request);
+    Boolean requiresTBOwnerRights = requiresClassOwnerRights(request);
     
     if(!policyEnforcementPoint.isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), isAuthenticated, requiresAdminRights, requiresTBOwnerRights)){
       if(isAuthenticated){
@@ -76,13 +76,13 @@ public class UserAuthorizationFilter implements Filter {
   }
 
   private Boolean requiresAdminRights(HttpServletRequest request) {
-    if(request.getRequestURI().endsWith("/role/ADMIN") || request.getRequestURI().endsWith("/role/TBOWNER")){
+    if(request.getRequestURI().endsWith("/role/FEDERATION_ADMIN") || request.getRequestURI().endsWith("/role/CLASSOWNER") || request.getRequestURI().endsWith("/role/NODE_ADMIN")){
       return true;
     }
     return false;
   }
   
-  private Boolean requiresTBOwnerRights(HttpServletRequest request) {
+  private Boolean requiresClassOwnerRights(HttpServletRequest request) {
     if(request.getRequestURI().endsWith("/api/user/")){
       return true;
     }
