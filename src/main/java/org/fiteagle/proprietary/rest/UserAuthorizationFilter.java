@@ -2,6 +2,7 @@ package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
 
+import javax.ejb.EJBException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -18,6 +19,8 @@ import javax.ws.rs.core.Response;
 import org.fiteagle.api.usermanagement.PolicyEnforcementPoint;
 import org.fiteagle.api.usermanagement.User.Role;
 import org.fiteagle.api.usermanagement.UserManager;
+import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
 
 public class UserAuthorizationFilter implements Filter {
 
@@ -46,8 +49,14 @@ public class UserAuthorizationFilter implements Filter {
     String resourceUsername = (String) request.getAttribute(UserAuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
     String action = (String) request.getAttribute(UserAuthenticationFilter.ACTION_ATTRIBUTE);
     Role role = Role.USER;
-    if(subjectUsername != null){
-      role = manager.get(subjectUsername).getRole();
+    if(subjectUsername != null && !action.equals("PUT")){
+      try {
+        role = manager.get(subjectUsername).getRole();
+      } catch (EJBException e) {
+        if(e.getCausedByException() instanceof UserNotFoundException){
+          throw new FiteagleWebApplicationException(404, e.getMessage());
+        }
+      }
     }
     Boolean isAuthenticated = (Boolean) request.getAttribute(UserAuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
     Boolean requiresAdminRights = requiresAdminRights(request);
