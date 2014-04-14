@@ -20,7 +20,6 @@ import org.fiteagle.api.usermanagement.PolicyEnforcementPoint;
 import org.fiteagle.api.usermanagement.User.Role;
 import org.fiteagle.api.usermanagement.UserManager;
 import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
-import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
 
 public class UserAuthorizationFilter implements Filter {
 
@@ -54,7 +53,8 @@ public class UserAuthorizationFilter implements Filter {
         role = manager.get(subjectUsername).getRole();
       } catch (EJBException e) {
         if(e.getCausedByException() instanceof UserNotFoundException){
-          throw new FiteagleWebApplicationException(404, e.getMessage());
+          response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+          return;
         }
       }
     }
