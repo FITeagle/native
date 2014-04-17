@@ -44,6 +44,11 @@ public class UserAuthorizationFilter implements Filter {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) resp;
     
+    if(request.getRequestURI().contains("/class/")){
+      chain.doFilter(request, response);
+      return;
+    }
+    
     String subjectUsername = (String) request.getAttribute(UserAuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
     String resourceUsername = (String) request.getAttribute(UserAuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
     String action = (String) request.getAttribute(UserAuthenticationFilter.ACTION_ATTRIBUTE);

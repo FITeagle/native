@@ -103,6 +103,10 @@ public class UserAuthenticationFilter implements Filter{
 //      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
 //      return;   
 //    }
+    if(request.getRequestURI().contains("/class/")){
+      chain.doFilter(request, response);
+      return;
+    }
     
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
     request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
