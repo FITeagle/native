@@ -248,6 +248,13 @@ public class UserPresenter{
   }
   
   @GET
+  @Path("{username}/ownedclasses")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<org.fiteagle.api.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username){
+    return manager.getAllClassesOwnedByUser(username);
+  }
+  
+  @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
   public List<User> getAllUsers(){

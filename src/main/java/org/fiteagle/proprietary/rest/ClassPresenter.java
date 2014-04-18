@@ -70,7 +70,7 @@ private UserManager manager;
 //    } catch(NotEnoughAttributesException | InValidAttributeException e){
 //        throw new FiteagleWebApplicationException(422, e.getMessage());
 //    }
-    long id = manager.add(targetClass).getId();
+    long id = manager.addClass(targetClass.getOwner().getUsername(), targetClass).getId();
     return id;
   }
   
