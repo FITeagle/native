@@ -105,6 +105,23 @@ private UserManager manager;
     return Response.status(200).build();
   }
   
+  
+  @DELETE
+  @Path("{id}/participant/{username}")
+  public Response deleteParticipant(@PathParam("id") long id, @PathParam("username") String username) {    
+    try{
+      manager.removeParticipant(id, username);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof CourseNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+    }
+    
+    return Response.status(200).build();
+  }
 
   
   
