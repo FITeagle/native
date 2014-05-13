@@ -12,7 +12,7 @@ function getRootUri() {
 function writeToScreen(message) {
 	var pre = document.createElement("p");
 	pre.style.wordWrap = "break-word";
-	pre.innerHTML = message.replace(/\n/g, "<br />");
+	pre.innerHTML = message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, "<br />");
 
 	output.appendChild(pre);
 }
