@@ -16,10 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.usermanagement.PolicyEnforcementPoint;
-import org.fiteagle.api.usermanagement.User.Role;
-import org.fiteagle.api.usermanagement.UserManager;
-import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
+import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 
 public class UserAuthorizationFilter implements Filter {
 

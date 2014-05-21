@@ -26,17 +26,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.usermanagement.User;
-import org.fiteagle.api.usermanagement.User.Role;
-import org.fiteagle.api.usermanagement.UserManager;
-import org.fiteagle.api.usermanagement.UserPublicKey;
-import org.fiteagle.api.usermanagement.User.InValidAttributeException;
-import org.fiteagle.api.usermanagement.User.NotEnoughAttributesException;
-import org.fiteagle.api.usermanagement.User.PublicKeyNotFoundException;
-import org.fiteagle.api.usermanagement.UserManager.DuplicateEmailException;
-import org.fiteagle.api.usermanagement.UserManager.DuplicatePublicKeyException;
-import org.fiteagle.api.usermanagement.UserManager.DuplicateUsernameException;
-import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.api.core.usermanagement.User;
+import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.UserPublicKey;
+import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
+import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
+import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
+import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
+import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
+import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
+import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 
@@ -243,14 +243,14 @@ public class UserPresenter{
   @GET
   @Path("{username}/classes")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username){
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username){
     return manager.getAllClassesFromUser(username);
   }
   
   @GET
   @Path("{username}/ownedclasses")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username){
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username){
     return manager.getAllClassesOwnedByUser(username);
   }
   

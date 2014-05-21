@@ -24,10 +24,10 @@ import javax.xml.bind.DatatypeConverter;
 
 import net.iharder.Base64;
 
-import org.fiteagle.api.usermanagement.User;
-import org.fiteagle.api.usermanagement.User.Role;
-import org.fiteagle.api.usermanagement.UserManager;
-import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.api.core.usermanagement.User;
+import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

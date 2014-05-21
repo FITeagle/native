@@ -17,10 +17,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.usermanagement.Class;
-import org.fiteagle.api.usermanagement.UserManager;
-import org.fiteagle.api.usermanagement.UserManager.CourseNotFoundException;
-import org.fiteagle.api.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.api.core.usermanagement.Class;
+import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.UserManager.CourseNotFoundException;
+import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
 
 @Path("/class")
