@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class UserAuthenticationFilter implements Filter{
+public class AuthenticationFilter implements Filter{
 
   public final static String COOKIE_NAME = "fiteagle_user_cookie";
   protected final static String SUBJECT_USERNAME_ATTRIBUTE = "subjectUsername";
@@ -43,15 +43,15 @@ public class UserAuthenticationFilter implements Filter{
   
   private Logger log = LoggerFactory.getLogger(getClass());
   
-  public UserAuthenticationFilter(UserManager manager){
+  public AuthenticationFilter(UserManager manager){
     this.manager = manager;
   }
   
-  public UserAuthenticationFilter(){};
+  public AuthenticationFilter(){};
  
   private UserManager manager;
   
-  private static UserAuthenticationFilter instance;
+  private static AuthenticationFilter instance;
   
   protected HashMap<String, Cookie> cookies = new HashMap<>();
   
@@ -86,7 +86,7 @@ public class UserAuthenticationFilter implements Filter{
     return false;
   }
   
-  public static UserAuthenticationFilter getInstance(){
+  public static AuthenticationFilter getInstance(){
     return instance;
   }
   

@@ -16,28 +16,25 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
-import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 
-public class UserAuthorizationFilter implements Filter {
+public class ClassAuthorizationFilter implements Filter{
 
-  private PolicyEnforcementPoint policyEnforcementPoint;
   private UserManager manager;
-
+  
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
     Context context;
     try {
       context = new InitialContext();
       manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
-      policyEnforcementPoint = (PolicyEnforcementPoint) context.lookup("java:global/usermanagement/FiteaglePolicyEnforcementPoint!org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint");
     } catch (NamingException e) {
       e.printStackTrace();
     }
   }
-  
+
   @Override
   public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException,
       ServletException {
@@ -45,10 +42,13 @@ public class UserAuthorizationFilter implements Filter {
     HttpServletResponse response = (HttpServletResponse) resp;
     
     String subjectUsername = (String) request.getAttribute(AuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
-    String resourceUsername = (String) request.getAttribute(AuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
     String action = (String) request.getAttribute(AuthenticationFilter.ACTION_ATTRIBUTE);
     Role role = Role.STUDENT;
-    if(subjectUsername != null && !action.equals("PUT")){
+    if(!action.equals("GET")){
+      if(subjectUsername == null){
+        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+        return;
+      }
       try {
         role = manager.get(subjectUsername).getRole();
       } catch (EJBException e) {
@@ -57,42 +57,17 @@ public class UserAuthorizationFilter implements Filter {
           return;
         }
       }
-    }
-    Boolean isAuthenticated = (Boolean) request.getAttribute(AuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
-    Boolean requiresAdminRights = requiresAdminRights(request);
-    Boolean requiresTBOwnerRights = requiresClassOwnerRights(request);
-    
-    if(!policyEnforcementPoint.isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), isAuthenticated, requiresAdminRights, requiresTBOwnerRights)){
-      if(isAuthenticated){
+      if(role.equals(Role.STUDENT)){
         response.sendError(Response.Status.FORBIDDEN.getStatusCode());
+        return;
       }
-      else{
-        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-      }
-      return; 
     }
     
     chain.doFilter(request, response);
   }
 
-  private Boolean requiresAdminRights(HttpServletRequest request) {
-    if(request.getRequestURI().endsWith("/role/FEDERATION_ADMIN") || request.getRequestURI().endsWith("/role/CLASSOWNER") || request.getRequestURI().endsWith("/role/NODE_ADMIN")){
-      return true;
-    }
-    return false;
-  }
-  
-  private Boolean requiresClassOwnerRights(HttpServletRequest request) {
-    if(request.getRequestURI().endsWith("/api/user/")){
-      return true;
-    }
-    return false;
-  }
-
   @Override
   public void destroy() {
-    
   }
-
-
+  
 }

@@ -33,6 +33,7 @@ import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
 import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager.CourseNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
@@ -236,7 +237,7 @@ public class UserPresenter{
   @DELETE
   @Path("{username}/cookie")
   public Response deleteCookie(@PathParam("username") String username){
-    UserAuthenticationFilter.getInstance().deleteCookie(username);
+    AuthenticationFilter.getInstance().deleteCookie(username);
     return Response.status(200).build();
   }
   
@@ -252,6 +253,41 @@ public class UserPresenter{
   @Produces(MediaType.APPLICATION_JSON)
   public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username){
     return manager.getAllClassesOwnedByUser(username);
+  }
+  
+  @POST
+  @Path("{username}/class/{id}")
+  public Response signUpForClass(@PathParam("username") String username, @PathParam("id") long id) {    
+    try{
+      manager.addParticipant(id, username);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof CourseNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+    }
+    
+    return Response.status(200).build();
+  }
+  
+  
+  @DELETE
+  @Path("{username}/class/{id}")
+  public Response leaveClass(@PathParam("username") String username, @PathParam("id") long id) {    
+    try{
+      manager.removeParticipant(id, username);
+    } catch(EJBException e){
+      if(e.getCausedByException() instanceof UserNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+      if(e.getCausedByException() instanceof CourseNotFoundException){
+        throw new FiteagleWebApplicationException(404, e.getMessage());
+      }
+    }
+    
+    return Response.status(200).build();
   }
   
   @GET
