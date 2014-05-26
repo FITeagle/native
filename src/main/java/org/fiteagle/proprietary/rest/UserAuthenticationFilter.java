@@ -60,7 +60,7 @@ public class UserAuthenticationFilter implements Filter{
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
+      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
     } catch (NamingException e) {
       e.printStackTrace();
     }
@@ -103,10 +103,6 @@ public class UserAuthenticationFilter implements Filter{
 //      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
 //      return;   
 //    }
-    if(request.getRequestURI().contains("/class/")){
-      chain.doFilter(request, response);
-      return;
-    }
     
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
     request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
@@ -270,9 +266,6 @@ public class UserAuthenticationFilter implements Filter{
   protected String getTarget(HttpServletRequest request) {
     String path = request.getRequestURI();
     String target = getTargetNameFromURI(path, "user");
-    if(target == null){
-      return "";
-    }
     return addDomain(target);
   } 
   
@@ -295,7 +288,7 @@ public class UserAuthenticationFilter implements Filter{
         return splitted[i+1];
       }
     }
-    return null;
+    return "";
   }
   
   protected String createRandomAuthToken(String postfix) {

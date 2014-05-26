@@ -30,7 +30,7 @@ private UserManager manager;
   
   public ClassPresenter() throws NamingException{
     final Context context = new InitialContext();
-    manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
+    manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
   }
   
   @GET
@@ -52,24 +52,6 @@ private UserManager manager;
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
   public long add(Class targetClass) {
-//    try {
-      
-//    } catch(EJBException e){
-//      if(e.getCausedByException() instanceof DuplicateUsernameException){
-//      throw new FiteagleWebApplicationException(409, e.getMessage());
-//      }
-//      else if(e.getCausedByException() instanceof DuplicateEmailException){
-//        throw new FiteagleWebApplicationException(409, e.getMessage());
-//      }
-//      else if(e.getCausedByException() instanceof DuplicatePublicKeyException){
-//        throw new FiteagleWebApplicationException(409, e.getMessage());
-//      }
-//      if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
-//        throw new FiteagleWebApplicationException(422, e.getMessage());
-//      }
-//    } catch(NotEnoughAttributesException | InValidAttributeException e){
-//        throw new FiteagleWebApplicationException(422, e.getMessage());
-//    }
     long id = manager.addClass(targetClass.getOwner().getUsername(), targetClass).getId();
     return id;
   }

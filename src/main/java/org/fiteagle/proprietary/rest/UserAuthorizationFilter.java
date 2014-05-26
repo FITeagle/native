@@ -31,8 +31,8 @@ public class UserAuthorizationFilter implements Filter {
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.usermanagement.UserManager");
-      policyEnforcementPoint = (PolicyEnforcementPoint) context.lookup("java:global/usermanagement/FiteaglePolicyEnforcementPoint!org.fiteagle.api.usermanagement.PolicyEnforcementPoint");
+      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+      policyEnforcementPoint = (PolicyEnforcementPoint) context.lookup("java:global/usermanagement/FiteaglePolicyEnforcementPoint!org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint");
     } catch (NamingException e) {
       e.printStackTrace();
     }
@@ -43,11 +43,6 @@ public class UserAuthorizationFilter implements Filter {
       ServletException {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) resp;
-    
-    if(request.getRequestURI().contains("/class/")){
-      chain.doFilter(request, response);
-      return;
-    }
     
     String subjectUsername = (String) request.getAttribute(UserAuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
     String resourceUsername = (String) request.getAttribute(UserAuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
