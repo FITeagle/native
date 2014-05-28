@@ -39,6 +39,7 @@ import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyExcept
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
+import org.fiteagle.core.aaa.authentication.PasswordUtil;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 
 
@@ -307,7 +308,8 @@ public class UserPresenter{
 
   private User createUser(NewUser newUser){
     List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
-    return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getPassword(), publicKeys);     
+    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
+    return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);     
   }
   
   private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {

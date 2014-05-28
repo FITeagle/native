@@ -28,6 +28,7 @@ import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.User.Role;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.core.aaa.authentication.PasswordUtil;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +73,8 @@ public class AuthenticationFilter implements Filter{
   
   private void createFirstAdminUser() {
     log.info("Creating First Admin User");
-    User admin = User.createAdminUser("admin", "admin");
+    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt("admin");
+    User admin = User.createAdminUser("admin", passwordHashAndSalt[0], passwordHashAndSalt[1]);
     manager.add(admin);
   }
   
