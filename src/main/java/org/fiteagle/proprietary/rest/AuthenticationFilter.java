@@ -3,7 +3,6 @@ package org.fiteagle.proprietary.rest;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import javax.ejb.EJBException;
@@ -24,11 +23,8 @@ import javax.xml.bind.DatatypeConverter;
 
 import net.iharder.Base64;
 
-import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.api.core.usermanagement.User.Role;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
-import org.fiteagle.core.aaa.authentication.PasswordUtil;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,33 +57,13 @@ public class AuthenticationFilter implements Filter{
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+      manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
     } catch (NamingException e) {
       e.printStackTrace();
     }
-    if(!databaseContainsAdminUser()){
-      createFirstAdminUser();
-    }
     instance = this;
   }
-  
-  private void createFirstAdminUser() {
-    log.info("Creating First Admin User");
-    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt("admin");
-    User admin = User.createAdminUser("admin", passwordHashAndSalt[0], passwordHashAndSalt[1]);
-    manager.add(admin);
-  }
-  
-  private boolean databaseContainsAdminUser() {
-    List<User> users = manager.getAllUsers();
-    for (User u : users) {
-      if (u.getRole().equals(Role.FEDERATION_ADMIN)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  
+
   public static AuthenticationFilter getInstance(){
     return instance;
   }

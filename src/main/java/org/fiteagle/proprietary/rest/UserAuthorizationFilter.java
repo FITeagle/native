@@ -31,7 +31,7 @@ public class UserAuthorizationFilter implements Filter {
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+      manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
       policyEnforcementPoint = (PolicyEnforcementPoint) context.lookup("java:global/usermanagement/FiteaglePolicyEnforcementPoint!org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint");
     } catch (NamingException e) {
       e.printStackTrace();

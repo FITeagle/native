@@ -29,7 +29,7 @@ public class ClassAuthorizationFilter implements Filter{
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+      manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
     } catch (NamingException e) {
       e.printStackTrace();
     }

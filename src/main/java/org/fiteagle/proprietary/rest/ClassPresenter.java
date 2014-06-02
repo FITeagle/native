@@ -28,7 +28,7 @@ private UserManager manager;
   
   public ClassPresenter() throws NamingException{
     final Context context = new InitialContext();
-    manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+    manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
   }
   
   @GET

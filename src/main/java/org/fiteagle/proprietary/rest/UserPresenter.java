@@ -2,14 +2,22 @@ package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import javax.annotation.Resource;
 import javax.ejb.EJBException;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Topic;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -26,21 +34,25 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.User;
-import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.api.core.usermanagement.UserPublicKey;
 import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
 import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.UserManager.CourseNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.api.core.usermanagement.UserPublicKey;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
-import org.fiteagle.core.aaa.authentication.PasswordUtil;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
+import org.fiteagle.core.aaa.authentication.PasswordUtil;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 
 @Path("/user")
@@ -48,9 +60,14 @@ public class UserPresenter{
   
   private UserManager manager;
   
+  @Inject
+  private JMSContext context;
+  @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
+  private Topic topic;
+  
   public UserPresenter() throws NamingException{
     final Context context = new InitialContext();
-    manager = (UserManager) context.lookup("java:global/usermanagement/JPAUserManager!org.fiteagle.api.core.usermanagement.UserManager");
+    manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
   }
   
   @GET
@@ -294,8 +311,31 @@ public class UserPresenter{
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<User> getAllUsers(){
-    return manager.getAllUsers();
+  public List<User> getAllUsers() throws JMSException{
+    final String filter = sendMessage(UserManager.GET_ALL_USERS);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    if(rcvMessage != null){
+      String resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
+      Type listType = new TypeToken<ArrayList<User>>() {}.getType();
+      return new Gson().fromJson(resultJSON, listType);
+    }
+    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+  }
+  
+  private String sendMessage(String messageName){
+    Message message = context.createMessage();
+    String filter = "";
+    try {
+      message.setStringProperty(IMessageBus.TYPE_REQUEST, messageName);
+      message.setJMSCorrelationID(UUID.randomUUID().toString());
+      filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
+    } catch (JMSException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    context.createProducer().send(topic, message);
+    return filter;
   }
   
   private String decode(String string){    
