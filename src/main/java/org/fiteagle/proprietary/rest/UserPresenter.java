@@ -62,7 +62,7 @@ public class UserPresenter{
   
   @Inject
   private JMSContext context;
-  @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
+  @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
   private Topic topic;
   
   public UserPresenter() throws NamingException{
@@ -74,6 +74,19 @@ public class UserPresenter{
   @Path("{username}")
   @Produces(MediaType.APPLICATION_JSON)
   public User get(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
+//    final String filter = sendMessage(UserManager.GET_USER);
+//    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+//    if(rcvMessage != null){
+//      String resultJSON;
+//      try {
+//        resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
+//      } catch (JMSException e) {
+//        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+//      }
+//      return new Gson().fromJson(resultJSON, User.class);
+//    }
+//    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+//    
 	try {
       return manager.get(username);
     } catch (EJBException e) {
@@ -331,8 +344,7 @@ public class UserPresenter{
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
     } catch (JMSException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
     }
     context.createProducer().send(topic, message);
     return filter;
