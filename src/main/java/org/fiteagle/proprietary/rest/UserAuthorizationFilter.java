@@ -50,7 +50,7 @@ public class UserAuthorizationFilter implements Filter {
     Role role = Role.STUDENT;
     if(subjectUsername != null && !action.equals("PUT")){
       try {
-        role = manager.get(subjectUsername).getRole();
+        role = manager.getUser(subjectUsername).getRole();
       } catch (EJBException e) {
         if(e.getCausedByException() instanceof UserNotFoundException){
           response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());

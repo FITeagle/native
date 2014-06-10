@@ -73,31 +73,31 @@ public class UserPresenter{
   @GET
   @Path("{username}")
   @Produces(MediaType.APPLICATION_JSON)
-  public User get(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) {
-//    final String filter = sendMessage(UserManager.GET_USER);
-//    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
-//    if(rcvMessage != null){
-//      String resultJSON;
-//      try {
-//        resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
-//      } catch (JMSException e) {
-//        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
-//      }
-//      return new Gson().fromJson(resultJSON, User.class);
-//    }
-//    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
-//    
-	try {
-      return manager.get(username);
-    } catch (EJBException e) {
-    	if(e.getCausedByException() instanceof UserNotFoundException){
-    	  throw new FiteagleWebApplicationException(404, e.getMessage());
-    	}
-    	return null;
-//    } catch (DatabaseException e) {
-//      log.error(e.getMessage());
-//      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-    }   
+  public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException {
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
+    message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.GET_USER);
+    final String filter = sendMessage(message);
+    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    if(rcvMessage != null){
+      String resultJSON;
+      try {
+        String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+        if(exceptionMessage != null){
+          if(exceptionMessage.startsWith(UserNotFoundException.class.getName())){
+            throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
+          }
+          else{
+            throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);
+          }
+        }
+        resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
+      } catch (JMSException e) {
+        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+      }
+      return new Gson().fromJson(resultJSON, User.class);
+    }
+    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
   }
   
   @PUT
@@ -325,7 +325,9 @@ public class UserPresenter{
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
   public List<User> getAllUsers() throws JMSException{
-    final String filter = sendMessage(UserManager.GET_ALL_USERS);
+    Message message = context.createMessage();
+    message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.GET_ALL_USERS);
+    final String filter = sendMessage(message);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
     if(rcvMessage != null){
@@ -336,11 +338,10 @@ public class UserPresenter{
     throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
   }
   
-  private String sendMessage(String messageName){
-    Message message = context.createMessage();
+  private String sendMessage(Message message){
+    
     String filter = "";
     try {
-      message.setStringProperty(IMessageBus.TYPE_REQUEST, messageName);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
     } catch (JMSException e) {
