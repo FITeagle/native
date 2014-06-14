@@ -76,53 +76,26 @@ public class UserPresenter{
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
-    message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.GET_USER);
-    final String filter = sendMessage(message);
+    final String filter = sendMessage(message, UserManager.GET_USER);
+    
     Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
-    if(rcvMessage != null){
-      String resultJSON;
-      try {
-        String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
-        if(exceptionMessage != null){
-          if(exceptionMessage.startsWith(UserNotFoundException.class.getName())){
-            throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
-          }
-          else{
-            throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);
-          }
-        }
-        resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
-      } catch (JMSException e) {
-        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
-      }
-      return new Gson().fromJson(resultJSON, User.class);
-    }
-    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+    checkForExceptions(rcvMessage);
+    String resultJSON = getResultString(rcvMessage);
+    return new Gson().fromJson(resultJSON, User.class);
   }
   
   @PUT
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response add(@PathParam("username") String username, NewUser user) {
+  public Response add(@PathParam("username") String username, NewUser user) throws JMSException {
     user.setUsername(username);
-    try {
-      manager.add(createUser(user));
-    } catch(EJBException e){
-    	if(e.getCausedByException() instanceof DuplicateUsernameException){
-		  throw new FiteagleWebApplicationException(409, e.getMessage());
-    	}
-    	else if(e.getCausedByException() instanceof DuplicateEmailException){
-    	  throw new FiteagleWebApplicationException(409, e.getMessage());
-    	}
-    	else if(e.getCausedByException() instanceof DuplicatePublicKeyException){
-    	  throw new FiteagleWebApplicationException(409, e.getMessage());
-    	}
-    	if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
-    } catch(NotEnoughAttributesException | InValidAttributeException e){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-    }
+    Message message = context.createMessage();
+    String userJSON = new Gson().toJson(createUser(user));
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
+    final String filter = sendMessage(message, UserManager.ADD_USER);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    checkForExceptions(rcvMessage);
     return Response.status(201).build();
   }
 
@@ -326,22 +299,19 @@ public class UserPresenter{
   @Produces(MediaType.APPLICATION_JSON)
   public List<User> getAllUsers() throws JMSException{
     Message message = context.createMessage();
-    message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.GET_ALL_USERS);
-    final String filter = sendMessage(message);
+    final String filter = sendMessage(message, UserManager.GET_ALL_USERS);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
-    if(rcvMessage != null){
-      String resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
-      Type listType = new TypeToken<ArrayList<User>>() {}.getType();
-      return new Gson().fromJson(resultJSON, listType);
-    }
-    throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+    checkForExceptions(rcvMessage);
+    String resultJSON = getResultString(rcvMessage);
+    Type listType = new TypeToken<ArrayList<User>>() {}.getType();
+    return new Gson().fromJson(resultJSON, listType);
   }
   
-  private String sendMessage(Message message){
-    
+  private String sendMessage(Message message, String requestType){
     String filter = "";
     try {
+      message.setStringProperty(IMessageBus.TYPE_REQUEST, requestType);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
     } catch (JMSException e) {
@@ -349,6 +319,50 @@ public class UserPresenter{
     }
     context.createProducer().send(topic, message);
     return filter;
+  }
+  
+  private String getResultString(Message message){
+    String result;    
+    try {        
+      result = message.getStringProperty(IMessageBus.TYPE_RESULT);
+    } catch (JMSException e) {
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+    }
+    return result;
+  }
+  
+  private void checkForExceptions(Message message){
+    if(message == null){
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+    }
+    try {
+      String exceptionMessage = message.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+      if(exceptionMessage != null){
+        if(exceptionMessage.startsWith(UserNotFoundException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(DuplicateUsernameException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.CONFLICT.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(DuplicateEmailException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.CONFLICT.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(DuplicatePublicKeyException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.CONFLICT.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(InValidAttributeException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(422, exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(NotEnoughAttributesException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(422, exceptionMessage);    
+        }
+        else{
+          throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);
+        }
+      }
+    } catch (JMSException e) {
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+    }
   }
   
   private String decode(String string){    
@@ -362,7 +376,13 @@ public class UserPresenter{
   private User createUser(NewUser newUser){
     List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
-    return new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);     
+    User user = null;
+    try{
+      user = new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
+    } catch(NotEnoughAttributesException | InValidAttributeException e){
+       throw new FiteagleWebApplicationException(422, e.getMessage());
+    }
+    return user;     
   }
   
   private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {
