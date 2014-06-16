@@ -1,8 +1,14 @@
 package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
+import java.util.UUID;
 
-import javax.ejb.EJBException;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Topic;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -16,22 +22,30 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
+import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.User.Role;
-import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
+import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
+
+import com.google.gson.Gson;
 
 public class UserAuthorizationFilter implements Filter {
 
   private PolicyEnforcementPoint policyEnforcementPoint;
-  private UserManager manager;
+  
+  @Inject
+  private JMSContext context;
+  @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
+  private Topic topic;
+  private final static int TIMEOUT_TIME_MS = 4000;
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
     Context context;
     try {
       context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
       policyEnforcementPoint = (PolicyEnforcementPoint) context.lookup("java:global/usermanagement/FiteaglePolicyEnforcementPoint!org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint");
     } catch (NamingException e) {
       e.printStackTrace();
@@ -50,12 +64,10 @@ public class UserAuthorizationFilter implements Filter {
     Role role = Role.STUDENT;
     if(subjectUsername != null && !action.equals("PUT")){
       try {
-        role = manager.getUser(subjectUsername).getRole();
-      } catch (EJBException e) {
-        if(e.getCausedByException() instanceof UserNotFoundException){
-          response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-          return;
-        }
+        role = getRole(subjectUsername);
+      } catch (Exception e) {
+        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+        return;
       }
     }
     Boolean isAuthenticated = (Boolean) request.getAttribute(AuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
@@ -75,6 +87,32 @@ public class UserAuthorizationFilter implements Filter {
     chain.doFilter(request, response);
   }
 
+  private Role getRole(String username){
+    try{
+      Message message = context.createMessage();
+      message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
+      message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.GET_USER);
+      message.setJMSCorrelationID(UUID.randomUUID().toString());
+      String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
+      context.createProducer().send(topic, message);
+      
+      Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+      
+      if(rcvMessage == null){
+        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+      }
+      String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+      if(exceptionMessage != null){
+        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);    
+      }
+      String resultJSON = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
+      User user =  new Gson().fromJson(resultJSON, User.class);
+      return user.getRole();
+    }catch(JMSException e) {
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+    }
+  }
+  
   private Boolean requiresAdminRights(HttpServletRequest request) {
     if(request.getRequestURI().endsWith("/role/FEDERATION_ADMIN") || request.getRequestURI().endsWith("/role/CLASSOWNER") || request.getRequestURI().endsWith("/role/NODE_ADMIN")){
       return true;

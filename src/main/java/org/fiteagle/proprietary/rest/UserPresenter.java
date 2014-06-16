@@ -12,15 +12,11 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Resource;
-import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Topic;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -41,7 +37,7 @@ import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
 import org.fiteagle.api.core.usermanagement.User.Role;
 import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.api.core.usermanagement.UserManager.CourseNotFoundException;
+import org.fiteagle.api.core.usermanagement.UserManager.FiteagleClassNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
@@ -58,16 +54,14 @@ import com.google.gson.reflect.TypeToken;
 @Path("/user")
 public class UserPresenter{
   
-  private UserManager manager;
-  
   @Inject
   private JMSContext context;
   @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
   private Topic topic;
   
-  public UserPresenter() throws NamingException{
-    final Context context = new InitialContext();
-    manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
+  private final static int TIMEOUT_TIME_MS = 4000;
+  
+  public UserPresenter() {
   }
   
   @GET
@@ -78,7 +72,7 @@ public class UserPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
     final String filter = sendMessage(message, UserManager.GET_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
     return new Gson().fromJson(resultJSON, User.class);
@@ -94,7 +88,7 @@ public class UserPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
     final String filter = sendMessage(message, UserManager.ADD_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(201).build();
   }
@@ -102,140 +96,125 @@ public class UserPresenter{
   @POST
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response update(@PathParam("username") String username, NewUser user) {
-    try {
-      List<UserPublicKey> publicKeys = createPublicKeys(user.getPublicKeys());  
-      manager.update(username, user.getFirstName(), user.getLastName(), user.getEmail(), user.getAffiliation(), user.getPassword(), publicKeys);
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof DuplicateEmailException){
-        throw new FiteagleWebApplicationException(409, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
-        throw new FiteagleWebApplicationException(409, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
-    } catch(NotEnoughAttributesException | InValidAttributeException e){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-    }
+  public Response update(@PathParam("username") String username, NewUser user) throws JMSException {
+    String pubKeysJSON = new Gson().toJson(createPublicKeys(user.getPublicKeys()));
+    Message message = context.createMessage();
+    
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
+    message.setStringProperty(UserManager.TYPE_PARAMETER_FIRSTNAME, user.getFirstName());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_LASTNAME, user.getLastName());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_EMAIL, user.getEmail());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_AFFILIATION, user.getAffiliation());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.getPassword());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEYS, pubKeysJSON);
+    
+    final String filter = sendMessage(message, UserManager.UPDATE_USER);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
 
   @POST
   @Path("{username}/role/{role}")
-  public Response setRole(@PathParam("username") String username, @PathParam("role") Role role) {
-    try {
-      manager.setRole(username, role);
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-    }
+  public Response setRole(@PathParam("username") String username, @PathParam("role") Role role) throws JMSException {
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
+    message.setStringProperty(UserManager.TYPE_PARAMETER_ROLE, role.toString());
+    final String filter = sendMessage(message, UserManager.SET_ROLE);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   @POST
   @Path("{username}/pubkey/")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response addPublicKey(@PathParam("username") String username, NewPublicKey pubkey) {    
+  public Response addPublicKey(@PathParam("username") String username, NewPublicKey pubkey) throws JMSException {    
+    Message message = context.createMessage();
     PublicKey key;
     try {
       key = KeyManagement.getInstance().decodePublicKey(pubkey.getPublicKeyString());
-    } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e1) {
-      throw new FiteagleWebApplicationException(422, e1.getMessage());
-    }
-  
-    try {
-      manager.addKey(username, new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
-        throw new FiteagleWebApplicationException(409, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof InValidAttributeException || e.getCausedByException() instanceof NotEnoughAttributesException || e.getCausedByException() instanceof CouldNotParse){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
-    } catch(NotEnoughAttributesException | InValidAttributeException | CouldNotParse e){
+    } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
       throw new FiteagleWebApplicationException(422, e.getMessage());
     }
+    String pubKeyJSON = new Gson().toJson(new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));  
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY, pubKeyJSON);
+    final String filter = sendMessage(message, UserManager.ADD_PUBLIC_KEY);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   @DELETE
   @Path("{username}/pubkey/{description}")
-  public Response deletePublicKey(@PathParam("username") String username, @PathParam("description") String description) {
-    try {
-      manager.deleteKey(username, decode(description));
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof InValidAttributeException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
-    } catch(InValidAttributeException e){
-      throw new FiteagleWebApplicationException(422, e.getMessage());
-    }
+  public Response deletePublicKey(@PathParam("username") String username, @PathParam("description") String description) throws JMSException {
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));
+    final String filter = sendMessage(message, UserManager.DELETE_PUBLIC_KEY);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   @POST
   @Path("{username}/pubkey/{description}/description")
   @Consumes(MediaType.TEXT_PLAIN)
-  public Response renamePublicKey(@PathParam("username") String username, @PathParam("description") String description, String newDescription) {    
-    try {
-      manager.renameKey(username, decode(description), newDescription);
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException || e.getCausedByException() instanceof PublicKeyNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof DuplicatePublicKeyException){
-        throw new FiteagleWebApplicationException(409, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof InValidAttributeException){
-        throw new FiteagleWebApplicationException(422, e.getMessage());
-      }
-    } catch(InValidAttributeException e){
-      throw new FiteagleWebApplicationException(422, e.getMessage());
-    }
+  public Response renamePublicKey(@PathParam("username") String username, @PathParam("description") String description, String newDescription) throws JMSException {    
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION_NEW, decode(newDescription));
+    final String filter = sendMessage(message, UserManager.RENAME_PUBLIC_KEY);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   @DELETE
   @Path("{username}")
-  public Response delete(@PathParam("username") String username) {
-    manager.delete(username);
+  public Response delete(@PathParam("username") String username) throws JMSException {
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    final String filter = sendMessage(message, UserManager.DELETE_USER);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   @POST
   @Path("{username}/certificate")
   @Consumes(MediaType.TEXT_PLAIN)
-  public String createUserCertAndPrivateKey(@PathParam("username") String username, String passphrase) {  
-    try {      
-      return manager.createUserKeyPairAndCertificate(username, decode(passphrase));
-    } catch (Exception e) {
-      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-    }    
+  public String createUserCertAndPrivateKey(@PathParam("username") String username, String passphrase) throws JMSException {  
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSPHRASE, decode(passphrase));      
+    final String filter = sendMessage(message, UserManager.CREATE_USER_CERT_AND_PRIVATE_KEY);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    return getResultString(rcvMessage);
   }
   
   @GET
   @Path("{username}/pubkey/{description}/certificate")
   @Produces(MediaType.TEXT_PLAIN)
-  public String getUserCertificateForPublicKey(@PathParam("username") String username, @PathParam("description") String description) {
-    try {
-      return manager.createUserCertificateForPublicKey(username, decode(description));
-    } catch (PublicKeyNotFoundException e){
-      throw new FiteagleWebApplicationException(404, e.getMessage());
-    } catch (Exception e) {
-      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-    }    
+  public String getUserCertificateForPublicKey(@PathParam("username") String username, @PathParam("description") String description) throws JMSException {
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));      
+    final String filter = sendMessage(message, UserManager.GET_USER_CERT_FOR_PUBLIC_KEY);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    return getResultString(rcvMessage);
   } 
   
   @DELETE
@@ -248,49 +227,55 @@ public class UserPresenter{
   @GET
   @Path("{username}/classes")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username){
-    return manager.getAllClassesFromUser(username);
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username) throws JMSException{
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_FROM_USER);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    Type listType = new TypeToken<ArrayList<org.fiteagle.api.core.usermanagement.Class>>() {}.getType();
+    return new Gson().fromJson(getResultString(rcvMessage), listType);
   }
   
   @GET
   @Path("{username}/ownedclasses")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username){
-    return manager.getAllClassesOwnedByUser(username);
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username) throws JMSException{
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
+    final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_OWNED_BY_USER);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    Type listType = new TypeToken<ArrayList<org.fiteagle.api.core.usermanagement.Class>>() {}.getType();
+    return new Gson().fromJson(getResultString(rcvMessage), listType);
   }
   
   @POST
   @Path("{username}/class/{id}")
-  public Response signUpForClass(@PathParam("username") String username, @PathParam("id") long id) {    
-    try{
-      manager.addParticipant(id, username);
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof CourseNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-    }
+  public Response signUpForClass(@PathParam("username") String username, @PathParam("id") long id) throws JMSException {    
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);   
+    message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id); 
+    final String filter = sendMessage(message, UserManager.SIGN_UP_FOR_CLASS);
     
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
   
   @DELETE
   @Path("{username}/class/{id}")
-  public Response leaveClass(@PathParam("username") String username, @PathParam("id") long id) {    
-    try{
-      manager.removeParticipant(id, username);
-    } catch(EJBException e){
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-      if(e.getCausedByException() instanceof CourseNotFoundException){
-        throw new FiteagleWebApplicationException(404, e.getMessage());
-      }
-    }
+  public Response leaveClass(@PathParam("username") String username, @PathParam("id") long id) throws JMSException {    
+    Message message = context.createMessage();
+    message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);   
+    message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id); 
+    final String filter = sendMessage(message, UserManager.LEAVE_CLASS);
     
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
   
@@ -301,12 +286,13 @@ public class UserPresenter{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_USERS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(2000);
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
     Type listType = new TypeToken<ArrayList<User>>() {}.getType();
     return new Gson().fromJson(resultJSON, listType);
   }
+  
   
   private String sendMessage(Message message, String requestType){
     String filter = "";
@@ -339,6 +325,12 @@ public class UserPresenter{
       String exceptionMessage = message.getStringProperty(IMessageBus.TYPE_EXCEPTION);
       if(exceptionMessage != null){
         if(exceptionMessage.startsWith(UserNotFoundException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(PublicKeyNotFoundException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
+        }
+        if(exceptionMessage.startsWith(FiteagleClassNotFoundException.class.getSimpleName())){
           throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
         }
         if(exceptionMessage.startsWith(DuplicateUsernameException.class.getSimpleName())){

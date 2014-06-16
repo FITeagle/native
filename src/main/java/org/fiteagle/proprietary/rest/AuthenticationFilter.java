@@ -1,14 +1,15 @@
 package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.UUID;
 
-import javax.ejb.EJBException;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Topic;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -19,13 +20,15 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
 
 import net.iharder.Base64;
 
+import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
+import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,27 +43,20 @@ public class AuthenticationFilter implements Filter{
   
   private Logger log = LoggerFactory.getLogger(getClass());
   
-  public AuthenticationFilter(UserManager manager){
-    this.manager = manager;
-  }
-  
   public AuthenticationFilter(){};
  
-  private UserManager manager;
-  
   private static AuthenticationFilter instance;
+  
+  @Inject
+  private JMSContext context;
+  @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
+  private Topic topic;
+  private final static int TIMEOUT_TIME_MS = 4000;
   
   protected HashMap<String, Cookie> cookies = new HashMap<>();
   
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    Context context;
-    try {
-      context = new InitialContext();
-      manager = (UserManager) context.lookup("java:global/usermanagement/UserManagerEJB!org.fiteagle.api.core.usermanagement.UserManager");
-    } catch (NamingException e) {
-      e.printStackTrace();
-    }
     instance = this;
   }
 
@@ -172,23 +168,36 @@ public class AuthenticationFilter implements Filter{
     }
     String subjectUsername = addDomain(credentials[0]);
     
-    try {
-      if (!manager.verifyCredentials(subjectUsername, credentials[1])) {
-        return false;
-      }
-    } catch (EJBException e) {
-      if(e.getCausedByException() instanceof UserNotFoundException){
-        return false;
-      }
-    } catch (NoSuchAlgorithmException e) {
-      log.error(e.getMessage());
-      return false;
-    } catch (UserNotFoundException e) {
+    if (!verifyCredentials(subjectUsername, credentials[1])) {
       return false;
     }
-    
     request.setAttribute(SUBJECT_USERNAME_ATTRIBUTE, subjectUsername);
     return true;
+  }
+  
+  private boolean verifyCredentials(String username, String password){
+    try{
+      Message message = context.createMessage();
+      message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
+      message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, password);
+      message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.VERIFY_CREDENTIALS);
+      message.setJMSCorrelationID(UUID.randomUUID().toString());
+      String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
+      context.createProducer().send(topic, message);
+      
+      Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+      
+      if(rcvMessage == null){
+        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+      }
+      String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+      if(exceptionMessage != null){
+        return false;
+      }
+      return rcvMessage.getBooleanProperty(IMessageBus.TYPE_RESULT);
+    }catch(JMSException e) {
+      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+    }
   }
   
   private String getUsernameFromCookie(Cookie cookie){
