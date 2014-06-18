@@ -49,7 +49,7 @@ public class AuthenticationFilter implements Filter{
   
   @Inject
   private JMSContext context;
-  @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
+  @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
   private final static int TIMEOUT_TIME_MS = 4000;
   
@@ -180,6 +180,7 @@ public class AuthenticationFilter implements Filter{
       Message message = context.createMessage();
       message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
       message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, password);
+      message.setStringProperty(IMessageBus.TYPE_TARGET, UserManager.TARGET);
       message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.VERIFY_CREDENTIALS);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";

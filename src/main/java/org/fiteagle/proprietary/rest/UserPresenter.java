@@ -56,7 +56,7 @@ public class UserPresenter{
   
   @Inject
   private JMSContext context;
-  @Resource(mappedName = IMessageBus.TOPIC_USERMANAGEMENT_NAME)
+  @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
   
   private final static int TIMEOUT_TIME_MS = 4000;
@@ -298,6 +298,7 @@ public class UserPresenter{
     String filter = "";
     try {
       message.setStringProperty(IMessageBus.TYPE_REQUEST, requestType);
+      message.setStringProperty(IMessageBus.TYPE_TARGET, UserManager.TARGET);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
     } catch (JMSException e) {
