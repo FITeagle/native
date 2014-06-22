@@ -1,8 +1,5 @@
 package org.fiteagle.proprietary.rest;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class NewPublicKey{
   
   private String publicKeyString;  

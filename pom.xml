@@ -155,20 +155,17 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-server</artifactId>
-			<version>1.18</version>
+		  <groupId>org.jboss.resteasy</groupId>
+		  <artifactId>resteasy-jaxrs</artifactId>
+		  <version>3.0.8.Final</version>
+		  <scope>provided</scope>
 		</dependency>
+
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-json</artifactId>
-			<version>1.18</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>3.0-alpha-1</version>
-		</dependency>
+      <groupId>org.jboss.spec.javax.servlet</groupId>
+      <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
     
     <dependency>
       <groupId>com.google.code.gson</groupId>

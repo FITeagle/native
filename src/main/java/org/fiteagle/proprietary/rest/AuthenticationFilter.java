@@ -241,6 +241,7 @@ public class AuthenticationFilter implements Filter{
     String authToken = createRandomAuthToken("-username:"+username);
     Cookie cookie = new Cookie(COOKIE_NAME, authToken);
     cookie.setSecure(true);
+    cookie.setHttpOnly(true);
     cookie.setMaxAge(365 * 24 * 60 * 60);
     cookie.setPath("/");
     cookies.put(username, cookie);
