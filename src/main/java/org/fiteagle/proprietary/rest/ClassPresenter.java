@@ -45,7 +45,7 @@ public class ClassPresenter {
   @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
   
-  private final static int TIMEOUT_TIME_MS = 4000;
+  private final static int TIMEOUT_TIME_MS = 10000;
 
   public ClassPresenter() {
   }
