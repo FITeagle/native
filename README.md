@@ -1,17 +1,18 @@
 Native FITeagle Interfaces
 ==========================
 
+Graphical User Interface
+------------------------
+
+  http://localhost:8080/native/gui/admin
+
 Resource Repository
 -------------------
 
-0. Requirements: The 'resourcerepository' core module must be deployed.
+Requirements: The 'resourcerepository' core module must be deployed.
 
-1. List resources via Message Driven Bean
+List resources via REST API
 
-  curl http://localhost:8080/native/api/repo/mdb/resources.rdf
-  curl http://localhost:8080/native/api/repo/mdb/resources.ttl
-
-2. List resources via Enterprise Java Bean
-
-  curl http://localhost:8080/native/api/repo/ejb/resources.rdf
-  curl http://localhost:8080/native/api/repo/ejb/resources.ttl
+  curl http://localhost:8080/native/api/repo/resources.rdf
+  curl http://localhost:8080/native/api/repo/resources.ttl
+  curl http://localhost:8080/native/api/repo/resources.jsonld
