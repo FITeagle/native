@@ -1,6 +1,12 @@
 Native FITeagle Interfaces
 ==========================
 
+Installation
+------------
+
+    mvn wildfly:deploy
+
+
 Graphical User Interface
 ------------------------
 
@@ -9,7 +15,9 @@ Graphical User Interface
 Resource Repository
 -------------------
 
-Requirements: The 'resourcerepository' core module must be deployed.
+Requirements
+
+    The 'resourcerepository' core module must be deployed.
 
 List resources via REST API
 
