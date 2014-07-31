@@ -114,15 +114,25 @@
 <div style="float:right;">
 
 ID: <input id="controlInstanceNumber" value="1" type="text" size="2">
-Property: <input id="controlProperty" value="1" type="text" size="2">
-Value: <input id="controlValue" value="1" type="text" size="2">
-<input onclick="generateCont()" value="Generate TTL Control Code" type="button">
+Property: 
+<select id="controlProperty" onChange="refreshControlValueType();">
+  <option value="rpm">RPM</option>
+  <option value="maxRpm">Max RPM</option>
+  <option value="throttle">Throttle</option>
+  <option value="isDynamic">is Dynamic</option>
+</select> 
+Value: <input id="controlValueInteger" value="1" type="text" size="10">
+<select id="controlValueBoolean">
+  <option value="true">true</option>
+  <option value="false">false</option>
+</select>
+<input onclick="generateControlCode();" value="Generate TTL Control Code" type="button">
 
 <br/>
 
 <textarea id="controlInput" cols="80" rows="4"></textarea>
 
-<input onclick="wsControlInstances()" value="Control" type="button">
+<input onclick="wsControlInstances();" value="Control" type="button">
 
 </div>
 
@@ -168,6 +178,7 @@ ID: <input id="wsInstanceNumber" value="1" type="text" size="2">
     </div><!-- /#wrapper -->
 
     <!-- Bootstrap core JavaScript -->
+<script type='text/javascript' src='http://216.239.32.20/jsapi'></script>
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/adapter_admin.js"></script>

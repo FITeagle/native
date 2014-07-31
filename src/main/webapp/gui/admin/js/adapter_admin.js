@@ -1,21 +1,15 @@
 var host = "http://localhost:8080/AdapterMotor/api/";
 
-var wsUri = getRootUri() + "/AdapterMotor/websocket";
-//var restOutput;
-//var wsOutput;
 var websocket;
 
 var serialization = "TURTLE";
-//var restSerialization = "TURTLE";
-
 var currentInstanceID = 1;
 
-//var restMotors = [];
 var wsMotors = [];
 
-//google.load('visualization', '1', {
-//	packages : [ 'gauge' ]
-//});
+google.load('visualization', '1', {
+	packages : [ 'gauge' ]
+});
 
 // google.setOnLoadCallback(drawChart);
 
@@ -24,7 +18,9 @@ var wsGaugeData;
 var wsUriLogger;
 var wsUriCommand;
 
+var controlValueType = 0;
 
+var chart;
 
 function writeToScreen(message, isIncoming) {
 	var pre = document.createElement("p");
@@ -68,10 +64,11 @@ var gaugeOptions = {
 	yellowFrom : 750,
 	yellowTo : 900,
 	minorTicks : 50,
-    animation:{
-        duration: 30000,
+      animation:{
+        duration: 2000,
         easing: 'out',
-      }
+      },
+
 
 };
 
@@ -92,8 +89,6 @@ function getRootUri() {
 
 function init() {
 	output = document.getElementById("output");
-	//restOutput = document.getElementById("restOutput");
-	//wsOutput = document.getElementById("wsOutput");
 
 	wsUriLogger = getRootUri() + "/bus/api/logger";
 	websocketLogger = new WebSocket(wsUriLogger);
@@ -109,9 +104,9 @@ function init() {
 	};
 	websocketLogger.onmessage = function(evt) {
 		if(evt.data.indexOf("Event Notification:") > -1){
-			//wsRefreshInstanceGraphics(evt.data, true);
-		} else {
-			//wsRefreshInstanceGraphics(evt.data, false);
+			wsRefreshInstanceGraphics(evt.data, true);
+		} else if (evt.data.indexOf("response : listResources") > -1 && evt.data.indexOf("rdfs:label") > -1){
+			wsRefreshInstanceGraphics(evt.data, false);
 		}
 		writeToScreen(evt.data, true);
 	};
@@ -125,12 +120,16 @@ function init() {
 		writeToScreen('<span style="color: red;">Sender ERROR:</span> ' + evt.data, false);
 	};
 
-	
-	//wsGaugeData = new google.visualization.DataTable();
-	//wsGaugeData.addColumn('string', 'Motor');
-	//wsGaugeData.addColumn('number', 'RPM');
 
-	//refresGUIInstanceIDs();
+	
+	wsGaugeData = new google.visualization.DataTable();
+	wsGaugeData.addColumn('string', 'Motor');
+	wsGaugeData.addColumn('number', 'RPM');
+
+	refreshGUIInstanceIDs();
+	clearControlInput();
+
+ chart = new google.visualization.Gauge(document.getElementById('wsGraphics'));
 }
 
 function drawChart(data, element) {
@@ -146,8 +145,7 @@ function drawChart(data, element) {
 	// data.addColumn('number', 'RPM');
 	// data.addRow(['V', 200]);
 
-	var chart = new google.visualization.Gauge(document.getElementById(element));
-	chart.draw(data, gaugeOptions);
+	chart.draw(wsGaugeData, gaugeOptions);
 }
 
 
@@ -197,7 +195,7 @@ function onMessage(evt) {
 
 
 function wsRefreshInstanceGraphics(ttlString, isEvent) {
-	wsMotors = [];
+	//wsMotors = [];
 	
 	if(isEvent){
 		if(ttlString.indexOf("terminated:") > 0){
@@ -230,7 +228,6 @@ function wsRefreshInstanceGraphics(ttlString, isEvent) {
 			
 			for(var i = 0; i < wsGaugeData.getNumberOfRows(); i++){
 				if(wsGaugeData.getValue(i, 0) == instanceIdToChange){
-					//wsGaugeData.removeRow(i);
 					wsGaugeData.setValue(i, 1, rpmToChange);
 				}
 			}
@@ -245,7 +242,8 @@ function wsRefreshInstanceGraphics(ttlString, isEvent) {
 		
 	} else {
 
-		if (wsSerialization == "ttl") {
+		wsMotors = [];
+		if (serialization == "TURTLE") {
 			parseTTL(ttlString, wsMotors);
 		}
 	
@@ -260,7 +258,7 @@ function wsRefreshInstanceGraphics(ttlString, isEvent) {
 		}
 	}
 
-	drawChart(wsGaugeData, 'wsGraphics');
+	drawChart();
 
 }
 
@@ -278,29 +276,9 @@ function formatInput(inputString) {
 
 function refreshGUIInstanceIDs() {
 	$("#wsInstanceNumber").val(currentInstanceID);
+	$("#controlInstanceNumber").val(currentInstanceID-1);
 }
 
-function restRefreshInstanceGraphics(ttlString) {
-	restMotors = [];
-
-	if (restSerialization == "ttl") {
-		parseTTL(ttlString, restMotors);
-	}
-
-	var data = new google.visualization.DataTable();
-	data.addColumn('string', 'Motor');
-	data.addColumn('number', 'RPM');
-	// data.addRow(['Motor 1', 200]);
-
-	// $("#restGraphics").html("");
-	for ( var index = 0; index < restMotors.length; ++index) {
-		// $("#restGraphics").append(restMotors[index].instanceID + " -> " +
-		// restMotors[index].rpm + "<br/>");
-		data.addRow([ "M" + restMotors[index].instanceID + " RPM", parseInt(restMotors[index].rpm) ]);
-	}
-
-	drawChart(data, 'restGraphics');
-}
 
 function parseTTL(ttlString, motors) {
 
@@ -344,5 +322,55 @@ function setWsSerialization(fileEnding) {
 	wsSerialization = fileEnding;
 }
 
+
+function generateControlCode(){
+
+	var code = "@prefix :      <http://fiteagle.org/ontology/adapter/motor#> .";
+	code += "\n";
+	code += "@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .";
+	code += "\n";
+	code += "@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .";
+	code += "\n";
+	code += ":m" + $("#controlInstanceNumber").val();
+	code += "	a             :MotorResource ;"
+	code += "\n";
+	code += "			rdfs:label \"" + $("#controlInstanceNumber").val() + "\" ;";
+	code += "\n";
+	code += "			:" + $("#controlProperty").val() + " \"";
+	if(controlValueType == 1){
+		code  += $("#controlValueBoolean").val() + "\"^^xsd:boolean .";
+	} else if(controlValueType == 0) {
+		code  += $("#controlValueInteger").val() + "\"^^xsd:long .";
+	}
+
+	$("#controlInput").val(code);
+}
+
+function refreshControlValueType(){
+
+	if($("#controlProperty").val() == "isDynamic"){
+		$("#controlValueInteger").hide();
+		$("#controlValueBoolean").show();
+		controlValueType = 1;
+	} else {
+		$("#controlValueInteger").show();
+		$("#controlValueBoolean").hide();
+		controlValueType = 0;
+	}
+
+}
+
+
+function clearControlInput(){
+	$("#controlInput").val("");
+ var element = document.getElementById('controlProperty');
+    element.value = 'rpm';
+
+$("#controlValueInteger").val("");
+$("#controlValueBoolean").val("true");
+
+$("#controlValueInteger").show();
+$("#controlValueBoolean").hide();
+}
 
 window.addEventListener("load", init, false);
