@@ -334,6 +334,8 @@ function generateControlCode(){
 	code += ":m" + $("#controlInstanceNumber").val();
 	code += "	a             :MotorResource ;"
 	code += "\n";
+	code += "			:isDynamic false ;";
+	code += "\n";
 	code += "			rdfs:label \"" + $("#controlInstanceNumber").val() + "\" ;";
 	code += "\n";
 	code += "			:" + $("#controlProperty").val() + " \"";
