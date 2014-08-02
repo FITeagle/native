@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/FITeagle/native.svg?branch=master)](https://travis-ci.org/FITeagle/native)
+
 Native FITeagle Interfaces
 ==========================
 
