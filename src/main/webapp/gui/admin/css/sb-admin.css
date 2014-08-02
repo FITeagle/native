@@ -160,8 +160,23 @@ table.tablesorter thead tr th:hover {
 
 .console {
     background:#000;
-    color:#0c0;
+    color:#0d0;
     height:30em;
     overflow:scroll;
 }
+
+.outputBox {
+	background: -webkit-linear-gradient(#FFFFFF, #EEEEEE);
+	/* For Safari 5.1 to 6.0 */
+	background: -o-linear-gradient(#FFFFFF, #EEEEEE);
+	/* For Opera 11.1 to 12.0 */
+	background: -moz-linear-gradient(#FFFFFF, #EEEEEE);
+	/* For Firefox 3.6 to 15 */
+	background: linear-gradient(#FFFFFF, #EEEEEE); /* Standard syntax */
+	height: 600px;
+	border: 1px solid #000000;
+	padding: 10px;
+	margin-bottom: 10px;
+}
+
     #logo {height:1.8em; padding:0.2em;}
