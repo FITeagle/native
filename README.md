@@ -24,8 +24,8 @@ Requirements
 
 List resources via REST API
 
-    curl http://localhost:8080/native/api/repo/resources.rdf
-    curl http://localhost:8080/native/api/repo/resources.ttl
-    curl http://localhost:8080/native/api/repo/resources.jsonld
-    
+    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/rest/resources
+    curl -H "Accept: text/turtle" http://localhost:8080/native/api/rest/resources
+    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/rest/resources/testMe
+    curl -H "Accept: text/turtle" http://localhost:8080/native/api/rest/resources/anotherTest
 
