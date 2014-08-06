@@ -40,15 +40,15 @@ Requirements
 
 Get a user
 
-    Request:
-   curl -v -k --request GET "http://localhost:8080/native/api/user/mnikolaus" --user mnikolaus:mitja
+   Request:
+    curl -v -k --request GET "http://localhost:8080/native/api/user/mnikolaus" --user mnikolaus:mitja
 
 Add a new user
   
-    Request:
-   curl -v -k --request PUT "http://localhost:8080/native/api/user/mnikolaus" --data @exampleUser.json -H "Content-type: application/json"
+   Request:
+    curl -v -k --request PUT "http://localhost:8080/native/api/user/mnikolaus" --data @exampleUser.json -H "Content-type: application/json"
 
-    Data:
+   Data:
     {"firstName":"mitja","lastName":"nikolaus","password":"mitja","email":"mnikolaus@test.de","affiliation":"exampleAffiliation"}
 
 Update a user
