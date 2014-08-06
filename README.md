@@ -40,15 +40,15 @@ Requirements
 
 Get a user
 
-   Request:
+    Request:
     curl -v -k --request GET "http://localhost:8080/native/api/user/mnikolaus" --user mnikolaus:mitja
 
 Add a new user
   
-   Request:
+    Request:
     curl -v -k --request PUT "http://localhost:8080/native/api/user/mnikolaus" --data @exampleUser.json -H "Content-type: application/json"
 
-   Data:
+    Data:
     {"firstName":"mitja","lastName":"nikolaus","password":"mitja","email":"mnikolaus@test.de","affiliation":"exampleAffiliation"}
 
 Update a user
@@ -106,8 +106,8 @@ Delete cookie and invalidate session (to logout)
 
 Authentication:
 
-    * On the first GET-Request the Server always sends a JSESSIONID which can be used to authenticate further requests
-    * Additionally, if the Queryparameter setCookie is set to true, the server sends a "fiteagle_user_cookie" which can be used for a "remember me" functionality (it is valid for 1 year)
-    * The request should then look like this:
+    On the first GET-Request the Server always sends a JSESSIONID which can be used to authenticate further requests
+    Additionally, if the Queryparameter setCookie is set to true, the server sends a "fiteagle_user_cookie" which can be used for a "remember me" functionality (it is valid for 1 year)
+    The request should then look like this:
     curl -v -k --request GET "http://localhost:8080/native/api/user/mnikolaus?setCookie=true" --user mnikolaus:mitja
  
