@@ -46,43 +46,36 @@ public class UserAuthorizationFilter implements Filter {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) resp;
     
+    String action = (String) request.getAttribute(AuthenticationFilter.ACTION_ATTRIBUTE);
+    if(action.equals("PUT")){
+      chain.doFilter(request, response);
+      return;
+    }
+    
     String subjectUsername = (String) request.getAttribute(AuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
     String resourceUsername = (String) request.getAttribute(AuthenticationFilter.RESOURCE_USERNAME_ATTRIBUTE);
-    String action = (String) request.getAttribute(AuthenticationFilter.ACTION_ATTRIBUTE);
-    Role role = Role.STUDENT;
-    if(subjectUsername != null && !action.equals("PUT")){
-      try {
-        role = getRole(subjectUsername);
-      } catch (Exception e) {
-        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-        return;
-      }
-    }
-    Boolean isAuthenticated = (Boolean) request.getAttribute(AuthenticationFilter.IS_AUTHENTICATED_ATTRIBUTE);
+    
+    Role role = getRole(subjectUsername);
+
     Boolean requiresAdminRights = requiresAdminRights(request);
     Boolean requiresTBOwnerRights = requiresClassOwnerRights(request);
     
-    if(!isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), isAuthenticated, requiresAdminRights, requiresTBOwnerRights)){
-      if(isAuthenticated){
-        response.sendError(Response.Status.FORBIDDEN.getStatusCode());
-      }
-      else{
-        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-      }
-      return; 
+    if(!isRequestAuthorized(subjectUsername, resourceUsername, action, role.name(), requiresAdminRights, requiresTBOwnerRights)){
+      response.sendError(Response.Status.FORBIDDEN.getStatusCode());
+      return;
     }
     
     chain.doFilter(request, response);
   }
   
-  private Boolean isRequestAuthorized(String subjectUsername, String resourceUsername, String action, String role, Boolean isAuthenticated, Boolean requiresAdminRights, Boolean requiresTBOwnerRights){
+  private Boolean isRequestAuthorized(String subjectUsername, String resourceUsername, String action, String role, Boolean requiresAdminRights, Boolean requiresTBOwnerRights){
     try{
       Message message = context.createMessage();
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_SUBJECT_USERNAME, subjectUsername);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_RESOURCE_USERNAME, resourceUsername);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_ACTION, action);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_ROLE, role);
-      message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_IS_AUTHENTICATED, isAuthenticated);
+//      message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_IS_AUTHENTICATED, isAuthenticated);
       message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_REQUIRES_ADMIN_RIGHTS, requiresAdminRights);
       message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_REQUIRES_TBOWNER_RIGHTS, requiresTBOwnerRights);
       message.setStringProperty(IMessageBus.TYPE_TARGET, PolicyEnforcementPoint.TARGET);
