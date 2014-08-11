@@ -75,7 +75,6 @@ public class UserAuthorizationFilter implements Filter {
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_RESOURCE_USERNAME, resourceUsername);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_ACTION, action);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_ROLE, role);
-//      message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_IS_AUTHENTICATED, isAuthenticated);
       message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_REQUIRES_ADMIN_RIGHTS, requiresAdminRights);
       message.setBooleanProperty(PolicyEnforcementPoint.TYPE_PARAMETER_REQUIRES_TBOWNER_RIGHTS, requiresTBOwnerRights);
       message.setStringProperty(IMessageBus.TYPE_TARGET, PolicyEnforcementPoint.TARGET);
