@@ -39,7 +39,6 @@ public class AuthenticationFilter implements Filter{
   protected final static String SUBJECT_USERNAME_ATTRIBUTE = "subjectUsername";
   protected final static String RESOURCE_USERNAME_ATTRIBUTE = "resourceUsername";
   protected final static String ACTION_ATTRIBUTE = "action";
-  protected final static String IS_AUTHENTICATED_ATTRIBUTE = "isAuthenticated";
   
   private Logger log = LoggerFactory.getLogger(getClass());
   
@@ -77,17 +76,20 @@ public class AuthenticationFilter implements Filter{
 //      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
 //      return;   
 //    }
-    
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
-    request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
+    if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user")){
+      chain.doFilter(request, response);
+      return;
+    }
     
+    request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
     if(authenticateWithSession(request) || authenticateWithCookie(request) || authenticateWithUsernamePassword(request, response)){
-      request.setAttribute(IS_AUTHENTICATED_ATTRIBUTE, true);
       addCookieOnLogin(request, response);
-      createSession(request);  
+      createSession(request);
     }
     else{
-      request.setAttribute(IS_AUTHENTICATED_ATTRIBUTE, false);
+      response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+      return;
     }
       
     chain.doFilter(request, response);
