@@ -31,23 +31,28 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
+import org.fiteagle.api.core.usermanagement.Node;
 import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
 import org.fiteagle.api.core.usermanagement.User.Role;
 import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.api.core.usermanagement.UserManager.FiteagleClassNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
+import org.fiteagle.api.core.usermanagement.UserManager.FiteagleClassNotFoundException;
+import org.fiteagle.api.core.usermanagement.UserManager.NodeNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserPublicKey;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 import org.fiteagle.core.aaa.authentication.PasswordUtil;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 
@@ -62,6 +67,21 @@ public class UserPresenter{
   private final static int TIMEOUT_TIME_MS = 10000;
   
   public UserPresenter() {
+  }
+  
+  private static Gson gsonBuilder;
+  
+  static {
+    gsonBuilder = new GsonBuilder()
+    .setExclusionStrategies(new ExclusionStrategy() {
+        public boolean shouldSkipClass(Class<?> classToSkip) {
+           return false;
+        }
+        public boolean shouldSkipField(FieldAttributes f) {
+          return ((f.getDeclaringClass() == Node.class && f.getName().equals("users")));
+        }
+     })
+    .create();
   }
   
   @GET
@@ -84,7 +104,10 @@ public class UserPresenter{
   public Response add(@PathParam("username") String username, NewUser user) throws JMSException {
     user.setUsername(username);
     Message message = context.createMessage();
-    String userJSON = new Gson().toJson(createUser(user));
+    System.out.println("add user1");
+    String userJSON = gsonBuilder.toJson(createUser(user));
+    System.out.println("user as json:");
+    System.out.println(userJSON);
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
     final String filter = sendMessage(message, UserManager.ADD_USER);
     
@@ -334,6 +357,9 @@ public class UserPresenter{
         if(exceptionMessage.startsWith(FiteagleClassNotFoundException.class.getSimpleName())){
           throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
         }
+        if(exceptionMessage.startsWith(NodeNotFoundException.class.getSimpleName())){
+          throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    
+        }
         if(exceptionMessage.startsWith(DuplicateUsernameException.class.getSimpleName())){
           throw new FiteagleWebApplicationException(Response.Status.CONFLICT.getStatusCode(), exceptionMessage);    
         }
@@ -371,11 +397,11 @@ public class UserPresenter{
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
-      user = new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
+      user = new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getNode(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
     } catch(NotEnoughAttributesException | InValidAttributeException e){
        throw new FiteagleWebApplicationException(422, e.getMessage());
     }
-    return user;     
+    return user;
   }
   
   private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {

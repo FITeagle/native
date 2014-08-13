@@ -2,6 +2,8 @@ package org.fiteagle.proprietary.rest;
 
 import java.util.List;
 
+import org.fiteagle.api.core.usermanagement.Node;
+
 public class NewUser{
   
   private String username;
@@ -11,6 +13,7 @@ public class NewUser{
   private String affiliation;
   private String password;
   private List<NewPublicKey> publicKeys;
+  private Node node;
   
   public NewUser(){};
   
@@ -63,6 +66,14 @@ public class NewUser{
 
   public void setPublicKeys(List<NewPublicKey> publicKeys) {
     this.publicKeys = publicKeys;
+  }
+
+  public Node getNode() {
+    return node;
+  }
+
+  public void setNode(Node node) {
+    this.node = node;
   }
  
 }
