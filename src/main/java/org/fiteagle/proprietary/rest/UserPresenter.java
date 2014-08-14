@@ -102,7 +102,7 @@ public class UserPresenter{
   @PUT
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response add(@PathParam("username") String username, NewUser user) throws JMSException {
+  public Response add(@PathParam("username") String username, User user) throws JMSException {
     Message message = context.createMessage();
     String userJSON = gsonBuilder.toJson(createUser(username, user));
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
@@ -116,7 +116,7 @@ public class UserPresenter{
   @POST
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response update(@PathParam("username") String username, NewUser user) throws JMSException {
+  public Response update(@PathParam("username") String username, User user) throws JMSException {
     String pubKeysJSON = new Gson().toJson(checkPublicKeys(user.getPublicKeys()));
     Message message = context.createMessage();
     
@@ -125,7 +125,7 @@ public class UserPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_LASTNAME, user.getLastName());
     message.setStringProperty(UserManager.TYPE_PARAMETER_EMAIL, user.getEmail());
     message.setStringProperty(UserManager.TYPE_PARAMETER_AFFILIATION, user.getAffiliation());
-    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.getPassword());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.password());
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEYS, pubKeysJSON);
     
     final String filter = sendMessage(message, UserManager.UPDATE_USER);
@@ -389,15 +389,15 @@ public class UserPresenter{
     }
   }
 
-  private User createUser(String username, NewUser newUser){
+  private User createUser(String username, User newUser){
     if(newUser == null){
       throw new FiteagleWebApplicationException(422, "user data could not be parsed");
     }
     List<UserPublicKey> publicKeys = checkPublicKeys(newUser.getPublicKeys());    
-    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
+    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.password());
     User user = null;
     try{
-      user = new User(username, newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getNode(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
+      user = new User(username, newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.node(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
     } catch(NotEnoughAttributesException | InValidAttributeException e){
        throw new FiteagleWebApplicationException(422, e.getMessage());
     }
