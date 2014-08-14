@@ -72,10 +72,10 @@ public class AuthenticationFilter implements Filter{
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) resp;
     
-//    if(!request.isSecure()){
-//      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
-//      return;   
-//    }
+    if(!request.isSecure()){
+      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
+      return;   
+    }
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
     if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user") || 
         request.getMethod().equals("GET") && (request.getRequestURI().equals("/native/api/node") || request.getRequestURI().equals("/native/api/node/"))){

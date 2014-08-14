@@ -103,9 +103,8 @@ public class UserPresenter{
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response add(@PathParam("username") String username, NewUser user) throws JMSException {
-    user.setUsername(username);
     Message message = context.createMessage();
-    String userJSON = gsonBuilder.toJson(createUser(user));
+    String userJSON = gsonBuilder.toJson(createUser(username, user));
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
     final String filter = sendMessage(message, UserManager.ADD_USER);
     
@@ -390,12 +389,15 @@ public class UserPresenter{
     }
   }
 
-  private User createUser(NewUser newUser){
+  private User createUser(String username, NewUser newUser){
+    if(newUser == null){
+      throw new FiteagleWebApplicationException(422, "user data could not be parsed");
+    }
     List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
-      user = new User(newUser.getUsername(), newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getNode(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
+      user = new User(username, newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getNode(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
     } catch(NotEnoughAttributesException | InValidAttributeException e){
        throw new FiteagleWebApplicationException(422, e.getMessage());
     }
