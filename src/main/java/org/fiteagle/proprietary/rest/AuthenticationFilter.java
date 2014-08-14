@@ -77,7 +77,8 @@ public class AuthenticationFilter implements Filter{
 //      return;   
 //    }
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
-    if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user")){
+    if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user") || 
+        request.getMethod().equals("GET") && (request.getRequestURI().equals("/native/api/node") || request.getRequestURI().equals("/native/api/node/"))){
       chain.doFilter(request, response);
       return;
     }
