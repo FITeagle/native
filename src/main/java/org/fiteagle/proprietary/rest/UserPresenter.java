@@ -117,7 +117,7 @@ public class UserPresenter{
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response update(@PathParam("username") String username, NewUser user) throws JMSException {
-    String pubKeysJSON = new Gson().toJson(createPublicKeys(user.getPublicKeys()));
+    String pubKeysJSON = new Gson().toJson(checkPublicKeys(user.getPublicKeys()));
     Message message = context.createMessage();
     
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
@@ -151,7 +151,7 @@ public class UserPresenter{
   @POST
   @Path("{username}/pubkey/")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response addPublicKey(@PathParam("username") String username, NewPublicKey pubkey) throws JMSException {    
+  public Response addPublicKey(@PathParam("username") String username, UserPublicKey pubkey) throws JMSException {    
     Message message = context.createMessage();
     PublicKey key;
     try {
@@ -393,7 +393,7 @@ public class UserPresenter{
     if(newUser == null){
       throw new FiteagleWebApplicationException(422, "user data could not be parsed");
     }
-    List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());    
+    List<UserPublicKey> publicKeys = checkPublicKeys(newUser.getPublicKeys());    
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
@@ -404,12 +404,12 @@ public class UserPresenter{
     return user;
   }
   
-  private ArrayList<UserPublicKey> createPublicKeys(List<NewPublicKey> keys) {
+  private ArrayList<UserPublicKey> checkPublicKeys(List<UserPublicKey> keys) {
     if(keys == null){
       return null;
     }
     ArrayList<UserPublicKey> publicKeys = new ArrayList<>();
-    for(NewPublicKey key : keys){
+    for(UserPublicKey key : keys){
       try {
         publicKeys.add(new UserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
       } catch (CouldNotParse e) {

@@ -3,6 +3,7 @@ package org.fiteagle.proprietary.rest;
 import java.util.List;
 
 import org.fiteagle.api.core.usermanagement.Node;
+import org.fiteagle.api.core.usermanagement.UserPublicKey;
 
 public class NewUser{
   
@@ -12,7 +13,7 @@ public class NewUser{
   private String email;
   private String affiliation;
   private String password;
-  private List<NewPublicKey> publicKeys;
+  private List<UserPublicKey> publicKeys;
   private Node node;
   
   public NewUser(){};
@@ -60,11 +61,11 @@ public class NewUser{
     this.password = password;
   }
   
-  public List<NewPublicKey> getPublicKeys() {
+  public List<UserPublicKey> getPublicKeys() {
     return publicKeys;
   }
 
-  public void setPublicKeys(List<NewPublicKey> publicKeys) {
+  public void setPublicKeys(List<UserPublicKey> publicKeys) {
     this.publicKeys = publicKeys;
   }
 
