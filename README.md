@@ -35,53 +35,55 @@ Usermanagement
 ### Requirements
 
   The 'api' module must be available.
-  
+
   The 'usermanagement', 'aaa' and 'config' core modules must be deployed.
 
 ### API Calls
 
-(most of the calls are made to a user with the username 'test' and the password 'test')
+When this module is being deployed for the first time, a new node is being created (name: TU Berlin) and a new admin user is being created (username: admin, password: admin).
+
+Most of the following example calls are made to a user with the username 'test' and the password 'test'.
 
 #### Add a new user
   
 Request:
 
-    curl -v -k --request PUT "http://localhost:8080/native/api/user/test" --data @exampleUser.json -H "Content-type: application/json"
+    curl -v -k --request PUT "https://localhost:8443/native/api/user/test" --data @exampleUser.json -H "Content-type: application/json"
 
 Data:
 
-    {"firstName":"test","lastName":"testlastname","password":"test","email":"test@test.de","affiliation":"exampleAffiliation"}
+    {"firstName":"test","lastName":"testlastname","password":"test","email":"test@test.de","affiliation":"exampleAffiliation","node":{"id":"1"}}}
 
 #### Get a user
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user/test" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/user/test" --user test:test
     
 #### Get all classes of a user
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user/test/classes" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/user/test/classes" --user test:test
     
 #### Get all classes owned by a user
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user/test/ownedclasses" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/user/test/ownedclasses" --user test:test
     
 #### Get all users
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user" --user admin:admin
+    curl -v -k --request GET "https://localhost:8443/native/api/user" --user admin:admin
 
 
 #### Update a user
 
 Request:
 
-    curl -v -k --request POST "http://localhost:8080/native/api/user/test" --data @exampleUserUpdate.json -H "Content-type: application/json" --user test:test
+    curl -v -k --request POST "https://localhost:8443/native/api/user/test" --data @exampleUserUpdate.json -H "Content-type: application/json" --user test:test
 
 Data:
 
@@ -93,7 +95,7 @@ Possible attributes: firstName, lastName, email, affiliation, password, publicKe
 
 Request:
 
-    curl -k -v --request POST "http://localhost:8080/native/api/user/test/role/FEDERATION_ADMIN" --user admin:admin
+    curl -k -v --request POST "https://localhost:8443/native/api/user/test/role/FEDERATION_ADMIN" --user admin:admin
 
 This will change the role of user 'test' to FEDERATION_ADMIN (can only be done by authenticating as an admin).
 
@@ -101,7 +103,7 @@ This will change the role of user 'test' to FEDERATION_ADMIN (can only be done b
 
 Request: 
 
-	curl -k -v --request PUT "http://localhost:8080/native/api/class" --user classowner:classowner --data @exampleClass.json -H "Content-type: application/json"
+	curl -k -v --request PUT "https://localhost:8443/native/api/class" --user classowner:classowner --data @exampleClass.json -H "Content-type: application/json"
     
 
 Data:
@@ -114,25 +116,25 @@ As a result you will get the ID of the created class.
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/class/1" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/class/1" --user test:test
 
 #### Get all classes
 
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/class" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/class" --user test:test
 
 #### Delete a class
 
 Request:
 
-    curl -v -k --request DELETE "http://localhost:8080/native/api/class/1" --user classowner:classowner
+    curl -v -k --request DELETE "https://localhost:8443/native/api/class/1" --user classowner:classowner
 
 #### Sign up for a class
 
 Request: 
 
-	curl -k -v --request POST "http://localhost:8080/native/api/user/test/class/1" --user test:test
+	curl -k -v --request POST "https://localhost:8443/native/api/user/test/class/1" --user test:test
     
 This will sign up the user 'test' for the class with the id '1'.
 
@@ -140,7 +142,7 @@ This will sign up the user 'test' for the class with the id '1'.
 
 Request: 
 
-	curl -k -v --request DELETE "http://localhost:8080/native/api/user/test/class/1" --user test:test
+	curl -k -v --request DELETE "https://localhost:8443/native/api/user/test/class/1" --user test:test
     
 This will make the user 'test' leave the class with the id '1'.
 
@@ -148,13 +150,13 @@ This will make the user 'test' leave the class with the id '1'.
 
 Request:
 
-    curl -v -k --request DELETE "http://localhost:8080/native/api/user/test" --user test:test
+    curl -v -k --request DELETE "https://localhost:8443/native/api/user/test" --user test:test
 
 #### Add a new publickey
 
 Request:
 
-    curl -v -k --request POST "http://localhost:8080/native/api/user/test/pubkey" --data @anotherKey.json -H "Content-type: application/json" --user test:test
+    curl -v -k --request POST "https://localhost:8443/native/api/user/test/pubkey" --data @anotherKey.json -H "Content-type: application/json" --user test:test
   
 Data:
 
@@ -164,19 +166,19 @@ Data:
   
 Request:
 
-    curl -v -k --request DELETE "http://localhost:8080/native/api/user/test/pubkey/key1" --user test:test
+    curl -v -k --request DELETE "https://localhost:8443/native/api/user/test/pubkey/key1" --user test:test
 
 #### Rename a publickey (changes the "description" of the key)
 
 Request:
 
-    curl -v -k --request POST "http://localhost:8080/native/api/user/test/pubkey/key1/description" --data "my new description" -H "Content-type: text/plain" --user test:test
+    curl -v -k --request POST "https://localhost:8443/native/api/user/test/pubkey/key1/description" --data "my new description" -H "Content-type: text/plain" --user test:test
 
 #### Create new keypair and get private key + certificate 
   
 Request:
 
-    curl -v -k --request POST "http://localhost:8080/native/api/user/test/certificate" --data "mypassphrase" -H "Content-type: text/plain" --user test:test
+    curl -v -k --request POST "https://localhost:8443/native/api/user/test/certificate" --data "mypassphrase" -H "Content-type: text/plain" --user test:test
 
 (if the passphrase is left empty, the private key won't be encrypted)
 
@@ -184,13 +186,13 @@ Request:
  
 Request:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user/test/pubkey/key1/certificate" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/user/test/pubkey/key1/certificate" --user test:test
 
 #### Delete cookie and invalidate session (to logout)
 
 Request:
 
-    curl -v -k --request DELETE "http://localhost:8080/native/api/user/test/cookie" --user test:test
+    curl -v -k --request DELETE "https://localhost:8443/native/api/user/test/cookie" --user test:test
 
 #### Authentication:
 
@@ -198,5 +200,5 @@ On the first GET-Request the Server always sends a JSESSIONID which can be used 
 Additionally, if the Queryparameter setCookie is set to true, the server sends a "fiteagle_user_cookie" which can be used for a "remember me" functionality (it is valid for 1 year).
 The request should then look like this:
 
-    curl -v -k --request GET "http://localhost:8080/native/api/user/test?setCookie=true" --user test:test
+    curl -v -k --request GET "https://localhost:8443/native/api/user/test?setCookie=true" --user test:test
  
