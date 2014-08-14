@@ -78,7 +78,8 @@ public class UserPresenter{
            return false;
         }
         public boolean shouldSkipField(FieldAttributes f) {
-          return ((f.getDeclaringClass() == Node.class && f.getName().equals("users")));
+          return ((f.getDeclaringClass() == Node.class && f.getName().equals("users")) ||
+              f.getDeclaringClass() == UserPublicKey.class && (f.getName().equals("owner") || f.getName().equals("publicKey")));
         }
      })
     .create();
@@ -104,10 +105,7 @@ public class UserPresenter{
   public Response add(@PathParam("username") String username, NewUser user) throws JMSException {
     user.setUsername(username);
     Message message = context.createMessage();
-    System.out.println("add user1");
     String userJSON = gsonBuilder.toJson(createUser(user));
-    System.out.println("user as json:");
-    System.out.println(userJSON);
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
     final String filter = sendMessage(message, UserManager.ADD_USER);
     
