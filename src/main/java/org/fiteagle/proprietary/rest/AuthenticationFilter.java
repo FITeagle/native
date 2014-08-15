@@ -37,7 +37,7 @@ public class AuthenticationFilter implements Filter{
 
   public final static String COOKIE_NAME = "fiteagle_user_cookie";
   protected final static String SUBJECT_USERNAME_ATTRIBUTE = "subjectUsername";
-  protected final static String RESOURCE_USERNAME_ATTRIBUTE = "resourceUsername";
+  protected final static String RESOURCE_ATTRIBUTE = "resource";
   protected final static String ACTION_ATTRIBUTE = "action";
   
   private Logger log = LoggerFactory.getLogger(getClass());
@@ -83,7 +83,7 @@ public class AuthenticationFilter implements Filter{
       return;
     }
     
-    request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
+    request.setAttribute(RESOURCE_ATTRIBUTE, getResource(request));
     if(authenticateWithSession(request) || authenticateWithCookie(request) || authenticateWithUsernamePassword(request, response)){
       addCookieOnLogin(request, response);
       createSession(request);
@@ -107,7 +107,7 @@ public class AuthenticationFilter implements Filter{
   private void addCookieOnLogin(HttpServletRequest request, HttpServletResponse response) {    
     boolean setCookie = Boolean.parseBoolean(request.getParameter("setCookie"));
     if(setCookie == true && getAuthCookieFromRequest(request) == null){      
-      response.addCookie(createNewCookie(getTarget(request)));      
+      response.addCookie(createNewCookie((String) request.getAttribute(SUBJECT_USERNAME_ATTRIBUTE))); 
     }
   }
 
@@ -255,10 +255,10 @@ public class AuthenticationFilter implements Filter{
     cookies.remove(addDomain(username));
   }
   
-  protected String getTarget(HttpServletRequest request) {
+  protected String getResource(HttpServletRequest request) {
     String path = request.getRequestURI();
-    String target = getTargetNameFromURI(path, "user");
-    return addDomain(target);
+    String resource = path.replaceFirst("/native/api/", "");
+    return resource;
   } 
   
   protected String[] decode(String auth) {
@@ -271,16 +271,6 @@ public class AuthenticationFilter implements Filter{
       return null;
     }
     return new String(decoded).split(":", 2);
-  }
-  
-  protected String getTargetNameFromURI(String path, String targetIdentifier) {
-    String[] splitted = path.split("/");
-    for (int i = 0; i < splitted.length - 1; i++) {
-      if (splitted[i].equals(targetIdentifier)) {
-        return splitted[i+1];
-      }
-    }
-    return "";
   }
   
   protected String createRandomAuthToken(String postfix) {
