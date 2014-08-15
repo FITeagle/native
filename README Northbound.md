@@ -1,5 +1,6 @@
 
-
+Northbound REST API
+----
 
 Checkout api, core, native, adapter from Dev branches.
 
@@ -68,11 +69,11 @@ Start experimenting:
 
 Use the following test RDF files from the MotorAdapter directory:
 
-createMotor.ttl
-createManyMotors.ttl
-configureMotor.ttl
-configureManyMotors.ttl
-configureDynamicMotor.ttl
+* createMotor.ttl
+* createManyMotors.ttl
+* configureMotor.ttl
+* configureManyMotors.ttl
+* configureDynamicMotor.ttl
 
 Create a single new motor instance using RDF description:
 
@@ -141,8 +142,3 @@ curl -i -X GET http://localhost:8080/native/api/resources/garage/ARunningMotor1
 
 
 
-
-
-
-
-initial parameters
