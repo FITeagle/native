@@ -28,7 +28,7 @@ import net.iharder.Base64;
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
-import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
+import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

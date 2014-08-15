@@ -24,7 +24,7 @@ import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
 import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.User.Role;
 import org.fiteagle.api.core.usermanagement.UserManager;
-import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
+import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
 
 import com.google.gson.Gson;
 
