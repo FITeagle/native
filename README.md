@@ -107,12 +107,11 @@ Request:
 
 	curl -k -v --request PUT "https://localhost:8443/native/api/class" --user classowner:classowner --data @exampleClass.json -H "Content-type: application/json"
     
-
 Data:
 
-    {"name":"Test Course","description":"a course for testing purposes","owner":{"username":"classowner"}}
+    {"name":"Test Class","description":"a class for testing purposes","owner":{"username":"classowner"},"nodes":[{"id":"1"}]}
 
-As a result you will get the ID of the created class.
+As a result you will get the ID of the created class. If no node is specified, the class will be added to the node of the classowner.
 
 #### Get a class
 
