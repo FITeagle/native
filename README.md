@@ -53,6 +53,8 @@ Request:
 Data:
 
     {"firstName":"test","lastName":"testlastname","password":"test","email":"test@test.de","affiliation":"exampleAffiliation","node":{"id":"1"}}}
+    
+If no node is specified, the user will be added to a default node.
 
 #### Get a user
 
