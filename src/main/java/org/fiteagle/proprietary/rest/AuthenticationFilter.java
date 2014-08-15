@@ -66,6 +66,14 @@ public class AuthenticationFilter implements Filter{
   @Override
   public void destroy() {}
   
+  protected static boolean requestDoesNotNeedAuth(String method, String requestURI){
+    if(method.equals("PUT") && requestURI.startsWith("/native/api/user") || 
+        method.equals("GET") && (requestURI.equals("/native/api/node") || requestURI.equals("/native/api/node/"))){
+      return true;
+    }
+    return false;
+  }
+  
   @Override
   public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException,
       ServletException {
@@ -77,8 +85,7 @@ public class AuthenticationFilter implements Filter{
       return;   
     }
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
-    if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user") || 
-        request.getMethod().equals("GET") && (request.getRequestURI().equals("/native/api/node") || request.getRequestURI().equals("/native/api/node/"))){
+    if(requestDoesNotNeedAuth(request.getMethod(), request.getRequestURI())){
       chain.doFilter(request, response);
       return;
     }

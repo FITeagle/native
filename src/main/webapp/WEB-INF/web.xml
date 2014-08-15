@@ -27,31 +27,20 @@
   </filter-mapping>
   
 	<filter>
-    <filter-name>UserAuthorizationFilter</filter-name>
-    <filter-class>org.fiteagle.proprietary.rest.UserAuthorizationFilter</filter-class>
+    <filter-name>AuthorizationFilter</filter-name>
+    <filter-class>org.fiteagle.proprietary.rest.AuthorizationFilter</filter-class>
   </filter>
 	<filter-mapping>
-    <filter-name>UserAuthorizationFilter</filter-name>
+    <filter-name>AuthorizationFilter</filter-name>
     <url-pattern>/api/user/*</url-pattern>
   </filter-mapping>
-  
-  <filter>
-    <filter-name>ClassAuthorizationFilter</filter-name>
-    <filter-class>org.fiteagle.proprietary.rest.ClassAuthorizationFilter</filter-class>
-  </filter>
   <filter-mapping>
-    <filter-name>ClassAuthorizationFilter</filter-name>
+    <filter-name>AuthorizationFilter</filter-name>
     <url-pattern>/api/class/*</url-pattern>
   </filter-mapping>
-  
-  <filter>
-    <filter-name>NodeAuthorizationFilter</filter-name>
-    <filter-class>org.fiteagle.proprietary.rest.NodeAuthorizationFilter</filter-class>
-  </filter>
   <filter-mapping>
-    <filter-name>NodeAuthorizationFilter</filter-name>
+    <filter-name>AuthorizationFilter</filter-name>
     <url-pattern>/api/node/*</url-pattern>
   </filter-mapping>
-  
   
 </web-app>

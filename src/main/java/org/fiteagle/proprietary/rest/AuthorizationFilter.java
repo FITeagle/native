@@ -23,7 +23,7 @@ import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
 import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
 
-public class UserAuthorizationFilter implements Filter {
+public class AuthorizationFilter implements Filter {
 
   @Inject
   private JMSContext context;
@@ -42,13 +42,13 @@ public class UserAuthorizationFilter implements Filter {
     HttpServletResponse response = (HttpServletResponse) resp;
     
     String action = (String) request.getAttribute(AuthenticationFilter.ACTION_ATTRIBUTE);
-    if(action.equals("PUT")){
+    String subjectUsername = (String) request.getAttribute(AuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
+    String resource = (String) request.getAttribute(AuthenticationFilter.RESOURCE_ATTRIBUTE);
+    
+    if(AuthenticationFilter.requestDoesNotNeedAuth(action, request.getRequestURI())){
       chain.doFilter(request, response);
       return;
     }
-    
-    String subjectUsername = (String) request.getAttribute(AuthenticationFilter.SUBJECT_USERNAME_ATTRIBUTE);
-    String resource = (String) request.getAttribute(AuthenticationFilter.RESOURCE_ATTRIBUTE);
     
     if(!isRequestAuthorized(subjectUsername, resource, action)){
       response.sendError(Response.Status.FORBIDDEN.getStatusCode());
