@@ -307,7 +307,7 @@ public class NorthboundAPI {
     private Message waitForResult(final Message message) throws JMSException {
         NorthboundAPI.LOGGER.log(Level.INFO, "Waiting for an answer...");
         final String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
+        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(5000);
         return rcvMessage;
     }
 
