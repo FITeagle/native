@@ -5,11 +5,11 @@ Northbound REST API
 Checkout Code
 -------------
 ```
-git clone -b dev --depth 1 https://github.com/FITeagle/api.git && \
-git clone -b dev --depth 1 https://github.com/FITeagle/core.git && \
-git clone -b dev --depth 1 https://github.com/FITeagle/native.git && \
-git clone -b Dev --depth 1 https://github.com/FITeagle/adapters.git && \
-git clone --depth 1 https://github.com/FITeagle/bootstrap.git
+git clone --recursive -b dev --depth 1 https://github.com/FITeagle/api.git && \
+git clone --recursive -b dev --depth 1 https://github.com/FITeagle/core.git && \
+git clone --recursive -b dev --depth 1 https://github.com/FITeagle/native.git && \
+git clon --recursivee -b Dev --depth 1 https://github.com/FITeagle/adapters.git && \
+git clone --recursive --depth 1 https://github.com/FITeagle/bootstrap.git
 ```
 
 Start Servers
