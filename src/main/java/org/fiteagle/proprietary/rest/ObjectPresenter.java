@@ -25,6 +25,8 @@ import org.fiteagle.api.core.usermanagement.UserManager.FiteagleClassNotFoundExc
 import org.fiteagle.api.core.usermanagement.UserManager.NodeNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ObjectPresenter {
   
   @Inject
@@ -33,6 +35,8 @@ public class ObjectPresenter {
   protected Topic topic;
   
   protected final static int TIMEOUT_TIME_MS = 10000;
+  
+  protected static ObjectMapper objectMapper = new ObjectMapper();
   
   public ObjectPresenter() {
   }

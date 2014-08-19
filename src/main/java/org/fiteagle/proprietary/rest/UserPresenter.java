@@ -1,7 +1,6 @@
 package org.fiteagle.proprietary.rest;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -23,7 +22,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.fiteagle.api.core.usermanagement.Node;
 import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
@@ -34,11 +32,10 @@ import org.fiteagle.core.aaa.authentication.KeyManagement;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 import org.fiteagle.core.aaa.authentication.PasswordUtil;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 
 @Path("/user")
@@ -47,26 +44,10 @@ public class UserPresenter extends ObjectPresenter{
   public UserPresenter() {
   }
   
-  private static Gson gsonBuilder;
-  
-  static {
-    gsonBuilder = new GsonBuilder()
-    .setExclusionStrategies(new ExclusionStrategy() {
-        public boolean shouldSkipClass(Class<?> classToSkip) {
-           return false;
-        }
-        public boolean shouldSkipField(FieldAttributes f) {
-          return ((f.getDeclaringClass() == Node.class && f.getName().equals("users")) ||
-              f.getDeclaringClass() == UserPublicKey.class && (f.getName().equals("owner") || f.getName().equals("publicKey")));
-        }
-     })
-    .create();
-  }
-  
   @GET
   @Path("{username}")
   @Produces(MediaType.APPLICATION_JSON)
-  public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException {
+  public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
     final String filter = sendMessage(message, UserManager.GET_USER);
@@ -74,15 +55,15 @@ public class UserPresenter extends ObjectPresenter{
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
-    return new Gson().fromJson(resultJSON, User.class);
+    return objectMapper.readValue(resultJSON, User.class);
   }
   
   @PUT
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response add(@PathParam("username") String username, User user) throws JMSException {
+  public Response add(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
     Message message = context.createMessage();
-    String userJSON = gsonBuilder.toJson(createUser(username, user));
+    String userJSON = objectMapper.writeValueAsString(createUser(username, user));
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
     final String filter = sendMessage(message, UserManager.ADD_USER);
     
@@ -94,8 +75,8 @@ public class UserPresenter extends ObjectPresenter{
   @POST
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response update(@PathParam("username") String username, User user) throws JMSException {
-    String pubKeysJSON = new Gson().toJson(checkPublicKeys(user.getPublicKeys()));
+  public Response update(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
+    String pubKeysJSON = objectMapper.writeValueAsString(checkPublicKeys(user.getPublicKeys()));
     Message message = context.createMessage();
     
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
@@ -103,7 +84,7 @@ public class UserPresenter extends ObjectPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_LASTNAME, user.getLastName());
     message.setStringProperty(UserManager.TYPE_PARAMETER_EMAIL, user.getEmail());
     message.setStringProperty(UserManager.TYPE_PARAMETER_AFFILIATION, user.getAffiliation());
-    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.password());
+    message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.getPassword());
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEYS, pubKeysJSON);
     
     final String filter = sendMessage(message, UserManager.UPDATE_USER);
@@ -129,7 +110,7 @@ public class UserPresenter extends ObjectPresenter{
   @POST
   @Path("{username}/pubkey/")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response addPublicKey(@PathParam("username") String username, UserPublicKey pubkey) throws JMSException {    
+  public Response addPublicKey(@PathParam("username") String username, UserPublicKey pubkey) throws JMSException, JsonProcessingException, NotEnoughAttributesException {    
     Message message = context.createMessage();
     PublicKey key;
     try {
@@ -137,7 +118,7 @@ public class UserPresenter extends ObjectPresenter{
     } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
       throw new FiteagleWebApplicationException(422, e.getMessage());
     }
-    String pubKeyJSON = new Gson().toJson(new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));  
+    String pubKeyJSON = objectMapper.writeValueAsString(new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));  
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY, pubKeyJSON);
     final String filter = sendMessage(message, UserManager.ADD_PUBLIC_KEY);
@@ -225,29 +206,27 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("{username}/classes")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username) throws JMSException{
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_FROM_USER);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
-    Type listType = new TypeToken<ArrayList<org.fiteagle.api.core.usermanagement.Class>>() {}.getType();
-    return new Gson().fromJson(getResultString(rcvMessage), listType);
+    return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<org.fiteagle.api.core.usermanagement.Class>>(){});
   }
   
   @GET
   @Path("{username}/ownedclasses")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username) throws JMSException{
+  public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_OWNED_BY_USER);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
-    Type listType = new TypeToken<ArrayList<org.fiteagle.api.core.usermanagement.Class>>() {}.getType();
-    return new Gson().fromJson(getResultString(rcvMessage), listType);
+    return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<org.fiteagle.api.core.usermanagement.Class>>(){});
   }
   
   @POST
@@ -280,26 +259,25 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<User> getAllUsers() throws JMSException{
+  public List<User> getAllUsers() throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_USERS);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
-    Type listType = new TypeToken<ArrayList<User>>() {}.getType();
-    return new Gson().fromJson(resultJSON, listType);
+    return objectMapper.readValue(resultJSON, new TypeReference<List<User>>(){});
   }
   
   private User createUser(String username, User newUser){
     if(newUser == null){
       throw new FiteagleWebApplicationException(422, "user data could not be parsed");
     }
-    List<UserPublicKey> publicKeys = checkPublicKeys(newUser.getPublicKeys());    
-    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.password());
+    List<UserPublicKey> publicKeys = checkPublicKeys(newUser.getPublicKeys());   
+    String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
-      user = new User(username, newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.node(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
+      user = new User(username, newUser.getFirstName(), newUser.getLastName(), newUser.getEmail(), newUser.getAffiliation(), newUser.getNode(), passwordHashAndSalt[0], passwordHashAndSalt[1], publicKeys);
     } catch(NotEnoughAttributesException | InValidAttributeException e){
        throw new FiteagleWebApplicationException(422, e.getMessage());
     }

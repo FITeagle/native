@@ -1,7 +1,6 @@
 package org.fiteagle.proprietary.rest;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -20,8 +19,10 @@ import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.Class;
 import org.fiteagle.api.core.usermanagement.UserManager;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 @Path("/class")
 public class ClassPresenter extends ObjectPresenter {
@@ -32,7 +33,7 @@ public class ClassPresenter extends ObjectPresenter {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Class get(@PathParam("id") long id) throws JMSException {
+  public Class get(@PathParam("id") long id) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);
     final String filter = sendMessage(message, UserManager.GET_CLASS);
@@ -40,16 +41,16 @@ public class ClassPresenter extends ObjectPresenter {
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
-    return new Gson().fromJson(resultJSON, Class.class);
+    return objectMapper.readValue(resultJSON, Class.class);
   }
   
   @PUT
   @Path("")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
-  public long add(Class targetClass) throws JMSException {
+  public long add(Class targetClass) throws JMSException, JsonProcessingException {
     Message message = context.createMessage();
-    String classJSON = new Gson().toJson(targetClass);
+    String classJSON = objectMapper.writeValueAsString(targetClass);
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, targetClass.getOwner().getUsername());
     message.setStringProperty(UserManager.TYPE_PARAMETER_CLASS_JSON, classJSON);
     final String filter = sendMessage(message, UserManager.ADD_CLASS);
@@ -74,14 +75,13 @@ public class ClassPresenter extends ObjectPresenter {
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Class> getAllClasses(){
+  public List<Class> getAllClasses() throws JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
-    Type listType = new TypeToken<ArrayList<Class>>() {}.getType();
-    return new Gson().fromJson(getResultString(rcvMessage), listType);
+    return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<Class>>(){});
   }
 
 }

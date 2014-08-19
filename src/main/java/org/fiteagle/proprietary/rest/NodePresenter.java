@@ -1,7 +1,6 @@
 package org.fiteagle.proprietary.rest;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -17,8 +16,10 @@ import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.Node;
 import org.fiteagle.api.core.usermanagement.UserManager;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 @Path("/node")
 public class NodePresenter extends ObjectPresenter{
@@ -30,9 +31,9 @@ public class NodePresenter extends ObjectPresenter{
   @Path("")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
-  public long add(Node node) throws JMSException {
+  public long add(Node node) throws JMSException, JsonProcessingException {
     Message message = context.createMessage();
-    String nodeJSON = new Gson().toJson(node);
+    String nodeJSON = objectMapper.writeValueAsString(node);
     message.setStringProperty(UserManager.TYPE_PARAMETER_NODE_JSON, nodeJSON);
     final String filter = sendMessage(message, UserManager.ADD_NODE);
     
@@ -44,14 +45,13 @@ public class NodePresenter extends ObjectPresenter{
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Node> getAllNodes(){
+  public List<Node> getAllNodes() throws JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_NODES);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
-    Type listType = new TypeToken<ArrayList<Node>>() {}.getType();
-    return new Gson().fromJson(getResultString(rcvMessage), listType);
+    return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<Node>>(){});
   }
   
 }
