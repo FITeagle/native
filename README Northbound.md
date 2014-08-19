@@ -1,51 +1,42 @@
 
 Northbound REST API
-----
+===================
 
-Checkout api, core, native, adapter from Dev branches.
+Checkout Code
+-------------
+```
+git clone -b dev --depth 1 https://github.com/FITeagle/api.git && \
+git clone -b dev --depth 1 https://github.com/FITeagle/core.git && \
+git clone -b dev --depth 1 https://github.com/FITeagle/native.git && \
+git clone -b Dev --depth 1 https://github.com/FITeagle/adapters.git && \
+git clone --depth 1 https://github.com/FITeagle/bootstrap.git
+```
 
-Make sure you have the newest api and AbstractAdapter jars in your local repository:
+Start Servers
+-------------
 
-  ```
-cd api
-mvn clean install
-  ```
+Assuming you've run the bootstrap script from http://github.com/fiteagle/bootstrap:
 
-  ```
-cd adapters/abstract
-mvn clean install
-  ```
+```
+./bootstrap/fiteagle.sh startJ2EE
+./bootstrap/fiteagle.sh startSPARQL
+```
 
-Run Wildfly and FUSEKI:
+Start Microservices
+-------------------
 
-  ```
-/bootstrap/fiteagle.sh startJ2EE
-/bootstrap/fiteagle.sh startSPARQL
-  ```
+```
+cd native && mvn clean verify wildfly:deploy && cd - \\
+cd core/repo && mvn clean verify  wildfly:deployy && cd - \\
+cd core/bus && mvn clean verify wildfly:deploy && cd -
+```
 
-Run the Northbound REST API Microservice:
+Look at the logger
+------------------
 
-  ```
-cd native
-mvn clean install wildfly:deploy
-  ```
-
-Run the Westbound Repository Microservice:
-
-  ```
-cd core/repo
-mvn clean install wildfly:deploy
-  ```
-
-Run the Logger Microservice:
-
-  ```
-cd core/bus
-mvn clean install wildfly:deploy
-  ```
-
-
-To see what messages are sent over the bus open:
+```
+to be done
+```
 
 native/src/main/webapp/gui/admin/console2.html
 
