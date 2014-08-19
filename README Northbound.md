@@ -34,18 +34,13 @@ cd core/bus && mvn clean verify wildfly:deploy && cd -
 Look at the logger
 ------------------
 
-```
-open http://localhost:8080/native/gui/admin/console2.html
+Open http://localhost:8080/native/gui/admin/console2.html
 
-```
 
 Look at the repository
 ----------------------
 
-
-```
-open http://localhost:3030/ds/query?query=SELECT+*+{%3Fs+%3Fp+%3Fo}&output=text&stylesheet=
-```
+Open http://localhost:3030/ds/query?query=SELECT+*+{%3Fs+%3Fp+%3Fo}&output=text&stylesheet=
 
 
 Run the Motor adapter
@@ -85,3 +80,8 @@ Use the following test RDF files from the MotorAdapter directory.
   * ```curl -i -X GET http://localhost:8080/native/api/resources/garage/```
 * To discover/describe a single resource:
   * ```curl -i -X GET http://localhost:8080/native/api/resources/garage/ARunningMotor1```
+
+LodLive visualization
+---------------------
+
+To browse through the data open http://localhost:8080/native/gui/lodlive/ and select a pre-defined resource from the grey box called "fiteagleinternal".
