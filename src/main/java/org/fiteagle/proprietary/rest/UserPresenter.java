@@ -26,12 +26,14 @@ import org.fiteagle.api.core.usermanagement.User;
 import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.Role;
+import org.fiteagle.api.core.usermanagement.User.VIEW;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.UserPublicKey;
 import org.fiteagle.core.aaa.authentication.KeyManagement;
 import org.fiteagle.core.aaa.authentication.KeyManagement.CouldNotParse;
 import org.fiteagle.core.aaa.authentication.PasswordUtil;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -47,6 +49,7 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("{username}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
@@ -61,7 +64,7 @@ public class UserPresenter extends ObjectPresenter{
   @PUT
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response add(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
+  public Response addUser(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
     Message message = context.createMessage();
     String userJSON = objectMapper.writeValueAsString(createUser(username, user));
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
@@ -75,8 +78,8 @@ public class UserPresenter extends ObjectPresenter{
   @POST
   @Path("{username}")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response update(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
-    String pubKeysJSON = objectMapper.writeValueAsString(checkPublicKeys(user.getPublicKeys()));
+  public Response updateUser(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
+    String pubKeysJSON = objectMapper.writeValueAsString(createPublicKeys(user.getPublicKeys()));
     Message message = context.createMessage();
     
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
@@ -158,7 +161,7 @@ public class UserPresenter extends ObjectPresenter{
   
   @DELETE
   @Path("{username}")
-  public Response delete(@PathParam("username") String username) throws JMSException {
+  public Response deleteUser(@PathParam("username") String username) throws JMSException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     final String filter = sendMessage(message, UserManager.DELETE_USER);
@@ -206,6 +209,7 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("{username}/classes")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
@@ -219,6 +223,7 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("{username}/ownedclasses")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
@@ -259,6 +264,7 @@ public class UserPresenter extends ObjectPresenter{
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public List<User> getAllUsers() throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_USERS);
@@ -273,7 +279,7 @@ public class UserPresenter extends ObjectPresenter{
     if(newUser == null){
       throw new FiteagleWebApplicationException(422, "user data could not be parsed");
     }
-    List<UserPublicKey> publicKeys = checkPublicKeys(newUser.getPublicKeys());   
+    List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());   
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
@@ -284,7 +290,7 @@ public class UserPresenter extends ObjectPresenter{
     return user;
   }
   
-  private ArrayList<UserPublicKey> checkPublicKeys(List<UserPublicKey> keys) {
+  private ArrayList<UserPublicKey> createPublicKeys(List<UserPublicKey> keys) {
     if(keys == null){
       return null;
     }

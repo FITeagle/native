@@ -18,7 +18,9 @@ import javax.ws.rs.core.Response;
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.Class;
 import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.User.VIEW;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -33,6 +35,7 @@ public class ClassPresenter extends ObjectPresenter {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public Class get(@PathParam("id") long id) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);
@@ -75,6 +78,7 @@ public class ClassPresenter extends ObjectPresenter {
   @GET
   @Path("")
   @Produces(MediaType.APPLICATION_JSON)
+  @JsonView(VIEW.PUBLIC.class)
   public List<Class> getAllClasses() throws JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES);
