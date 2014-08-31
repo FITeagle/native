@@ -14,16 +14,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.User.InValidAttributeException;
 import org.fiteagle.api.core.usermanagement.User.NotEnoughAttributesException;
 import org.fiteagle.api.core.usermanagement.User.PublicKeyNotFoundException;
+import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateEmailException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicatePublicKeyException;
 import org.fiteagle.api.core.usermanagement.UserManager.DuplicateUsernameException;
 import org.fiteagle.api.core.usermanagement.UserManager.FiteagleClassNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.NodeNotFoundException;
 import org.fiteagle.api.core.usermanagement.UserManager.UserNotFoundException;
+import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,6 +38,8 @@ public class ObjectPresenter {
   protected final static int TIMEOUT_TIME_MS = 10000;
   
   protected static ObjectMapper objectMapper = new ObjectMapper();
+  
+  private final static Logger log = Logger.getLogger(AuthenticationFilter.class.toString());
   
   public ObjectPresenter() {
   }
@@ -67,6 +70,7 @@ public class ObjectPresenter {
 
   protected void checkForExceptions(Message message){
     if(message == null){
+      log.error("JMS: timeout while waiting for response");
       throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
     }
     try {
@@ -100,6 +104,7 @@ public class ObjectPresenter {
           throw new FiteagleWebApplicationException(422, exceptionMessage);    
         }
         else{
+          log.error(exceptionMessage);
           throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);
         }
       }
@@ -112,6 +117,7 @@ public class ObjectPresenter {
     try {
       return URLDecoder.decode(string, "UTF-8");
     } catch (UnsupportedEncodingException e) {
+      log.error(e);
       throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
     }
   }

@@ -21,7 +21,7 @@ import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.PolicyEnforcementPoint;
-import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
+import org.jboss.logging.Logger;
 
 public class AuthorizationFilter implements Filter {
 
@@ -31,6 +31,8 @@ public class AuthorizationFilter implements Filter {
   private Topic topic;
   private final static int TIMEOUT_TIME_MS = 10000;
 
+  private final static Logger log = Logger.getLogger(AuthorizationFilter.class.toString());
+  
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
   }
@@ -50,7 +52,7 @@ public class AuthorizationFilter implements Filter {
       return;
     }
     
-    if(!isRequestAuthorized(subjectUsername, resource, action)){
+    if(!isRequestAuthorized(subjectUsername, resource, action, response)){
       response.sendError(Response.Status.FORBIDDEN.getStatusCode());
       return;
     }
@@ -58,7 +60,7 @@ public class AuthorizationFilter implements Filter {
     chain.doFilter(request, response);
   }
   
-  private Boolean isRequestAuthorized(String subjectUsername, String resource, String action){
+  private Boolean isRequestAuthorized(String subjectUsername, String resource, String action, HttpServletResponse response) throws IOException{
     try{
       Message message = context.createMessage();
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_SUBJECT_USERNAME, subjectUsername);
@@ -73,12 +75,16 @@ public class AuthorizationFilter implements Filter {
       Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
       
       if(rcvMessage == null){
-        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+        log.error("JMS: timeout while waiting for response");
+        response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        return false;
       }
       Boolean result = rcvMessage.getBooleanProperty(IMessageBus.TYPE_RESULT);
       return result;
     }catch(JMSException e) {
-      throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
+      log.error(e);
+      response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+      return false;
     }
   }
 

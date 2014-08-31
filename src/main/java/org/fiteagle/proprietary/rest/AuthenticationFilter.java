@@ -29,9 +29,7 @@ import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
 import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.jboss.logging.Logger;
 
 public class AuthenticationFilter implements Filter{
 
@@ -40,7 +38,7 @@ public class AuthenticationFilter implements Filter{
   protected final static String RESOURCE_ATTRIBUTE = "resource";
   protected final static String ACTION_ATTRIBUTE = "action";
   
-  private Logger log = LoggerFactory.getLogger(getClass());
+  private final static Logger log = Logger.getLogger(AuthenticationFilter.class.toString());
   
   public AuthenticationFilter(){};
  
