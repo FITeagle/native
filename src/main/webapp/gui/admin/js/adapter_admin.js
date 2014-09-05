@@ -23,7 +23,7 @@ window.addEventListener("load", init, false);
 
 	//google.load('visualization', '1', {
 	//	packages : [ 'gauge' ]
-	//});
+	//});Please stop "improving" the motor adapter code without even getting in touch with me. 
 
 function writeToScreen(message, isIncoming) {
 	var pre = document.createElement("p");
@@ -103,12 +103,12 @@ function init() {
 	};
 	websocketLogger.onmessage = function(evt) {
 		if (evt.data.indexOf("Event Notification:") > -1) {
-			processEvent(evt.data);
+			//processEvent(evt.data);
 			if (DRAW_CHART) {
-				drawChart();
+			//	drawChart();
 			}
 		} else if (evt.data.indexOf("response : listResources") > -1 && evt.data.indexOf("rdfs:label") > -1) {
-			processGetInstances(evt.data);
+			//processGetInstances(evt.data);
 		}
 		writeToScreen(evt.data, true);
 	};
