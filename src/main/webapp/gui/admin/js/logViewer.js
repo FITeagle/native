@@ -80,6 +80,7 @@ var LogViewer = function () {
     this.createModal = function(data){
         var modal = $("#detailModal");
         var output = $("#modalOutput");
+        output[0].innerHTML = "";
 
         var pre = document.createElement("p");
         pre.style.wordWrap = "break-word";

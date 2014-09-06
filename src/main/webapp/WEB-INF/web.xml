@@ -9,6 +9,15 @@
 		<url-pattern>/api/*</url-pattern>
 	</servlet-mapping>
 
+    <filter>
+        <filter-name>LodLiveJSONPFilter</filter-name>
+        <filter-class>org.fiteagle.north.proprietary.rest.LodLiveJSONPFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>LodLiveJSONPFilter</filter-name>
+        <url-pattern>/api/lodlive/*</url-pattern>
+    </filter-mapping>
+
 	<filter>
 		<filter-name>AuthenticationFilter</filter-name>
 		<filter-class>org.fiteagle.proprietary.rest.AuthenticationFilter</filter-class>
