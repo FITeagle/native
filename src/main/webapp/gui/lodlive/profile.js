@@ -15,7 +15,8 @@ $.jStorage.set('profile', {
 				inverse : 'SELECT DISTINCT * WHERE {?object ?property <{URI}>} LIMIT 100',
 				inverseSameAs : 'SELECT DISTINCT * WHERE {?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}>}'
 			},
-			endpoint : 'http://localhost:3030/ds/query',
+			//endpoint : 'http://localhost:3030/ds/query',
+            endpoint : 'http://localhost:8080/native/api/lodlive/query',
 			examples : [{
 				uri : 'http://fiteagleinternal%23ARunningMotor1',
 				label : 'Running Motor 1'
@@ -42,7 +43,8 @@ $.jStorage.set('profile', {
 				inverse : 'SELECT DISTINCT * WHERE {?object ?property <{URI}>} LIMIT 100',
 				inverseSameAs : 'SELECT DISTINCT * WHERE {?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}>}'
 			},
-			endpoint : 'http://localhost:3030/ds/query',
+			//endpoint : 'http://localhost:3030/ds/query',
+            endpoint : 'http://localhost:8080/native/api/lodlive/query',
 			examples : [{
 				uri : 'http://fed4fire.eu/resources#federation',
 				label : 'Federation'
@@ -65,7 +67,8 @@ $.jStorage.set('profile', {
 				inverse : 'SELECT DISTINCT * WHERE {?object ?property <{URI}>} LIMIT 100',
 				inverseSameAs : 'SELECT DISTINCT * WHERE {?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}>}'
 			},
-			endpoint : 'http://federation.av.tu-berlin.de:3030/omn/query',
+			//endpoint : 'http://federation.av.tu-berlin.de:3030/omn/query',
+            endpoint : 'http://localhost:8080/native/api/lodlive/query',
 			examples : [{
 				uri : 'http://fed4fire.eu/resources#federation',
 				label : 'Federation'

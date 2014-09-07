@@ -27,7 +27,7 @@ public class LodLiveJSONPFilter implements Filter {
 
             out.println(getCallbackMethod(httpRequest) + "(");
             chain.doFilter(request, response);
-            out.println(");");
+            out.println(")");
 
             response.setContentType("application/sparql-results+json");
         }
