@@ -1,3 +1,0 @@
-[submodule "lodlive"]
-      path = src/main/webapp/gui/lodlive/lib
-      url = https://github.com/dvcama/LodLive.git
