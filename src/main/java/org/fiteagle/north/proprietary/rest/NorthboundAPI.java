@@ -1,8 +1,6 @@
 package org.fiteagle.north.proprietary.rest;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,9 +20,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.MessageBusOntologyModel;
+import org.fiteagle.api.core.MessageBusMsgFactory;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -40,249 +39,252 @@ public class NorthboundAPI {
 
     private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
 
+    // TODO: Temporary solution, Refactor
+    private static HashMap<String, String[]> adapterNameToResourceName = new HashMap<String, String[]>();
+
+    static {
+        // TODO: Add robot, stopwatch etc.
+        String[] motorAdapterParams = { "http://fiteagle.org/ontology/adapter/motor#Motor", "motor", "http://fiteagle.org/ontology/adapter/motor#" };
+
+        adapterNameToResourceName.put("motor", motorAdapterParams);
+
+    }
+
     @GET
     @Path("/")
     @Produces("text/turtle")
-    public String discoverResourcesTTL() throws JMSException {
-        return discoverMotorTTL();
-    }
-    
-    @GET
-    @Path("/garage")
-    @Produces("text/turtle")
-    public String discoverMotorTTL() throws JMSException {
-        String serialization = "TURTLE";
-        
-        Model inputModel = getDiscoverModel();
+    public Response discoverAllTTL() throws JMSException {
 
-        String response = "";
-        try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_DISCOVER);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            response = getResult(result);
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        // TODO
+        for (String adapterName : adapterNameToResourceName.keySet()) {
+            return discoverAdapterInstanceTTL(adapterName);
         }
 
-        return response;
+        return getRESTResponse(null);
     }
-    
-    @GET
-    @Path("/garage/{instanceName}")
-    @Produces("text/turtle")
-    public String discoverMotorInstanceTTL(@PathParam("instanceName") String instanceName) {
-        String serialization = "TURTLE";
-        
-        Model inputModel = getDiscoverModel(instanceName);
 
-        String response = "";
-        try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_DISCOVER);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            response = getResult(result);
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    @GET
+    @Path("/{adapterName}")
+    @Produces("text/turtle")
+    public Response discoverAdapterInstanceTTL(@PathParam("adapterName") String adapterName) throws JMSException {
+
+        Model inputModel = getDiscoverModel(adapterName, null);
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
 
-        return response;
+        return getRESTResponse(null);
     }
-    
-    private Model getDiscoverModel(String instanceName){
-        Model rdfModel = getDiscoverModel();
-        
-        com.hp.hpl.jena.rdf.model.Resource motorResourceType = rdfModel.createResource("http://fiteagle.org/ontology/adapter/motor#Motor");
-        com.hp.hpl.jena.rdf.model.Resource motor = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
-        motor.addProperty(RDF.type, motorResourceType);
-        
-        rdfModel.setNsPrefix("motor", "http://fiteagle.org/ontology/adapter/motor#");
-        
-        return rdfModel;
-    }
-        
-        
-    private Model getDiscoverModel(){
-        Model rdfModel = ModelFactory.createDefaultModel();
-        
-        com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
-        message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleDiscover);
 
-        rdfModel.setNsPrefix("", "http://fiteagleinternal#");
-        rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
+    @GET
+    @Path("/{adapterName}/{instanceName}")
+    @Produces("text/turtle")
+    public Response discoverAdapterResourceInstanceTTL(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
+
+        Model inputModel = getDiscoverModel(adapterName, instanceName);
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
         
-        return rdfModel;
-    }    
-        
+        return getRESTResponse(null);
+    }
     
+    private Response getRESTResponse(String responseString){        
+        if (responseString == null){
+            return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
+        } else if(responseString.equals(IMessageBus.STATUS_400)){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Resource not processed").build();
+        } else if (responseString.equals(IMessageBus.STATUS_404)){
+            return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
+        } else if (responseString.equals(IMessageBus.STATUS_408)){
+            return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out").build();
+        } else {
+            return Response.ok(responseString, "text/turtle").build();
+        }
+    }
+
     @PUT
-    @Path("/garage/{instanceName}")
+    @Path("/{adapterName}/{instanceName}")
     @Produces("text/html")
-    public String motorCreateInstance(@PathParam("instanceName") String instanceName) {
-        
-        String serialization = "TURTLE";
-        
-        Model inputModel = getCreateModel(instanceName);
+    public Response createResourceInstance(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        String response = "";
-        try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_CREATE);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            response = getResult(result);
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        Model inputModel = getCreateModel(adapterName, instanceName);
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
 
-        return response;
+        return getRESTResponse(null);
     }
 
     @PUT
-    @Path("/garage/{instanceName}")
+    @Path("/{adapterName}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces("text/html")
-    public String motorCreateInstanceWithRDF(@PathParam("instanceName") String instanceName, String rdfInput) {
+    public Response createResourceInstanceWithRDF(@PathParam("adapterName") String adapterName, String rdfInput) {
 
-        String serialization = "TURTLE";
-        
-        Model inputModel = getCreateModel(readModel(rdfInput, serialization));
+        Model inputModel = getCreateModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
-        String response = "";
         try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_CREATE);
+            Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
             sendRequest(request);
             Message result = waitForResult(request);
-            response = getResult(result);
+            return getRESTResponse(getResult(result));
         } catch (JMSException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        return response;
-    }
-    
-    private Model getReleaseModel(String instanceName){
-        Model rdfModel = ModelFactory.createDefaultModel();
-        com.hp.hpl.jena.rdf.model.Resource motorResourceType = rdfModel.createResource("http://fiteagle.org/ontology/adapter/motor#Motor");
-        com.hp.hpl.jena.rdf.model.Resource motor = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
-        motor.addProperty(RDF.type, motorResourceType);
-        
-        rdfModel.setNsPrefix("motor", "http://fiteagle.org/ontology/adapter/motor#");
-
-        com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
-        message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleRelease);
-
-        rdfModel.setNsPrefix("", "http://fiteagleinternal#");
-        rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
-        
-        return rdfModel;
-    }
-    
-    private Model getCreateModel(String instanceName){
-        Model rdfModel = ModelFactory.createDefaultModel();
-        com.hp.hpl.jena.rdf.model.Resource motorResourceType = rdfModel.createResource("http://fiteagle.org/ontology/adapter/motor#Motor");
-        com.hp.hpl.jena.rdf.model.Resource motor = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
-        motor.addProperty(RDF.type, motorResourceType);
-        
-        rdfModel.setNsPrefix("motor", "http://fiteagle.org/ontology/adapter/motor#");
-
-        return getCreateModel(rdfModel);
-    }
-    
-    private Model getCreateModel(Model rdfModel){
-        
-        com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
-        message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleCreate);
-
-        rdfModel.setNsPrefix("", "http://fiteagleinternal#");
-        rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
-        
-        return rdfModel;
-    }
-    
-    private Model getConfigureModel(Model rdfModel){
-        
-        com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
-        message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleConfigure);
-
-        rdfModel.setNsPrefix("", "http://fiteagleinternal#");
-        rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
-        
-        return rdfModel;
-    }
-    
-    private Model readModel(String modelString, String serialization){
-        Model rdfModel = ModelFactory.createDefaultModel();
-
-        InputStream is = new ByteArrayInputStream(modelString.getBytes());
-
-        // read the RDF/XML file
-        rdfModel.read(is, null, serialization);
-        
-        return rdfModel;
-    }
-    
-    private String modelToString(Model model, String serialization){
-        StringWriter writer = new StringWriter();
-
-        model.write(writer, serialization);
-        
-        return writer.toString();
+        return getRESTResponse(null);
     }
 
     @POST
-    @Path("/garage/{instanceName}")
+    @Path("/{adapterName}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces("text/html")
-    public String motorConfigureInstance(@PathParam("instanceName") String instanceName, String rdfInput) {
-        String serialization = "TURTLE";
-        
-        Model inputModel = getConfigureModel(readModel(rdfInput, serialization));
+    public Response configureResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
 
-        String response = "";
+        Model inputModel = getConfigureModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+
         try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_CONFIGURE);
+            Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
             sendRequest(request);
             Message result = waitForResult(request);
-            response = getResult(result);
+            return getRESTResponse(getResult(result));
         } catch (JMSException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        return response;
+        return getRESTResponse(null);
     }
 
     @DELETE
-    @Path("/garage/{instanceName}")
+    @Path("/{adapterName}/{instanceName}")
     @Produces("text/html")
-    public String motorReleaseInstance(@PathParam("instanceName") String instanceName) {
-        String serialization = "TURTLE";
-        
-        Model inputModel = getReleaseModel(instanceName);
+    public Response motorReleaseInstance(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        String response = "";
-        try {
-            Message request = this.createRequest(modelToString(inputModel, serialization), serialization, IMessageBus.TYPE_RELEASE);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            response = getResult(result);
-        } catch (JMSException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        Model inputModel = getReleaseModel(adapterName, instanceName);
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
 
-        return response;
+        return getRESTResponse(null);
     }
 
-    private Message createRequest(final String rdfInput, final String serialization, String methodType) throws JMSException {
+    private Model getDiscoverModel(String adapterName, String instanceName) {
+        Model rdfModel = ModelFactory.createDefaultModel();
+
+        String[] adapterParams = getAdapterParams(adapterName);
+
+        if (adapterParams != null) {
+
+            if (instanceName != null) {
+                addResourceInstanceToModel(rdfModel, adapterParams, instanceName);
+            }
+            setAdapterPrefix(rdfModel, adapterParams);
+
+            return MessageBusMsgFactory.createMsgDiscover(rdfModel);
+        }
+
+        return null;
+    }
+
+    private Model getReleaseModel(String adapterName, String instanceName) {
+
+        Model rdfModel = ModelFactory.createDefaultModel();
+
+        String[] adapterParams = getAdapterParams(adapterName);
+
+        if (adapterParams != null) {
+
+            addResourceInstanceToModel(rdfModel, adapterParams, instanceName);
+            setAdapterPrefix(rdfModel, adapterParams);
+
+            return MessageBusMsgFactory.createMsgRelease(rdfModel);
+        }
+
+        return null;
+    }
+
+    private Model getCreateModel(String adapterName, String instanceName) {
+
+        Model rdfModel = ModelFactory.createDefaultModel();
+
+        String[] adapterParams = getAdapterParams(adapterName);
+
+        if (adapterParams != null) {
+
+            addResourceInstanceToModel(rdfModel, adapterParams, instanceName);
+            setAdapterPrefix(rdfModel, adapterParams);
+
+            return MessageBusMsgFactory.createMsgCreate(rdfModel);
+        }
+
+        return null;
+    }
+
+    private Model getCreateModel(Model rdfModel) {
+        return MessageBusMsgFactory.createMsgCreate(rdfModel);
+    }
+
+    private Model getConfigureModel(Model rdfModel) {
+        return MessageBusMsgFactory.createMsgConfigure(rdfModel);
+    }
+
+    private String[] getAdapterParams(String paramAdapterName) {
+        for (String adapterName : adapterNameToResourceName.keySet()) {
+            if (paramAdapterName.equals(adapterName)) {
+                return adapterNameToResourceName.get(adapterName);
+            }
+        }
+        return null;
+    }
+
+    private void addResourceInstanceToModel(Model rdfModel, String[] adapterParams, String instanceName) {
+        com.hp.hpl.jena.rdf.model.Resource resourceType = rdfModel.createResource(adapterParams[0]);
+        com.hp.hpl.jena.rdf.model.Resource resourceInstance = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
+        resourceInstance.addProperty(RDF.type, resourceType);
+    }
+
+    private void setAdapterPrefix(Model rdfModel, String[] adapterParams) {
+        rdfModel.setNsPrefix(adapterParams[1], adapterParams[2]);
+    }
+
+    private Message createRequest(final String rdfInput, final String methodType) throws JMSException {
         final Message message = this.context.createMessage();
 
         message.setStringProperty(IMessageBus.METHOD_TYPE, methodType);
-        message.setStringProperty(IMessageBus.SERIALIZATION, serialization);
+        message.setStringProperty(IMessageBus.SERIALIZATION, IMessageBus.SERIALIZATION_DEFAULT);
         message.setStringProperty(IMessageBus.RDF, rdfInput);
         message.setJMSCorrelationID(UUID.randomUUID().toString());
 
@@ -290,7 +292,7 @@ public class NorthboundAPI {
     }
 
     private String getResult(final Message result) throws JMSException {
-        String resources = "timeout";
+        String resources = IMessageBus.STATUS_408;
 
         NorthboundAPI.LOGGER.log(Level.INFO, "Received resources via MDB...");
         if (null != result) {
