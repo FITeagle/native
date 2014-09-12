@@ -8,6 +8,7 @@ import javax.jms.Message;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -17,8 +18,9 @@ import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.Class;
-import org.fiteagle.api.core.usermanagement.UserManager;
+import org.fiteagle.api.core.usermanagement.Task;
 import org.fiteagle.api.core.usermanagement.User.VIEW;
+import org.fiteagle.api.core.usermanagement.UserManager;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -69,6 +71,35 @@ public class ClassPresenter extends ObjectPresenter {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);
     final String filter = sendMessage(message, UserManager.DELETE_CLASS);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    return Response.status(200).build();
+  }
+  
+  @POST
+  @Path("{id}/task/")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
+  public long addTask(@PathParam("id") long id, Task task) throws JMSException, JsonProcessingException {    
+    Message message = context.createMessage();
+    String taskJSON = objectMapper.writeValueAsString(new Task(task.getName(), task.getDescription()));  
+    message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);      
+    message.setStringProperty(UserManager.TYPE_PARAMETER_TASK_JSON, taskJSON);
+    final String filter = sendMessage(message, UserManager.ADD_TASK);
+    
+    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
+    checkForExceptions(rcvMessage);
+    return rcvMessage.getLongProperty(IMessageBus.TYPE_RESULT);
+  }
+  
+  @DELETE
+  @Path("{classId}/task/{taskId}")
+  public Response deletePublicKey(@PathParam("classId") long classId, @PathParam("taskId") long taskId) throws JMSException {
+    Message message = context.createMessage();
+    message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, classId);      
+    message.setLongProperty(UserManager.TYPE_PARAMETER_TASK_ID, taskId);
+    final String filter = sendMessage(message, UserManager.REMOVE_TASK);
     
     Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
