@@ -21,7 +21,7 @@ var LogViewer = function () {
             columns: [
                 { data: 'method_type' },
                 {data: "JMSCorrelationID"},
-                {data:"time"},
+                {data:"timeString"},
                 {
                     "targets": -1,
                     "data": null,
@@ -30,7 +30,16 @@ var LogViewer = function () {
                 {
                     data:"rdf",
                     "visible": false
+                },
+                {   data: "timeInt",
+                    "visible": false
+
                 }
+
+            ],
+            "columnDefs": [
+                { "orderData": [ 5 ],    "targets": 2 }
+
             ]
         } );
         var _this = this;
@@ -48,16 +57,20 @@ var LogViewer = function () {
     }.bind(this);
     this.addMessageToPool = function (jsonMessage) {
         if (jsonMessage.hasOwnProperty("method_type")) {
+            var date = new Date();
             var methodType = jsonMessage.method_type;
-            jsonMessage.time = new Date().toLocaleTimeString();
+            jsonMessage.timeInt = date.getTime();
+            jsonMessage.timeString = date.toLocaleTimeString();
             jsonMessage.responseList = [];
             messagePool.push(jsonMessage);
         }
         else if (jsonMessage.hasOwnProperty("response")) {
+            var date = new Date();
             var methodType = jsonMessage.response;
             var pos = messagePool.push(jsonMessage) - 1;
             jsonMessage.method_type = methodType;
-            jsonMessage.time = new Date().toLocaleTimeString();
+            jsonMessage.timeInt = date.getTime();
+            jsonMessage.timeString = date.toLocaleTimeString();
             if (jsonMessage.hasOwnProperty("JMSCorrelationID")) {
                 for (var i = 0; i < messagePool.length - 1; i++) {
                     var request = messagePool[i];
