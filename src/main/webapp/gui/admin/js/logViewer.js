@@ -11,7 +11,8 @@ var LogViewer = function () {
     this.ws = null;//websocket
     var requestPool = [];
     var responsePool = [];
-    var messagePool = []
+    var messagePool = [];
+
 
     this.init = function init() {
         var wsUriLogger = getRootUri() + "/bus/api/logger";
@@ -25,7 +26,7 @@ var LogViewer = function () {
                 {
                     "targets": -1,
                     "data": null,
-                    "defaultContent": "<button type='button' class='btn btn-default'> <span class='glyphicon glyphicon-star'></span> RDF </button>"
+                    "defaultContent": "<button type='button' class='btn btn-default' data-content='Test' data-original-title='RDF' > <span class='glyphicon glyphicon-star'></span> RDF </button>"
                 },
                 {
                     data:"rdf",
@@ -40,13 +41,50 @@ var LogViewer = function () {
             "columnDefs": [
                 { "orderData": [ 5 ],    "targets": 2 }
 
-            ]
+            ],
+            "createdRow": function ( row, data, index ) {
+               
+                $(row).attr('data-content',  data.rdf.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />"));
+
+
+                $(row).popover({placement:"bottom",
+                    trigger:"click",
+                    template: '<div class="popover"  role="tooltip"><div class="arrow"></div><h3 class="popover-title">RDF</h3><div class="popover-content" style="height: 300px; overflow-y: scroll"></div></div>',
+                    html:true
+
+
+                });
+                $("button", row).on("click", function(e){
+                    e.stopPropagation();
+                   // var data = table.row( $(this).parents('tr') ).data();
+                    _this.createModal(data);
+                })
+            }
+
         } );
         var _this = this;
-        $('#example tbody').on( 'click', 'button', function () {
+      /*  $('#example tbody').on( 'click', 'button', function (e) {
+            e.stopPropagation();
             var data = table.row( $(this).parents('tr') ).data();
             _this.createModal(data);
-        } );
+        } );*/
+     /*  $('#example tbody').on( 'click', 'tr', function () {
+           var data = table.row( $(this)).data();
+        $(this).attr('data-content',  data.rdf.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />"));
+
+
+        $(this).popover({placement:"top",
+            trigger:"click",
+            template: '<div class="popover"  role="tooltip"><div class="arrow"></div><h3 class="popover-title">RDF</h3><div class="popover-content" style="height: 300 px; overflow-y: scroll"></div></div>'
+        });
+           //this.click();
+
+
+
+
+
+       } );*/
+
 
 
 
@@ -93,7 +131,7 @@ var LogViewer = function () {
     this.createModal = function(data){
         var modal = $("#detailModal");
         var output = $("#modalOutput");
-        output[0].innerHTML = "";
+        output[0].innerHTML += "\n \n --------------------------------------------------------------- \n \n";
 
         var pre = document.createElement("p");
         pre.style.wordWrap = "break-word";
@@ -101,12 +139,14 @@ var LogViewer = function () {
 
         pre.innerHTML = data.rdf.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />");
 
-
-
-
-
-        output[0].appendChild(pre);
         modal.modal();
+        output[0].appendChild(pre);
+        output[0].scrollTop = output[0].scrollHeight;
+
+
+
+
+
     };
 
 }
