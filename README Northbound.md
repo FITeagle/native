@@ -11,6 +11,7 @@ git clone --recursive -b dev --depth 1 https://github.com/FITeagle/native.git &&
 git clone --recursive -b Dev --depth 1 https://github.com/FITeagle/adapters.git && \
 git clone --recursive --depth 1 https://github.com/FITeagle/bootstrap.git
 ```
+The native package contains the lodlive lib as a git submodule, hints: git submodule init, git submodule update
 
 Start Servers
 -------------
@@ -36,11 +37,21 @@ Look at the logger
 
 Open http://localhost:8080/native/gui/admin/console2.html
 
+an enhanced version can be found at
+
+http://localhost:8080/native/gui/admin/logViewer.html
+
 
 Look at the repository
 ----------------------
 
 Open http://localhost:3030/ds/query?query=SELECT+*+{%3Fs+%3Fp+%3Fo}&output=text&stylesheet=
+
+or better at
+
+http://localhost:8080/native/api/lodlive/query?output=json&format=application/json&timeout=0&query=Select%20*%20%7B?s%20?p%20?o%7D&callback=lodlive
+
+to get a readable version
 
 
 Run the Motor adapter
@@ -99,4 +110,7 @@ Implemented HTTP Status Codes
 LodLive visualization
 ---------------------
 
-To browse through the data open http://localhost:8080/native/gui/lodlive/ and select a pre-defined resource from the grey box called "fiteagleinternal".
+To browse through the data open http://localhost:8080/native/gui/lodlive/index.html?http://fiteagleinternal%23FITEAGLE_Testbed
+Keep in mind that the testbed adapter has to be deployed.
+You can start at every positin in  the graph stored at the repo by replacing the  http://fiteagleinternal%23FITEAGLE_Testbed part of the url with a known resource.
+E.g. http://localhost:8080/native/gui/lodlive/index.html?http://fiteagleinternal%23ADeployedMotorAdapter1 when it is deployed.
