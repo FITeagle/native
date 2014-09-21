@@ -104,20 +104,7 @@ public class NorthboundAPI {
         
         return getRESTResponse(null);
     }
-    
-    private Response getRESTResponse(String responseString){        
-        if (responseString == null){
-            return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
-        } else if(responseString.equals(IMessageBus.STATUS_400)){
-            return Response.status(Response.Status.BAD_REQUEST).entity("Resource not processed").build();
-        } else if (responseString.equals(IMessageBus.STATUS_404)){
-            return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
-        } else if (responseString.equals(IMessageBus.STATUS_408)){
-            return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out").build();
-        } else {
-            return Response.ok(responseString, "text/turtle").build();
-        }
-    }
+   
 
     @PUT
     @Path("/{adapterName}/{instanceName}")
@@ -260,6 +247,20 @@ public class NorthboundAPI {
     private Model getConfigureModel(Model rdfModel) {
         return MessageBusMsgFactory.createMsgConfigure(rdfModel);
     }
+    
+    private Response getRESTResponse(String responseString){        
+        if (responseString == null){
+            return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
+        } else if(responseString.equals(IMessageBus.STATUS_400)){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Resource not processed").build();
+        } else if (responseString.equals(IMessageBus.STATUS_404)){
+            return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
+        } else if (responseString.equals(IMessageBus.STATUS_408)){
+            return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out").build();
+        } else {
+            return Response.ok(responseString, "text/turtle").build();
+        }
+    }
 
     private String[] getAdapterParams(String paramAdapterName) {
         for (String adapterName : adapterNameToResourceName.keySet()) {
@@ -309,7 +310,7 @@ public class NorthboundAPI {
     private Message waitForResult(final Message message) throws JMSException {
         NorthboundAPI.LOGGER.log(Level.INFO, "Waiting for an answer...");
         final String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(5000);
+        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
         return rcvMessage;
     }
 
