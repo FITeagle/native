@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
@@ -24,9 +25,15 @@ import javax.ws.rs.core.Response;
 
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.MessageBusMsgFactory;
+import org.fiteagle.api.core.MessageBusOntologyModel;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 @Path("/resources")
@@ -45,19 +52,95 @@ public class NorthboundAPI {
     static {
         // TODO: Add robot, stopwatch etc.
         String[] motorAdapterParams = { "http://fiteagle.org/ontology/adapter/motor#Motor", "motor", "http://fiteagle.org/ontology/adapter/motor#" };
+        String[] testbedAdapterParams = { "http://fiteagle.org/ontology#Testbed", "fiteagle", "http://fiteagle.org/ontology#" };
 
         adapterNameToResourceName.put("motor", motorAdapterParams);
+        adapterNameToResourceName.put("testbed", testbedAdapterParams);
 
     }
+    
+//    @PostConstruct
+//    private startUp(){
+//        Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
+//
+//        if (inputModel != null) {
+//            try {
+//                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+//                sendRequest(request);
+//                Message result = waitForResult(request);
+//                
+//                Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));
+//                            
+//                    
+//                    // Get contained adapter names
+//                    //:FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
+//                    StmtIterator testbedAdapterIterator = response.listStatements(new SimpleSelector(currentStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleContainsAdapter, (RDFNode) null)); 
+//                    while (testbedAdapterIterator.hasNext()) {
+//                        Statement currentTestbedStatement = testbedAdapterIterator.next();
+//                        responseModel.add(currentTestbedStatement); 
+//                        
+//                        StmtIterator adapterIterator = currentModel.listStatements(new SimpleSelector(currentTestbedStatement.getResource(), RDF.type, (RDFNode) null));
+//                        while (adapterIterator.hasNext()) {
+//                            Statement currentAdapterStatement = adapterIterator.next();
+//                            responseModel.add(currentAdapterStatement); 
+//                            
+////                          motor:MotorGarageAdapter
+////                          a                    owl:Class ;
+////                          rdfs:label           "MotorGarageAdapterType "@en ;
+////                          rdfs:subClassOf      fiteagle:Adapter ;
+////                          fiteagle:implements  motor:Motor .
+//                           // System.err.println(currentAdapterStatement);
+//                            
+//                            StmtIterator adapterPropertiesIterator = currentModel.listStatements(new SimpleSelector(currentAdapterStatement.getResource(), (Property) null, (RDFNode) null)); 
+//                            while (adapterPropertiesIterator.hasNext()) {
+//                               // System.err.println("in: " + adapterPropertiesIterator.next());
+//                                responseModel.add(adapterPropertiesIterator.next());
+//                            }
+//                            
+//                        }
+//                    }
+//      
+//                
+//                return getRESTResponse(getResult(result));
+//            } catch (JMSException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        return getRESTResponse(null);
+//        
+//        
+//        <http://fiteagle.org/ontology/adapter/motor#MotorGarageAdapter>
+//            a                    <http://www.w3.org/2002/07/owl#Class> ;
+//            <http://www.w3.org/2000/01/rdf-schema#label>
+//                    "MotorGarageAdapterType "@en ;
+//            <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+//                    fiteagle:Adapter ;
+//            fiteagle:implements  <http://fiteagle.org/ontology/adapter/motor#Motor> .
+//
+//    :Message  a     fiteagle:Inform .
+//
+//    :ADeployedMotorAdapter1
+//            a       <http://fiteagle.org/ontology/adapter/motor#MotorGarageAdapter> .
+//
+//    }
 
     @GET
     @Path("/")
     @Produces("text/turtle")
     public Response discoverAllTTL() throws JMSException {
 
-        // TODO
-        for (String adapterName : adapterNameToResourceName.keySet()) {
-            return discoverAdapterInstanceTTL(adapterName);
+        Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
 
         return getRESTResponse(null);
@@ -186,6 +269,24 @@ public class NorthboundAPI {
         }
 
         return getRESTResponse(null);
+    }
+    
+    private Model getRequestModel(String adapterName, String instanceName) {
+        Model rdfModel = ModelFactory.createDefaultModel();
+
+        String[] adapterParams = getAdapterParams(adapterName);
+
+        if (adapterParams != null) {
+
+            if (instanceName != null) {
+                addResourceInstanceToModel(rdfModel, adapterParams, instanceName);
+            }
+            setAdapterPrefix(rdfModel, adapterParams);
+
+            return MessageBusMsgFactory.createMsgRequest(rdfModel);
+        }
+
+        return null;
     }
 
     private Model getDiscoverModel(String adapterName, String instanceName) {

@@ -25,25 +25,32 @@ window.addEventListener("load", init, false);
 	//	packages : [ 'gauge' ]
 	//});Please stop "improving" the motor adapter code without even getting in touch with me. 
 
-function writeToScreen(message, isIncoming) {
+function writeToScreen(data, isIncoming) {
 	var pre = document.createElement("p");
-	pre.style.wordWrap = "break-word";
-	pre.innerHTML = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />");
+	pre.style.wordWrap = "break-word";	
+		
+	var json = $.parseJSON(data);
 
-	if (!isIncoming) {
-		pre.style.color = "white";
-	}
+	if (json.hasOwnProperty("rdf") && json.hasOwnProperty("method_type")) {
 
-	output.appendChild(pre);
-
-	// Insert separator line
-	var preSeparator = document.createElement("p");
-	preSeparator.style.wordWrap = "break-word";
-	preSeparator.innerHTML = "-------------------------------------------------------------------------------------";
-
-	output.appendChild(preSeparator);
-	// Scroll automatically
-	output.scrollTop = output.scrollHeight;
+		var message = json.rdf;
+		pre.innerHTML = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />");
+	
+		if (!isIncoming) {
+			pre.style.color = "white";
+		}
+	
+		output.appendChild(pre);
+	
+		// Insert separator line
+		var preSeparator = document.createElement("p");
+		preSeparator.style.wordWrap = "break-word";
+		preSeparator.innerHTML = "-------------------------------------------------------------------------------------";
+	
+		output.appendChild(preSeparator);
+		// Scroll automatically
+		output.scrollTop = output.scrollHeight;
+}
 }
 
 function send_message() {
