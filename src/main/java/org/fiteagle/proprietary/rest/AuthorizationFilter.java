@@ -29,7 +29,6 @@ public class AuthorizationFilter implements Filter {
   private JMSContext context;
   @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
-  private final static int TIMEOUT_TIME_MS = 10000;
 
   private final static Logger log = Logger.getLogger(AuthorizationFilter.class.toString());
   
@@ -70,14 +69,11 @@ public class AuthorizationFilter implements Filter {
       message.setStringProperty(IMessageBus.TYPE_REQUEST, PolicyEnforcementPoint.IS_REQUEST_AUTHORIZED);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-      context.createProducer().send(topic, message);
       
-      Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
-      
-      if(rcvMessage == null){
-        log.error("JMS: timeout while waiting for response");
-        response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-        return false;
+      Message rcvMessage = null;
+      while(rcvMessage == null){
+        context.createProducer().send(topic, message);
+        rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
       }
       Boolean result = rcvMessage.getBooleanProperty(IMessageBus.TYPE_RESULT);
       return result;

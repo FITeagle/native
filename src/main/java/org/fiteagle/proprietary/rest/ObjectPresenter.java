@@ -35,8 +35,6 @@ public class ObjectPresenter {
   @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   protected Topic topic;
   
-  protected final static int TIMEOUT_TIME_MS = 10000;
-  
   protected static ObjectMapper objectMapper = new ObjectMapper();
   
   private final static Logger log = Logger.getLogger(AuthenticationFilter.class.toString());
@@ -44,7 +42,7 @@ public class ObjectPresenter {
   public ObjectPresenter() {
   }
   
-  protected String sendMessage(Message message, String requestType){
+  protected Message sendMessage(Message message, String requestType){
     String filter = "";
     try {
       message.setStringProperty(IMessageBus.TYPE_REQUEST, requestType);
@@ -54,8 +52,13 @@ public class ObjectPresenter {
     } catch (JMSException e) {
       throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
     }
-    context.createProducer().send(topic, message);
-    return filter;
+    Message rcvMessage = null;
+    while(rcvMessage == null){
+      context.createProducer().send(topic, message);
+      rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
+    }
+    
+    return rcvMessage;
   }
   
   protected String getResultString(Message message){

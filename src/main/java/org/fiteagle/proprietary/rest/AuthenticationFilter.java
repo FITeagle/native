@@ -48,7 +48,6 @@ public class AuthenticationFilter implements Filter{
   private JMSContext context;
   @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
-  private final static int TIMEOUT_TIME_MS = 10000;
   
   protected HashMap<String, Cookie> cookies = new HashMap<>();
   
@@ -192,12 +191,11 @@ public class AuthenticationFilter implements Filter{
       message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.VERIFY_CREDENTIALS);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-      context.createProducer().send(topic, message);
       
-      Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
-      
-      if(rcvMessage == null){
-        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+      Message rcvMessage = null;
+      while(rcvMessage == null){
+        context.createProducer().send(topic, message);
+        rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
       }
       String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
       if(exceptionMessage != null){
