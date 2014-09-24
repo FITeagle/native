@@ -41,9 +41,8 @@ public class ClassPresenter extends ObjectPresenter {
   public Class get(@PathParam("id") long id) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);
-    final String filter = sendMessage(message, UserManager.GET_CLASS);
+    Message rcvMessage = sendMessage(message, UserManager.GET_CLASS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
     return objectMapper.readValue(resultJSON, Class.class);
@@ -58,9 +57,8 @@ public class ClassPresenter extends ObjectPresenter {
     String classJSON = objectMapper.writeValueAsString(targetClass);
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, targetClass.getOwner().getUsername());
     message.setStringProperty(UserManager.TYPE_PARAMETER_CLASS_JSON, classJSON);
-    final String filter = sendMessage(message, UserManager.ADD_CLASS);
+    Message rcvMessage = sendMessage(message, UserManager.ADD_CLASS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return rcvMessage.getLongProperty(IMessageBus.TYPE_RESULT);
   }
@@ -70,9 +68,8 @@ public class ClassPresenter extends ObjectPresenter {
   public Response delete(@PathParam("id") long id) throws JMSException {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);
-    final String filter = sendMessage(message, UserManager.DELETE_CLASS);
+    Message rcvMessage = sendMessage(message, UserManager.DELETE_CLASS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -86,9 +83,8 @@ public class ClassPresenter extends ObjectPresenter {
     String taskJSON = objectMapper.writeValueAsString(new Task(task.getName(), task.getDescription()));  
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_TASK_JSON, taskJSON);
-    final String filter = sendMessage(message, UserManager.ADD_TASK);
+    Message rcvMessage = sendMessage(message, UserManager.ADD_TASK);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return rcvMessage.getLongProperty(IMessageBus.TYPE_RESULT);
   }
@@ -99,9 +95,8 @@ public class ClassPresenter extends ObjectPresenter {
     Message message = context.createMessage();
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, classId);      
     message.setLongProperty(UserManager.TYPE_PARAMETER_TASK_ID, taskId);
-    final String filter = sendMessage(message, UserManager.REMOVE_TASK);
+    Message rcvMessage = sendMessage(message, UserManager.REMOVE_TASK);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -112,9 +107,8 @@ public class ClassPresenter extends ObjectPresenter {
   @JsonView(VIEW.PUBLIC.class)
   public List<Class> getAllClasses() throws JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
-    final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES);
+    Message rcvMessage = sendMessage(message, UserManager.GET_ALL_CLASSES);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<Class>>(){});
   }

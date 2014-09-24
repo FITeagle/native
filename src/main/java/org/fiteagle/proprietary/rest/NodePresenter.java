@@ -35,9 +35,8 @@ public class NodePresenter extends ObjectPresenter{
     Message message = context.createMessage();
     String nodeJSON = objectMapper.writeValueAsString(node);
     message.setStringProperty(UserManager.TYPE_PARAMETER_NODE_JSON, nodeJSON);
-    final String filter = sendMessage(message, UserManager.ADD_NODE);
+    Message rcvMessage = sendMessage(message, UserManager.ADD_NODE);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return rcvMessage.getLongProperty(IMessageBus.TYPE_RESULT);
   }
@@ -47,9 +46,8 @@ public class NodePresenter extends ObjectPresenter{
   @Produces(MediaType.APPLICATION_JSON)
   public List<Node> getAllNodes() throws JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
-    final String filter = sendMessage(message, UserManager.GET_ALL_NODES);
+    Message rcvMessage = sendMessage(message, UserManager.GET_ALL_NODES);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<Node>>(){});
   }

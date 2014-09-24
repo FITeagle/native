@@ -53,9 +53,8 @@ public class UserPresenter extends ObjectPresenter{
   public User getUser(@PathParam("username") String username, @QueryParam("setCookie") boolean setCookie) throws JMSException, JsonParseException, JsonMappingException, IOException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
-    final String filter = sendMessage(message, UserManager.GET_USER);
+    Message rcvMessage = sendMessage(message, UserManager.GET_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
     return objectMapper.readValue(resultJSON, User.class);
@@ -68,9 +67,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     String userJSON = objectMapper.writeValueAsString(createUser(username, user));
     message.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, userJSON);
-    final String filter = sendMessage(message, UserManager.ADD_USER);
+    Message rcvMessage = sendMessage(message, UserManager.ADD_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(201).build();
   }
@@ -81,7 +79,6 @@ public class UserPresenter extends ObjectPresenter{
   public Response updateUser(@PathParam("username") String username, User user) throws JMSException, JsonProcessingException {
     String pubKeysJSON = objectMapper.writeValueAsString(createPublicKeys(user.getPublicKeys()));
     Message message = context.createMessage();
-    
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
     message.setStringProperty(UserManager.TYPE_PARAMETER_FIRSTNAME, user.getFirstName());
     message.setStringProperty(UserManager.TYPE_PARAMETER_LASTNAME, user.getLastName());
@@ -89,10 +86,8 @@ public class UserPresenter extends ObjectPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_AFFILIATION, user.getAffiliation());
     message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, user.getPassword());
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEYS, pubKeysJSON);
+    Message rcvMessage = sendMessage(message, UserManager.UPDATE_USER);
     
-    final String filter = sendMessage(message, UserManager.UPDATE_USER);
-    
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -103,9 +98,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
     message.setStringProperty(UserManager.TYPE_PARAMETER_ROLE, role.toString());
-    final String filter = sendMessage(message, UserManager.SET_ROLE);
+    Message rcvMessage = sendMessage(message, UserManager.SET_ROLE);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -124,9 +118,8 @@ public class UserPresenter extends ObjectPresenter{
     String pubKeyJSON = objectMapper.writeValueAsString(new UserPublicKey(key, pubkey.getDescription(), pubkey.getPublicKeyString()));  
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY, pubKeyJSON);
-    final String filter = sendMessage(message, UserManager.ADD_PUBLIC_KEY);
+    Message rcvMessage = sendMessage(message, UserManager.ADD_PUBLIC_KEY);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -137,9 +130,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));
-    final String filter = sendMessage(message, UserManager.DELETE_PUBLIC_KEY);
+    Message rcvMessage = sendMessage(message, UserManager.DELETE_PUBLIC_KEY);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -152,9 +144,8 @@ public class UserPresenter extends ObjectPresenter{
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION_NEW, decode(newDescription));
-    final String filter = sendMessage(message, UserManager.RENAME_PUBLIC_KEY);
+    Message rcvMessage = sendMessage(message, UserManager.RENAME_PUBLIC_KEY);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -164,9 +155,8 @@ public class UserPresenter extends ObjectPresenter{
   public Response deleteUser(@PathParam("username") String username) throws JMSException {
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
-    final String filter = sendMessage(message, UserManager.DELETE_USER);
+    Message rcvMessage = sendMessage(message, UserManager.DELETE_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -178,9 +168,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PASSPHRASE, decode(passphrase));      
-    final String filter = sendMessage(message, UserManager.CREATE_USER_CERT_AND_PRIVATE_KEY);
+    Message rcvMessage = sendMessage(message, UserManager.CREATE_USER_CERT_AND_PRIVATE_KEY);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return getResultString(rcvMessage);
   }
@@ -192,9 +181,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_PUBLIC_KEY_DESCRIPTION, decode(description));      
-    final String filter = sendMessage(message, UserManager.GET_USER_CERT_FOR_PUBLIC_KEY);
+    Message rcvMessage = sendMessage(message, UserManager.GET_USER_CERT_FOR_PUBLIC_KEY);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return getResultString(rcvMessage);
   } 
@@ -213,9 +201,8 @@ public class UserPresenter extends ObjectPresenter{
   public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesFromUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
-    final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_FROM_USER);
+    Message rcvMessage = sendMessage(message, UserManager.GET_ALL_CLASSES_FROM_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<org.fiteagle.api.core.usermanagement.Class>>(){});
   }
@@ -227,9 +214,8 @@ public class UserPresenter extends ObjectPresenter{
   public List<org.fiteagle.api.core.usermanagement.Class> getAllClassesOwnedByUser(@PathParam("username") String username) throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);      
-    final String filter = sendMessage(message, UserManager.GET_ALL_CLASSES_OWNED_BY_USER);
+    Message rcvMessage = sendMessage(message, UserManager.GET_ALL_CLASSES_OWNED_BY_USER);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return objectMapper.readValue(getResultString(rcvMessage), new TypeReference<List<org.fiteagle.api.core.usermanagement.Class>>(){});
   }
@@ -240,9 +226,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);   
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id); 
-    final String filter = sendMessage(message, UserManager.SIGN_UP_FOR_CLASS);
+    Message rcvMessage = sendMessage(message, UserManager.SIGN_UP_FOR_CLASS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -254,9 +239,8 @@ public class UserPresenter extends ObjectPresenter{
     Message message = context.createMessage();
     message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);   
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id); 
-    final String filter = sendMessage(message, UserManager.LEAVE_CLASS);
+    Message rcvMessage = sendMessage(message, UserManager.LEAVE_CLASS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     return Response.status(200).build();
   }
@@ -267,9 +251,8 @@ public class UserPresenter extends ObjectPresenter{
   @JsonView(VIEW.PUBLIC.class)
   public List<User> getAllUsers() throws JMSException, JsonParseException, JsonMappingException, IOException{
     Message message = context.createMessage();
-    final String filter = sendMessage(message, UserManager.GET_ALL_USERS);
+    Message rcvMessage = sendMessage(message, UserManager.GET_ALL_USERS);
     
-    Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
     checkForExceptions(rcvMessage);
     String resultJSON = getResultString(rcvMessage);
     return objectMapper.readValue(resultJSON, new TypeReference<List<User>>(){});
