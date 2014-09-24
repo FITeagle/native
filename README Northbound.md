@@ -32,6 +32,13 @@ cd core/repo && mvn clean verify wildfly:deploy && cd - && \
 cd core/bus && mvn clean verify wildfly:deploy && cd -
 ```
 
+Look at the manager
+------------------
+
+Open http://localhost:8080/native/gui/admin/manager.html
+
+Monitor, create, terminate and configure resource adapters.
+
 Look at the logger
 ------------------
 
@@ -70,27 +77,33 @@ Start experimenting
 
 Use the following test RDF files from the MotorAdapter directory.
 
+Possible adapter names:
+
+[ADAPTER_NAME]: ADeployedStopwatchAdapter1, ADeployedMotorAdapter1
+
+[RESOURCE_NAME]: Any name you want
+
 * Create a single new motor instance using RDF description:
-  * ```curl -i -X PUT -d @createMotor.ttl http://localhost:8080/native/api/resources/motor/ARunningMotor1```
+  * ```curl -i -X PUT -d @createMotor.ttl http://localhost:8080/native/api/resources/[ADAPTER_NAME]/ARunningMotor1```
 * Create four new motor instances at once using RDF description:
-  * ```curl -i -X PUT -d @createManyMotors.ttl http://localhost:8080/native/api/resources/motor```
+  * ```curl -i -X PUT -d @createManyMotors.ttl http://localhost:8080/native/api/resources/[ADAPTER_NAME]```
 * Create a single new motor instance with no attached RDF description (just using the path):
-  * ```curl -i -X PUT http://localhost:8080/native/api/resources/motor/ARunningMotor101```
+  * ```curl -i -X PUT http://localhost:8080/native/api/resources/[ADAPTER_NAME]/ARunningMotor101```
 * Release a single new motor instance with no attached RDF description (just using the path):
-  * ```curl -i -X DELETE http://localhost:8080/native/api/resources/motor/ARunningMotor1```
+  * ```curl -i -X DELETE http://localhost:8080/native/api/resources/[ADAPTER_NAME]/ARunningMotor1```
 * Configure a single motor instance using RDF description:
-  * ```curl -i -X POST -d @configureMotor.ttl http://localhost:8080/native/api/resources/motor```
+  * ```curl -i -X POST -d @configureMotor.ttl http://localhost:8080/native/api/resources/[ADAPTER_NAME]```
 * Configure a two new motor instances using RDF description:
-  * ```curl -i -X POST -d @configureManyMotors.ttl http://localhost:8080/native/api/resources/motor ```
+  * ```curl -i -X POST -d @configureManyMotors.ttl http://localhost:8080/native/api/resources/[ADAPTER_NAME] ```
 * Configure ARunningMotor1 instance so it becomes dynamic:
-  * ```curl -i -X POST -d @configureDynamicMotor.ttl http://localhost:8080/native/api/resources/motor ```
+  * ```curl -i -X POST -d @configureDynamicMotor.ttl http://localhost:8080/native/api/resources/[ADAPTER_NAME] ```
   * Now it will change its RPM property every 5 seconds and send inform messages over the bus. See log. Keep refreshing FUSEKI serviceto see the live updates in the repository.
 * To discover/describe resources in the Testbed (only motor at the moment):
   * ```curl -i -X GET http://localhost:8080/native/api/resources/```
 * To discover/describe resources of the garage moter adapter:
-  * ```curl -i -X GET http://localhost:8080/native/api/resources/motor/```
+  * ```curl -i -X GET http://localhost:8080/native/api/resources/[ADAPTER_NAME]/```
 * To discover/describe a single resource:
-  * ```curl -i -X GET http://localhost:8080/native/api/resources/motor/ARunningMotor1```
+  * ```curl -i -X GET http://localhost:8080/native/api/resources/[ADAPTER_NAME]/ARunningMotor1```
  
 
 Implemented HTTP Status Codes
