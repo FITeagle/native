@@ -1,7 +1,7 @@
 
 
 //var adapterName = "ADeployedMotorAdapter1";
-var adapterName = "ADeployedStopwatchAdapter1";
+var adapterName = "";
 var adapterOntologyPrefix = "";
 var adapterOntology = "";
 var adapterResourceName = "";
@@ -25,6 +25,8 @@ var wsUriLogger;
 var resourceInstances = [];
 var resourceInstanceBeforeConfigure;
 
+var adapterInstances = [];
+
 window.addEventListener("load", init, false);
 
 String.prototype.escape = function() {
@@ -37,6 +39,10 @@ String.prototype.escape = function() {
 		return tagsToReplace[tag] || tag;
 	});
 };
+
+function getURLParameter(name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+}
 
 function getRootUri() {
 	return "ws://" + (document.location.hostname == "" ? "localhost" : document.location.hostname) + ":" + (document.location.port == "" ? "8080" : document.location.port);
@@ -66,14 +72,19 @@ function init() {
 		}
 	};
 
-	restGetAll();
+	adapterName = getURLParameter('adaptername');
+	if(adapterName && adapterName !== ""){
+		restGetAll();
+	} else {
+		restGetAdapterList();
+	}
 }
 
 function restGetAll() {
 	var restURL = REST_HOST;
 	var callback = function(data) {
 		processGetAdapterParameters(data);
-		processGetInstances(data);
+		//processGetInstances(data);
 	};
 	restGET(restURL, callback);
 }
@@ -83,6 +94,15 @@ function restGetInstances() {
 	var callback = function(data) {
 		console.log("Received Instances RDF data!");
 		processGetInstances(data);
+	};
+	restGET(restURL, callback);
+}
+
+function restGetAdapterList() {
+	var restURL = BASE_URL;
+	var callback = function(data) {
+		console.log("Received Testbed Adapter RDF data!");
+		processGetTestbedAdapters(data);
 	};
 	restGET(restURL, callback);
 }
@@ -241,11 +261,34 @@ function processGetAdapterParameters(ttlString) {
 				gotAdapterParams = true;
 			}
 		} else {
+			guiRefreshLabels();
 			processGetAdapterProperties(ttlString);
 		}
 	});
-
 }
+
+function processGetTestbedAdapters(ttlString) {
+
+	adapterInstances = [];
+
+	var parser = N3.Parser();
+	parser.parse(ttlString, function(error, triple, prefixes) {
+		if (triple) {
+			// Find adapter resource instance type (fitealge:implements), prefixs
+			if(triple.predicate.indexOf(FITEAGLE_INTERNAL) != -1){
+				
+				var posPrefixSubj = triple.subject.indexOf("#");
+
+				var currentAdapter = {};
+				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
+				currentResInstance['type'] = triple.object;				
+			}
+		} else {
+			guiRefreshAdaptersList();
+		}
+	});
+}
+
 
 function processGetInstances(ttlString) {
 
@@ -398,6 +441,30 @@ function guiRefreshProperty(instanceName, property, value) {
 		}
 	});
 }
+
+function guiRefreshLabels() {
+	document.title = "Resource Management: " + adapterName + " (" + adapterType + ")";
+	$("h1").html("Resource Management: " + adapterName + " <small>" + adapterType + "</small>");
+}
+
+function guiRefreshAdaptersList() {
+
+$("#resourceInstancesBox").html("");
+
+	for ( var index = 0; index < adapterInstances.length; ++index) {
+		var object = adapterInstances[index];
+		var text = '<div class="resourceHeader"><h2>' + object.name + '</h2>' + '<h3>Type: ' + object.type + '</h3>';
+		text += '<div class="resourceButtons">';
+		text += '<form action="' + document.URL + object.name + '">';
+		text += '<input class="resourceButton" type="submit" value="Manage ' + object.name + ' Adapter">';
+		text += '</form></div><div class="clear"></div></div><div class="resourceProperties">';
+		text += "</div>";
+
+		d = document.createElement('div');
+		$(d).addClass("resourceInstanceDiv").attr('id', object.name).html(text).appendTo($("#resourceInstancesBox")); // main
+	}
+}
+
 
 function guiRefreshList() {
 
