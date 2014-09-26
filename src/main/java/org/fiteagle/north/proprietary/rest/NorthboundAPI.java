@@ -8,8 +8,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
@@ -59,7 +57,7 @@ public class NorthboundAPI {
         adapterSpecificParameters.put("testbed", testbedAdapterParams);
     }
     
-    @PostConstruct
+   // @PostConstruct
     private void refreshTestbedAdapterParameters(){
         
         resetAdapterParameters();
@@ -119,8 +117,6 @@ public class NorthboundAPI {
     @Path("/")
     @Produces("text/turtle")
     public Response discoverAllTTL() throws JMSException {
-        
-        System.err.println("now test");
 
         Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
 
@@ -142,8 +138,6 @@ public class NorthboundAPI {
     @Path("/{adapterName}")
     @Produces("text/turtle")
     public Response discoverAdapterInstanceTTL(@PathParam("adapterName") String adapterName) throws JMSException {
-        
-        System.err.println(adapterName);
 
         Model inputModel = getDiscoverModel(adapterName, null);
 
@@ -357,7 +351,6 @@ public class NorthboundAPI {
     private String[] getAdapterParams(String paramAdapterName) {
         for (String adapterName : adapterSpecificParameters.keySet()) {
             if (paramAdapterName.equals(adapterName)) {
-                System.err.println(adapterName + " equals " + paramAdapterName);
                 return adapterSpecificParameters.get(adapterName);
             }
         }
@@ -367,7 +360,6 @@ public class NorthboundAPI {
         
         for (String adapterName : adapterSpecificParameters.keySet()) {
             if (paramAdapterName.equals(adapterName)) {
-                System.err.println(adapterName + " equals " + paramAdapterName);
                 return adapterSpecificParameters.get(adapterName);
             }
         }

@@ -1,9 +1,16 @@
 
 
-var adapterName = "motor";
-var adapterOntologyPrefix = "motor";
-var adapterOntology = "http://fiteagle.org/ontology/adapter/motor#";
-var adapterResourceName = adapterOntology + "Motor";
+//var adapterName = "ADeployedMotorAdapter1";
+var adapterName = "ADeployedStopwatchAdapter1";
+var adapterOntologyPrefix = "";
+var adapterOntology = "";
+var adapterResourceName = "";
+var adapterType = "";
+
+var gotAdapterParams = false;
+
+
+var FITEAGLE_INTERNAL = "http://fiteagleinternal#";
 
 var BASE_URL = "http://localhost:8080/native/api/resources/";
 var LOGGER_SERVICE_URL = "/bus/api/logger";
@@ -95,13 +102,21 @@ function restReleaseInstance(instanceName) {
 }
 
 function restConfigureInstances(configureTTL) {
-	var restURL = REST_HOST;
-	restPOST(restURL, configureTTL);
+	if(gotAdapterParams){
+		var restURL = REST_HOST;
+		restPOST(restURL, configureTTL);
+	} else {
+		alert("Adapter not setup properly");
+	}
 }
 
 function restCreateInstance(createTTL) {
-	var restURL = REST_HOST;
-	restPUT(restURL, createTTL);
+	if(gotAdapterParams){
+		var restURL = REST_HOST;
+		restPUT(restURL, createTTL);
+	} else {
+		alert("Adapter not setup properly");
+	}
 }
 
 function restPOST(restURL, dataToSend) {
@@ -168,18 +183,20 @@ function processDelete(ttlString) {
 
 }
 
-function processGetAdapterParameters(ttlString) {
+function processGetAdapterProperties(ttlString) {
 
 	var adapterParameters = {};
 	var currentProperty = "";
 
 	var parser = N3.Parser();
 	parser.parse(ttlString, function(error, triple, prefixes) {
-		if (triple) {
+		if (triple) {			
+			// Find Resource Instance Type
 			if (triple.predicate === "http://www.w3.org/2000/01/rdf-schema#domain" && triple.object === adapterResourceName) {
 				currentProperty = triple.subject;
 			}
 
+			// Find Resource Instance Type's properties
 			if (triple.predicate === "http://www.w3.org/2000/01/rdf-schema#range" && triple.subject === currentProperty) {
 				var posPrefixSubj = triple.subject.indexOf("#");
 				var propertyName = triple.subject.slice(posPrefixSubj + 1);
@@ -190,6 +207,41 @@ function processGetAdapterParameters(ttlString) {
 
 		} else {
 			guiAddCreateBox(adapterParameters);
+			processGetInstances(ttlString);
+		}
+	});
+
+}
+
+
+function processGetAdapterParameters(ttlString) {
+
+	var adapterParameters = {};
+	var currentProperty = "";
+
+	var parser = N3.Parser();
+	parser.parse(ttlString, function(error, triple, prefixes) {
+		if (triple) {
+			// Find adapter resource instance type (fitealge:implements), prefixs
+			if(triple.predicate === "http://fiteagle.org/ontology#implements"){
+				
+				var posPrefixObj = triple.object.indexOf("#");
+				var posPrefixSubj = triple.subject.indexOf("#");
+				var prefix = triple.object.slice(0, posPrefixObj+1);
+				
+				adapterOntologyPrefix = prefix.slice(prefix.lastIndexOf("/") + 1, prefix.length - 1);
+				adapterOntology = prefix;
+				adapterResourceName = triple.object;
+				adapterType = triple.subject;
+				
+				console.log(adapterOntologyPrefix);
+				console.log(adapterOntology);
+				console.log(adapterResourceName);
+	
+				gotAdapterParams = true;
+			}
+		} else {
+			processGetAdapterProperties(ttlString);
 		}
 	});
 
@@ -267,7 +319,20 @@ function processCreate(ttlString) {
 
 function processInform(ttlString) {
 
-	console.log("parsing: " + ttlString);
+	var parser = N3.Parser();
+	parser.parse(ttlString, function(error, triple, prefixes) {
+
+		if (triple) {
+			if(triple.subject === FITEAGLE_INTERNAL + adapterName && triple.object === adapterType){
+				processAdapterInstances(ttlString);
+				return;
+			}
+		}
+	});
+}
+
+
+function processAdapterInstances(ttlString){
 
 	var parser = N3.Parser();
 	parser.parse(ttlString, function(error, triple, prefixes) {
@@ -275,7 +340,7 @@ function processInform(ttlString) {
 		if (triple) {
 			for ( var index = 0; index < resourceInstances.length; ++index) {
 				if (triple.subject === resourceInstances[index].name_full) {
-
+					console.log("called");
 					var posPrefixPred = triple.predicate.indexOf("#");
 					var property = triple.predicate.slice(posPrefixPred + 1);
 					var value = getObjectValue(triple);
@@ -285,9 +350,13 @@ function processInform(ttlString) {
 				}
 			}
 
+		} else {
+			
 		}
 	});
 }
+
+
 
 function getObjectValue(triple) {
 	var posPrefixObj = triple.object.indexOf("#");
@@ -438,7 +507,7 @@ function restoreResInstanceAfterCancel(instanceName) {
 }
 
 function getConfigureTTL(instanceName) {
-	var configureTTL = getPrefix();
+	var configureTTL = getPrefix() + getAdapterInstance();
 
 	configureTTL += ":" + instanceName + " rdf:type <" + adapterResourceName + ">";
 
@@ -453,7 +522,7 @@ function getConfigureTTL(instanceName) {
 }
 
 function getCreateTTL(instanceName) {
-	var ttl = getPrefix();
+	var ttl = getPrefix() + getAdapterInstance();
 
 	ttl += ":" + $("#inputCreateName").val() + " rdf:type <" + adapterResourceName + ">";
 
@@ -471,7 +540,12 @@ function getPrefix() {
 	var ttl = "@prefix fiteagle: <http://fiteagle.org/ontology#> .\n";
 	ttl += "@prefix " + adapterOntologyPrefix + ": <" + adapterOntology + "> .\n";
 	ttl += "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n";
-	ttl += "@prefix : <http://fiteagleinternal#> .\n";
+	ttl += "@prefix : <http://fiteagleinternal#> .\n\n";
+	return ttl;
+}
+
+function getAdapterInstance(){
+	var ttl = ":" + adapterName + " rdf:type <" + adapterType + "> .\n";
 	return ttl;
 }
 
