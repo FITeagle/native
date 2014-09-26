@@ -11,13 +11,13 @@ var gotAdapterParams = false;
 
 
 var FITEAGLE_INTERNAL = "http://fiteagleinternal#";
+var ONTOLOGY_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+var ONTOLOGY_FITEAGLE_MESSAGE = FITEAGLE_INTERNAL + "Message";
 
 var BASE_URL = "http://localhost:8080/native/api/resources/";
 var LOGGER_SERVICE_URL = "/bus/api/logger";
 
 var METHOD_TYPE_INFORM = "type_inform";
-var REST_HOST = BASE_URL + adapterName;
-
 
 var websocketLogger;
 var wsUriLogger;
@@ -74,23 +74,14 @@ function init() {
 
 	adapterName = getURLParameter('adaptername');
 	if(adapterName && adapterName !== ""){
-		restGetAll();
+		restGetInitList();
 	} else {
-		restGetAdapterList();
+		restGetTestbedAdapterList();
 	}
 }
 
-function restGetAll() {
-	var restURL = REST_HOST;
-	var callback = function(data) {
-		processGetAdapterParameters(data);
-		//processGetInstances(data);
-	};
-	restGET(restURL, callback);
-}
-
 function restGetInstances() {
-	var restURL = REST_HOST;
+	var restURL = BASE_URL + adapterName;
 	var callback = function(data) {
 		console.log("Received Instances RDF data!");
 		processGetInstances(data);
@@ -98,7 +89,7 @@ function restGetInstances() {
 	restGET(restURL, callback);
 }
 
-function restGetAdapterList() {
+function restGetTestbedAdapterList() {
 	var restURL = BASE_URL;
 	var callback = function(data) {
 		console.log("Received Testbed Adapter RDF data!");
@@ -107,8 +98,8 @@ function restGetAdapterList() {
 	restGET(restURL, callback);
 }
 
-function restGetAdapterParameters() {
-	var restURL = REST_HOST;
+function restGetInitList() {
+	var restURL = BASE_URL + adapterName;
 	var callback = function(data) {
 		console.log("Received Adapter RDF data!");
 		processGetAdapterParameters(data);
@@ -123,7 +114,7 @@ function restReleaseInstance(instanceName) {
 
 function restConfigureInstances(configureTTL) {
 	if(gotAdapterParams){
-		var restURL = REST_HOST;
+		var restURL = BASE_URL + adapterName;
 		restPOST(restURL, configureTTL);
 	} else {
 		alert("Adapter not setup properly");
@@ -132,7 +123,7 @@ function restConfigureInstances(configureTTL) {
 
 function restCreateInstance(createTTL) {
 	if(gotAdapterParams){
-		var restURL = REST_HOST;
+		var restURL = BASE_URL + adapterName;
 		restPUT(restURL, createTTL);
 	} else {
 		alert("Adapter not setup properly");
@@ -275,13 +266,14 @@ function processGetTestbedAdapters(ttlString) {
 	parser.parse(ttlString, function(error, triple, prefixes) {
 		if (triple) {
 			// Find adapter resource instance type (fitealge:implements), prefixs
-			if(triple.predicate.indexOf(FITEAGLE_INTERNAL) != -1){
+			if(triple.subject.indexOf(FITEAGLE_INTERNAL) != -1 && triple.predicate === ONTOLOGY_RDF_TYPE && triple.subject !== ONTOLOGY_FITEAGLE_MESSAGE){
 				
 				var posPrefixSubj = triple.subject.indexOf("#");
 
 				var currentAdapter = {};
-				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
-				currentResInstance['type'] = triple.object;				
+				currentAdapter['name'] = triple.subject.slice(posPrefixSubj + 1);
+				currentAdapter['type'] = triple.object;		
+				adapterInstances.push(currentAdapter);
 			}
 		} else {
 			guiRefreshAdaptersList();
@@ -383,7 +375,6 @@ function processAdapterInstances(ttlString){
 		if (triple) {
 			for ( var index = 0; index < resourceInstances.length; ++index) {
 				if (triple.subject === resourceInstances[index].name_full) {
-					console.log("called");
 					var posPrefixPred = triple.predicate.indexOf("#");
 					var property = triple.predicate.slice(posPrefixPred + 1);
 					var value = getObjectValue(triple);
@@ -443,8 +434,11 @@ function guiRefreshProperty(instanceName, property, value) {
 }
 
 function guiRefreshLabels() {
-	document.title = "Resource Management: " + adapterName + " (" + adapterType + ")";
-	$("h1").html("Resource Management: " + adapterName + " <small>" + adapterType + "</small>");
+	document.title = adapterName + " (" + adapterType + ")";
+	$("h1").html(adapterName + " <small>" + adapterType + "</small>");
+	$("#currentAdapterBreadcrumb").show();
+	$("#currentAdapterName").html(adapterName);
+	
 }
 
 function guiRefreshAdaptersList() {
@@ -455,10 +449,13 @@ $("#resourceInstancesBox").html("");
 		var object = adapterInstances[index];
 		var text = '<div class="resourceHeader"><h2>' + object.name + '</h2>' + '<h3>Type: ' + object.type + '</h3>';
 		text += '<div class="resourceButtons">';
-		text += '<form action="' + document.URL + object.name + '">';
-		text += '<input class="resourceButton" type="submit" value="Manage ' + object.name + ' Adapter">';
+		text += '<a href="?adaptername=' + object.name + '">';
+		text += 'Manage Adapter</a> | ';
+		text += ' <a href="http://localhost:8080/native/gui/lodlive/index.html?' + object.type + '">';
+		text += 'Open visualization</a>';
+		
 		text += '</form></div><div class="clear"></div></div><div class="resourceProperties">';
-		text += "</div>";
+		text += "Adapter Type: " + object.type + "</div>";
 
 		d = document.createElement('div');
 		$(d).addClass("resourceInstanceDiv").attr('id', object.name).html(text).appendTo($("#resourceInstancesBox")); // main
