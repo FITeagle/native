@@ -1,12 +1,10 @@
 package org.fiteagle.north.proprietary.rest;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
@@ -47,21 +45,22 @@ public class NorthboundAPI {
 
     private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
 
-    // TODO: Need to refresh this when a adapter gets deployed/undeployed....
+    // Need to refresh this when a adapter gets deployed/undeployed....
     private static HashMap<String, String[]> adapterSpecificParameters = new HashMap<String, String[]>();
-    
-    
-    private void resetAdapterParameters(){
+
+    private void resetAdapterParameters() {
         adapterSpecificParameters.clear();
         String[] testbedAdapterParams = { "http://fiteagle.org/ontology#Testbed", "http://fiteagle.org/ontology#Testbed", "fiteagle", "http://fiteagle.org/ontology#", "FITEAGLE_Testbed" };
         adapterSpecificParameters.put("testbed", testbedAdapterParams);
     }
-    
-   // @PostConstruct
-    private void refreshTestbedAdapterParameters(){
-        
+
+    /**
+     * This method will refresh the list of adapters available in the testbed It gets called every time an adapter is not found in the Map "adapterSpecificParameters"
+     */
+    private void refreshTestbedAdapterParameters() {
+
         resetAdapterParameters();
-        
+
         Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
 
         if (inputModel != null) {
@@ -69,54 +68,72 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                
-                Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));                
-                    
-                    // Get contained adapter names
-                    //:FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
-                    StmtIterator adapterIterator = response.listStatements(new SimpleSelector(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter)); 
-                    while (adapterIterator.hasNext()) {
-                        String[] adapterSpecificParams = new String[5];
-                        Statement currentAdapterTypeStatement = adapterIterator.next();
-                        
-                        // Find out what resource this adapter implements
-                        StmtIterator adapterImplementsIterator = response.listStatements(new SimpleSelector(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements, (RDFNode) null)); 
-                        while (adapterImplementsIterator.hasNext()) {
-                            adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
-                            adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
-                        }
-                        
-                        // Find out the name of the adapter instance and its namespace/prefix
-                        StmtIterator adapterTypeIterator = response.listStatements(new SimpleSelector(null, RDF.type, currentAdapterTypeStatement.getSubject())); 
-                        while (adapterTypeIterator.hasNext()) {
-                            Statement currentAdapterStatement = adapterTypeIterator.next();
-                            
-                            String namespace = currentAdapterTypeStatement.getSubject().getNameSpace();
-                            int posPrefix = namespace.lastIndexOf("/");
-                            String prefix = namespace.substring(posPrefix+1, namespace.length()-1);
-                            String adapterName = currentAdapterStatement.getSubject().getLocalName();
-                            
-                            adapterSpecificParams[2] = prefix;
-                            adapterSpecificParams[3] = namespace;
-                            adapterSpecificParams[4] = adapterName;
 
-                            adapterSpecificParameters.put(adapterName, adapterSpecificParams);
-                            
-                            NorthboundAPI.LOGGER.log(Level.INFO, "Successfully identified the following adapter: " + adapterName);
-                            NorthboundAPI.LOGGER.log(Level.INFO, "Adapter Parameter: " + Arrays.toString(adapterSpecificParams));
-                        }
+                Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));
+
+                // Get contained adapter names
+                // :FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
+                StmtIterator adapterIterator = response.listStatements(new SimpleSelector(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter));
+                while (adapterIterator.hasNext()) {
+                    String[] adapterSpecificParams = new String[5];
+                    Statement currentAdapterTypeStatement = adapterIterator.next();
+
+                    // Find out what resource this adapter implements
+                    StmtIterator adapterImplementsIterator = response.listStatements(new SimpleSelector(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,
+                            (RDFNode) null));
+                    while (adapterImplementsIterator.hasNext()) {
+                        adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
+                        adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
                     }
+
+                    // Find out the name of the adapter instance and its namespace/prefix
+                    StmtIterator adapterTypeIterator = response.listStatements(new SimpleSelector(null, RDF.type, currentAdapterTypeStatement.getSubject()));
+                    while (adapterTypeIterator.hasNext()) {
+                        Statement currentAdapterStatement = adapterTypeIterator.next();
+
+                        String namespace = currentAdapterTypeStatement.getSubject().getNameSpace();
+                        int posPrefix = namespace.lastIndexOf("/");
+                        String prefix = namespace.substring(posPrefix + 1, namespace.length() - 1);
+                        String adapterName = currentAdapterStatement.getSubject().getLocalName();
+
+                        adapterSpecificParams[2] = prefix;
+                        adapterSpecificParams[3] = namespace;
+                        adapterSpecificParams[4] = adapterName;
+
+                        adapterSpecificParameters.put(adapterName, adapterSpecificParams);
+                    }
+                }
             } catch (JMSException e) {
                 e.printStackTrace();
             }
-        }     
- 
+        }
+    }
+
+    @GET
+    @Path("/discover")
+    @Produces("text/turtle")
+    public Response discoverAllTTL() throws JMSException {
+
+        Model inputModel = getDiscoverModel();
+
+        if (inputModel != null) {
+            try {
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                sendRequest(request);
+                Message result = waitForResult(request);
+                return getRESTResponse(getResult(result));
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return getRESTResponse(null);
     }
 
     @GET
     @Path("/")
     @Produces("text/turtle")
-    public Response discoverAllTTL() throws JMSException {
+    public Response requestTestbedAdapterListTTL() throws JMSException {
 
         Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
 
@@ -137,13 +154,13 @@ public class NorthboundAPI {
     @GET
     @Path("/{adapterName}")
     @Produces("text/turtle")
-    public Response discoverAdapterInstanceTTL(@PathParam("adapterName") String adapterName) throws JMSException {
+    public Response requestAdapterResourceInstancesTTL(@PathParam("adapterName") String adapterName) throws JMSException {
 
-        Model inputModel = getDiscoverModel(adapterName, null);
+        Model inputModel = getRequestModel(adapterName, null);
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return getRESTResponse(getResult(result));
@@ -158,13 +175,13 @@ public class NorthboundAPI {
     @GET
     @Path("/{adapterName}/{instanceName}")
     @Produces("text/turtle")
-    public Response discoverAdapterResourceInstanceTTL(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
+    public Response requestSingleResourceInstanceTTL(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        Model inputModel = getDiscoverModel(adapterName, instanceName);
+        Model inputModel = getRequestModel(adapterName, instanceName);
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return getRESTResponse(getResult(result));
@@ -172,10 +189,9 @@ public class NorthboundAPI {
                 e.printStackTrace();
             }
         }
-        
+
         return getRESTResponse(null);
     }
-   
 
     @PUT
     @Path("/{adapterName}/{instanceName}")
@@ -258,16 +274,20 @@ public class NorthboundAPI {
 
         return getRESTResponse(null);
     }
-    
+
     private Model getRequestModel(String adapterName, String instanceName) {
 
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
-            Model rdfModel = getDefaultModel(adapterParams);
+            Model rdfModel = getDefaultModel();
 
             if (instanceName != null) {
+                // If instance specified, request that resource instance
                 addInstanceToModel(rdfModel, adapterParams[1], instanceName);
+            } else {
+                // If no instance specified, request whole adapter
+                rdfModel = getDefaultModel(adapterParams);
             }
             setAdapterPrefix(rdfModel, adapterParams);
 
@@ -277,26 +297,12 @@ public class NorthboundAPI {
         return null;
     }
 
-    private Model getDiscoverModel(String adapterName, String instanceName) {
-
-        String[] adapterParams = getAdapterParams(adapterName);
-
-        if (adapterParams != null) {
-            Model rdfModel = getDefaultModel(adapterParams);
-
-            if (instanceName != null) {
-                addInstanceToModel(rdfModel, adapterParams[1], instanceName);
-            } 
-            setAdapterPrefix(rdfModel, adapterParams);
-
-            return MessageBusMsgFactory.createMsgDiscover(rdfModel);
-        }
-
-        return null;
+    private Model getDiscoverModel() {
+        return MessageBusMsgFactory.createMsgDiscover(null);
     }
 
     private Model getReleaseModel(String adapterName, String instanceName) {
-        
+
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
@@ -312,6 +318,7 @@ public class NorthboundAPI {
     }
 
     private Model getCreateModel(String adapterName, String instanceName) {
+
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
@@ -333,15 +340,15 @@ public class NorthboundAPI {
     private Model getConfigureModel(Model rdfModel) {
         return MessageBusMsgFactory.createMsgConfigure(rdfModel);
     }
-    
-    private Response getRESTResponse(String responseString){        
-        if (responseString == null){
+
+    private Response getRESTResponse(String responseString) {
+        if (responseString == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
-        } else if(responseString.equals(IMessageBus.STATUS_400)){
+        } else if (responseString.equals(IMessageBus.STATUS_400)) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Resource not processed").build();
-        } else if (responseString.equals(IMessageBus.STATUS_404)){
+        } else if (responseString.equals(IMessageBus.STATUS_404)) {
             return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
-        } else if (responseString.equals(IMessageBus.STATUS_408)){
+        } else if (responseString.equals(IMessageBus.STATUS_408)) {
             return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out").build();
         } else {
             return Response.ok(responseString, "text/turtle").build();
@@ -354,16 +361,16 @@ public class NorthboundAPI {
                 return adapterSpecificParameters.get(adapterName);
             }
         }
-        
+
         // Try refresh adapter list and search again
         refreshTestbedAdapterParameters();
-        
+
         for (String adapterName : adapterSpecificParameters.keySet()) {
             if (paramAdapterName.equals(adapterName)) {
                 return adapterSpecificParameters.get(adapterName);
             }
         }
-        
+
         return null;
     }
 
@@ -372,15 +379,19 @@ public class NorthboundAPI {
         com.hp.hpl.jena.rdf.model.Resource resourceInstance = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
         resourceInstance.addProperty(RDF.type, resourceType);
     }
-    
+
     private void setAdapterPrefix(Model rdfModel, String[] adapterParams) {
         rdfModel.setNsPrefix(adapterParams[2], adapterParams[3]);
     }
-    
-    private Model getDefaultModel(String[] adapterParams){
+
+    private Model getDefaultModel(String[] adapterParams) {
         Model rdfModel = ModelFactory.createDefaultModel();
         addInstanceToModel(rdfModel, adapterParams[0], adapterParams[4]);
         return rdfModel;
+    }
+
+    private Model getDefaultModel() {
+        return ModelFactory.createDefaultModel();
     }
 
     private Message createRequest(final String rdfInput, final String methodType) throws JMSException {
