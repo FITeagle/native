@@ -19,6 +19,8 @@ var LogViewer = function () {
 
         var table = $('#example').DataTable( {
             data: null,
+            "order": [[ 2, "asc" ]],
+            "pageLength": 50,
             columns: [
                 { data: 'method_type' },
                 {data: "JMSCorrelationID"},
@@ -48,8 +50,8 @@ var LogViewer = function () {
 
 
                 $(row).popover({placement:"bottom",
-                    trigger:"click",
-                    template: '<div class="popover"  role="tooltip"><div class="arrow"></div><h3 class="popover-title">RDF</h3><div class="popover-content" style="height: 300px; overflow-y: scroll"></div></div>',
+                    trigger:"hover",
+                    template: '<div class="popover" style="height: 600px; width:600px; min-width: 600px;" role="tooltip"><div class="arrow"></div><h3 class="popover-title">RDF</h3><div class="popover-content" style="height: 600px; width:600px; min-width: 600px;"></div></div>',
                     html:true
 
 
