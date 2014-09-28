@@ -19,12 +19,17 @@ import javax.ws.rs.QueryParam;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Created by vju on 9/6/14.
+ */
+
+/**
+ * REST endpoint for Lodlive
  */
 @Path("/lodlive")
 public class LodLiveREST {
@@ -37,17 +42,16 @@ public class LodLiveREST {
     private static Logger LOGGER = Logger.getLogger(LodLiveREST.class.toString());
 
 
-
     @GET
     @Path("/query")
     @Produces("application/sparql-results+json")
     public String handleLodLiveRequest(@QueryParam("query") String sparqlQuery) {
-        String serialization =  "TURTLE";
+        String serialization = "TURTLE";
 
 
-        LOGGER.log(Level.INFO,sparqlQuery);
+        LOGGER.log(Level.INFO, sparqlQuery);
 
-      //  sparqlQuery = "SELECT DISTINCT * WHERE {?object <http://www.w3.org/2002/07/owl#sameAs> <http://fiteagleinternal#ARunningMotor1>}";
+        //  sparqlQuery = "SELECT DISTINCT * WHERE {?object <http://www.w3.org/2002/07/owl#sameAs> <http://fiteagleinternal#ARunningMotor1>}";
         Model rdfModel = ModelFactory.createDefaultModel();
 
         com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
@@ -70,7 +74,7 @@ public class LodLiveREST {
             // create an empty model
             Model modelAnswer = ModelFactory.createDefaultModel();
 
-            InputStream is = new ByteArrayInputStream(response.getBytes());
+            InputStream is = new ByteArrayInputStream(response.getBytes(Charset.defaultCharset()));
             modelAnswer.read(is, null, serialization);
             LOGGER.log(Level.INFO, "Pushed rdf into modelAnswer");
 
@@ -85,17 +89,12 @@ public class LodLiveREST {
                 currentStatement.toString();
                 LOGGER.log(Level.INFO, currentStatement.toString());
                 rdfsComment = currentStatement.getSubject().getProperty(RDFS.comment);
-                if (rdfsComment == null) {
-                    continue;
+                if (rdfsComment != null) {
+                    resultSet = rdfsComment.getObject().toString();
+                    LOGGER.log(Level.INFO, "ResultSet is" + resultSet);
+                    break;
                 }
-                resultSet = rdfsComment.getObject().toString();
-                LOGGER.log(Level.INFO, "ResultSet is" + resultSet);
-                break;
             }
-
-
-
-
 
 
         } catch (JMSException e) {
@@ -104,7 +103,8 @@ public class LodLiveREST {
         }
         return resultSet;
     }
-    private String modelToString(Model model, String serialization){
+
+    private String modelToString(Model model, String serialization) {
         StringWriter writer = new StringWriter();
 
         model.write(writer, serialization);
@@ -126,7 +126,7 @@ public class LodLiveREST {
     private String getResult(final Message result) throws JMSException {
         String resources = "timeout";
 
-       LOGGER.log(Level.INFO, "Received resources via MDB...");
+        LOGGER.log(Level.INFO, "Received resources via MDB...");
         if (null != result) {
             resources = result.getStringProperty(IMessageBus.RDF);
         }

@@ -19,6 +19,7 @@ import javax.ws.rs.QueryParam;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,7 +71,7 @@ public class NorthboundHandlerREST {
             // create an empty model
             Model modelAnswer = ModelFactory.createDefaultModel();
 
-            InputStream is = new ByteArrayInputStream(response.getBytes());
+            InputStream is = new ByteArrayInputStream(response.getBytes(Charset.defaultCharset()));
             modelAnswer.read(is, null, serialization);
             LOGGER.log(Level.INFO, "Pushed rdf into modelAnswer");
 
@@ -85,12 +86,10 @@ public class NorthboundHandlerREST {
                 currentStatement.toString();
                 LOGGER.log(Level.INFO, currentStatement.toString());
                 rdfsComment = currentStatement.getSubject().getProperty(RDFS.comment);
-                if (rdfsComment == null) {
-                    continue;
+                if (rdfsComment != null) {
+                    resultSet = rdfsComment.getObject().toString();
+                    LOGGER.log(Level.INFO, "ResultSet is" + resultSet);
                 }
-                resultSet = rdfsComment.getObject().toString();
-                LOGGER.log(Level.INFO, "ResultSet is" + resultSet);
-                break;
             }
 
 

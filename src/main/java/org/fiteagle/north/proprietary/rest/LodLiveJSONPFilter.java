@@ -8,6 +8,9 @@ import java.io.IOException;
  * Created by vju on 9/6/14.
  */
 
+/**
+ * surrounds incoming JSONPRequest with JSONP wrapping, also resets content type
+ */
 public class LodLiveJSONPFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -44,8 +47,7 @@ public class LodLiveJSONPFilter implements Filter {
 
     private boolean isJSONPRequest(HttpServletRequest httpRequest)
     {
-        String callbackMethod = getCallbackMethod(httpRequest);
-        return (callbackMethod != null && callbackMethod.length() > 0);
+        return getCallbackMethod(httpRequest) != null && getCallbackMethod(httpRequest).length() > 0;
     }
     @Override
     public void destroy() {}
