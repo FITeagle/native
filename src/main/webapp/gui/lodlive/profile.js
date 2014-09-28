@@ -1,6 +1,7 @@
 
 /*
  just an example of configuration useful to redirect all the request on the same endpoint
+
  */
 
 $.jStorage.set('profile', {
