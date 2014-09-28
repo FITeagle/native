@@ -349,7 +349,7 @@ public class NorthboundAPI {
         } else if (responseString.equals(IMessageBus.STATUS_404)) {
             return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
         } else if (responseString.equals(IMessageBus.STATUS_408)) {
-            return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out").build();
+            return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out, please try again").build();
         } else {
             return Response.ok(responseString, "text/turtle").build();
         }
@@ -423,7 +423,7 @@ public class NorthboundAPI {
     private Message waitForResult(final Message message) throws JMSException {
         NorthboundAPI.LOGGER.log(Level.INFO, "Waiting for an answer...");
         final String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(5000);
+        final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
         return rcvMessage;
     }
 
