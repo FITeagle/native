@@ -56,7 +56,7 @@ public class LodLiveREST {
 
         com.hp.hpl.jena.rdf.model.Resource message = rdfModel.createResource("http://fiteagleinternal#Message");
         message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleRequest);
-        message.addProperty(RDFS.comment, sparqlQuery); // SPARQL Query is expected in this form atm
+        message.addProperty(MessageBusOntologyModel.propertySparqlQuery, sparqlQuery); // SPARQL Query is expected in this form atm
 
         rdfModel.setNsPrefix("", "http://fiteagleinternal#");
         rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
@@ -88,7 +88,7 @@ public class LodLiveREST {
                 currentStatement = iter.nextStatement();
                 currentStatement.toString();
                 LOGGER.log(Level.INFO, currentStatement.toString());
-                rdfsComment = currentStatement.getSubject().getProperty(RDFS.comment);
+                rdfsComment = currentStatement.getSubject().getProperty(MessageBusOntologyModel.propertyJsonResult);
                 if (rdfsComment != null) {
                     resultSet = rdfsComment.getObject().toString();
                     LOGGER.log(Level.INFO, "ResultSet is" + resultSet);
