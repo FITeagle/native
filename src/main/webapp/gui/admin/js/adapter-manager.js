@@ -8,9 +8,11 @@ var adapterResourceName = "";
 var adapterType = "";
 
 var gotAdapterParams = false;
+var finishedInit = false;
 
 
 var FITEAGLE_INTERNAL = "http://fiteagleinternal#";
+var ONTOLOGY_FITEAGLE_RELEASES = "http://fiteagle.org/ontology#releases";
 var ONTOLOGY_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 var ONTOLOGY_FITEAGLE_MESSAGE = FITEAGLE_INTERNAL + "Message";
 
@@ -65,9 +67,11 @@ function init() {
 	websocketLogger.onmessage = function(evt) {
 		var json = $.parseJSON(evt.data);
 
-		if (json.hasOwnProperty("rdf") && json.hasOwnProperty("method_type")) {
-			if (json.method_type === METHOD_TYPE_INFORM) {
-				processInform(json.rdf);
+		if(finishedInit){
+			if (json.hasOwnProperty("rdf") && json.hasOwnProperty("method_type")) {
+				if (json.method_type === METHOD_TYPE_INFORM) {
+					processInform(json.rdf);
+				}
 			}
 		}
 	};
@@ -80,14 +84,14 @@ function init() {
 	}
 }
 
-function restGetInstances() {
-	var restURL = BASE_URL + adapterName;
-	var callback = function(data) {
-		console.log("Received Instances RDF data!");
-		processGetInstances(data);
-	};
-	restGET(restURL, callback);
-}
+//function restGetInstances() {
+//	var restURL = BASE_URL + adapterName;
+//	var callback = function(data) {
+//		console.log("Received Instances RDF data!");
+//		processGetInstances(data);
+//	};
+//	restGET(restURL, callback);
+//}
 
 function restGetTestbedAdapterList() {
 	var restURL = BASE_URL;
@@ -102,13 +106,14 @@ function restGetInitList() {
 	var restURL = BASE_URL + adapterName;
 	var callback = function(data) {
 		console.log("Received Adapter RDF data!");
+		resourceInstances = [];
 		processGetAdapterParameters(data);
 	};
 	restGET(restURL, callback);
 }
 
 function restReleaseInstance(instanceName) {
-	var restURL = REST_HOST + "/" + instanceName;
+	var restURL = BASE_URL + adapterName + "/" + instanceName;
 	restDELETE(restURL);
 }
 
@@ -138,7 +143,8 @@ function restPOST(restURL, dataToSend) {
 		contentType : "application/x-www-form-urlencoded",
 		data : "" + dataToSend,
 		success : function(data) {
-			processInform(data);
+			//processInform(data);
+			// Done automatically by processInform
 		}
 	});
 }
@@ -151,7 +157,8 @@ function restPUT(restURL, dataToSend) {
 		contentType : "application/x-www-form-urlencoded",
 		data : "" + dataToSend,
 		success : function(data) {
-			processCreate(data);
+			//processCreate(data);
+			// Done automatically by processInform
 		}
 	});
 }
@@ -162,8 +169,8 @@ function restDELETE(restURL) {
 		url : restURL,
 		type : 'DELETE',
 		success : function(data) {
-			console.log("Received RDF data!");
-			processDelete(data);
+			//processDelete(data);
+			// Done automatically by processInform
 		}
 	});
 }
@@ -177,21 +184,55 @@ function restGET(restURL, callback) {
 	});
 }
 
-function processDelete(ttlString) {
+//function processDelete(ttlString) {
+//
+//	var parser = N3.Parser();
+//	parser.parse(ttlString, function(error, triple, prefixes) {
+//		if (triple) {
+//			for ( var index = 0; index < resourceInstances.length; ++index) {
+//				if (triple.object === resourceInstances[index].name_full) {
+//					guiRemoveResourceInstance(resourceInstances[index].name);
+//					resourceInstances.splice(index, 1);
+//					break;
+//				}
+//			}
+//		}
+//	});
+//
+//}
+
+function processGetAdapterParameters(ttlString) {
+
+	var adapterParameters = {};
+	var currentProperty = "";
 
 	var parser = N3.Parser();
 	parser.parse(ttlString, function(error, triple, prefixes) {
 		if (triple) {
-			for ( var index = 0; index < resourceInstances.length; ++index) {
-				if (triple.object === resourceInstances[index].name_full) {
-					guiRemoveResourceInstance(resourceInstances[index].name);
-					resourceInstances.splice(index, 1);
-					break;
-				}
+			// Find adapter resource instance type (fitealge:implements), prefixs
+			if(triple.predicate === "http://fiteagle.org/ontology#implements"){
+				
+				var posPrefixObj = triple.object.indexOf("#");
+				var posPrefixSubj = triple.subject.indexOf("#");
+				var prefix = triple.object.slice(0, posPrefixObj+1);
+				
+				adapterOntologyPrefix = prefix.slice(prefix.lastIndexOf("/") + 1, prefix.length - 1);
+				adapterOntology = prefix;
+				adapterResourceName = triple.object;
+				adapterType = triple.subject;
+				
+				
+				console.log("Current adapter path :" + adapterOntologyPrefix);
+				console.log("Current adapter prefix: " + adapterOntology);
+				console.log("Current adapter resource type name: " + adapterResourceName);
+	
+				gotAdapterParams = true;
 			}
+		} else {
+			guiRefreshLabels();
+			processGetAdapterProperties(ttlString);
 		}
 	});
-
 }
 
 function processGetAdapterProperties(ttlString) {
@@ -218,45 +259,14 @@ function processGetAdapterProperties(ttlString) {
 
 		} else {
 			guiAddCreateBox(adapterParameters);
-			processGetInstances(ttlString);
+			
+			processInform(ttlString);
+			//processGetInstances(ttlString);
 		}
 	});
 
 }
 
-
-function processGetAdapterParameters(ttlString) {
-
-	var adapterParameters = {};
-	var currentProperty = "";
-
-	var parser = N3.Parser();
-	parser.parse(ttlString, function(error, triple, prefixes) {
-		if (triple) {
-			// Find adapter resource instance type (fitealge:implements), prefixs
-			if(triple.predicate === "http://fiteagle.org/ontology#implements"){
-				
-				var posPrefixObj = triple.object.indexOf("#");
-				var posPrefixSubj = triple.subject.indexOf("#");
-				var prefix = triple.object.slice(0, posPrefixObj+1);
-				
-				adapterOntologyPrefix = prefix.slice(prefix.lastIndexOf("/") + 1, prefix.length - 1);
-				adapterOntology = prefix;
-				adapterResourceName = triple.object;
-				adapterType = triple.subject;
-				
-				console.log(adapterOntologyPrefix);
-				console.log(adapterOntology);
-				console.log(adapterResourceName);
-	
-				gotAdapterParams = true;
-			}
-		} else {
-			guiRefreshLabels();
-			processGetAdapterProperties(ttlString);
-		}
-	});
-}
 
 function processGetTestbedAdapters(ttlString) {
 
@@ -282,75 +292,74 @@ function processGetTestbedAdapters(ttlString) {
 }
 
 
-function processGetInstances(ttlString) {
+//function processGetInstances(ttlString) {
+//
+//	var index = 0;
+//
+//	resourceInstances = [];
+//
+//	var currentResInstance = {};
+//
+//	var parser = N3.Parser();
+//	parser.parse(ttlString, function(error, triple, prefixes) {
+//		if (triple) {
+//			if (triple.predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && triple.object === adapterResourceName) {
+//				if (!isEmpty(currentResInstance)) {
+//					resourceInstances[index] = currentResInstance;
+//					index++;
+//				}
+//
+//				var posPrefixSubj = triple.subject.indexOf("#");
+//
+//				currentResInstance = {};
+//				currentResInstance['name_full'] = triple.subject;
+//				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
+//			}
+//			if (currentResInstance.name_full === triple.subject) {
+//				var posPrefixPred = triple.predicate.indexOf("#");
+//				currentResInstance[triple.predicate.slice(posPrefixPred + 1)] = getObjectValue(triple);
+//			}
+//		} else {
+//			if (!isEmpty(currentResInstance)) {
+//				resourceInstances[index] = currentResInstance;
+//				index++;
+//			}
+//			guiRefreshList();
+//		}
+//	});
+//}
 
-	var index = 0;
-
-	resourceInstances = [];
-
-	var currentResInstance = {};
-
-	var parser = N3.Parser();
-	parser.parse(ttlString, function(error, triple, prefixes) {
-		if (triple) {
-			if (triple.predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && triple.object === adapterResourceName) {
-				if (!isEmpty(currentResInstance)) {
-					resourceInstances[index] = currentResInstance;
-					index++;
-				}
-
-				var posPrefixSubj = triple.subject.indexOf("#");
-
-				currentResInstance = {};
-				currentResInstance['name_full'] = triple.subject;
-				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
-			}
-			if (currentResInstance.name_full === triple.subject) {
-				var posPrefixPred = triple.predicate.indexOf("#");
-				currentResInstance[triple.predicate.slice(posPrefixPred + 1)] = getObjectValue(triple);
-			}
-		} else {
-			if (!isEmpty(currentResInstance)) {
-				resourceInstances[index] = currentResInstance;
-				index++;
-			}
-			guiRefreshList();
-		}
-	});
-
-}
-
-function processCreate(ttlString) {
-
-	var index = 0;
-
-	resourceInstances = [];
-
-	var currentResInstance = {};
-
-	var parser = N3.Parser();
-	parser.parse(ttlString, function(error, triple, prefixes) {
-		if (triple) {
-			if (triple.predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && triple.object === adapterResourceName) {
-				var posPrefixSubj = triple.subject.indexOf("#");
-
-				currentResInstance = {};
-				currentResInstance['name_full'] = triple.subject;
-				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
-			}
-			if (currentResInstance.name_full === triple.subject) {
-				var posPrefixPred = triple.predicate.indexOf("#");
-				currentResInstance[triple.predicate.slice(posPrefixPred + 1)] = getObjectValue(triple);
-			}
-		} else {
-			if (!isEmpty(currentResInstance)) {
-				resourceInstances[resourceInstances.length] = currentResInstance;
-			}
-			guiRefreshList();
-		}
-	});
-
-}
+//function processCreate(ttlString) {
+//
+//	var index = 0;
+//
+//	resourceInstances = [];
+//
+//	var currentResInstance = {};
+//
+//	var parser = N3.Parser();
+//	parser.parse(ttlString, function(error, triple, prefixes) {
+//		if (triple) {
+//			if (triple.predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && triple.object === adapterResourceName) {
+//				var posPrefixSubj = triple.subject.indexOf("#");
+//
+//				currentResInstance = {};
+//				currentResInstance['name_full'] = triple.subject;
+//				currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
+//			}
+//			if (currentResInstance.name_full === triple.subject) {
+//				var posPrefixPred = triple.predicate.indexOf("#");
+//				currentResInstance[triple.predicate.slice(posPrefixPred + 1)] = getObjectValue(triple);
+//			}
+//		} else {
+//			if (!isEmpty(currentResInstance)) {
+//				resourceInstances[resourceInstances.length] = currentResInstance;
+//			}
+//			guiRefreshList();
+//		}
+//	});
+//
+//}
 
 function processInform(ttlString) {
 
@@ -368,24 +377,90 @@ function processInform(ttlString) {
 
 
 function processAdapterInstances(ttlString){
+	
+	
+	var foundResourceInstance = false;
+	var instancesToAdd = [];
+	
+	//resourceInstances = [];
+
+	//var currentResInstance = {};
 
 	var parser = N3.Parser();
 	parser.parse(ttlString, function(error, triple, prefixes) {
 
 		if (triple) {
-			for ( var index = 0; index < resourceInstances.length; ++index) {
-				if (triple.subject === resourceInstances[index].name_full) {
-					var posPrefixPred = triple.predicate.indexOf("#");
-					var property = triple.predicate.slice(posPrefixPred + 1);
-					var value = getObjectValue(triple);
-					resourceInstances[index][property] = value;
-					guiRefreshProperty(resourceInstances[index].name, property, value);
-					break;
+			// Is release message
+			if(triple.predicate === ONTOLOGY_FITEAGLE_RELEASES){
+				for ( var index = 0; index < resourceInstances.length; ++index) {
+					if (triple.object === resourceInstances[index].name_full) {
+						guiRemoveResourceInstance(resourceInstances[index].name);
+						resourceInstances.splice(index, 1);
+						break;
+					}
+				}
+			} else {
+				
+				// Is configure message
+				for ( var index = 0; index < resourceInstances.length; ++index) {
+					if (triple.subject === resourceInstances[index].name_full) {
+						var posPrefixPred = triple.predicate.indexOf("#");
+						var property = triple.predicate.slice(posPrefixPred + 1);
+						var value = getObjectValue(triple);
+						resourceInstances[index][property] = value;
+						guiRefreshProperty(resourceInstances[index].name, property, value);
+						foundResourceInstance = true;
+						break;
+					}
+				}
+				
+				// Is create message
+				if(!foundResourceInstance){
+					instancesToAdd.push(triple.subject);
 				}
 			}
 
 		} else {
-			
+			processAddNewInstances(ttlString, instancesToAdd);
+		}
+	});
+}
+
+function processAddNewInstances(ttlString, instancesToAdd) {
+
+	var currentResInstance = {};
+
+	var parser = N3.Parser();
+	parser.parse(ttlString, function(error, triple, prefixes) {
+		if (triple) {
+			if (triple.predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" && triple.object === adapterResourceName) {
+				if (!isEmpty(currentResInstance)) {
+					resourceInstances.push(currentResInstance);
+				}
+
+				var posPrefixSubj = triple.subject.indexOf("#");
+				
+				for ( var index = 0; index < instancesToAdd.length; ++index) {
+					if(instancesToAdd[index] == triple.subject){
+						currentResInstance = {};
+						currentResInstance['name_full'] = triple.subject;
+						currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
+						break;
+					}
+				}
+			}
+			if (!isEmpty(currentResInstance) && currentResInstance.name_full === triple.subject) {
+				var posPrefixPred = triple.predicate.indexOf("#");
+				currentResInstance[triple.predicate.slice(posPrefixPred + 1)] = getObjectValue(triple);
+			}
+		} else {
+			if (!isEmpty(currentResInstance)) {
+				resourceInstances.push(currentResInstance);
+			}
+			if(!finishedInit){
+				finishedInit = true;
+			}
+			guiRefreshList();
 		}
 	});
 }
@@ -451,8 +526,9 @@ $("#resourceInstancesBox").html("");
 		text += '<div class="resourceButtons">';
 		text += '<a href="?adaptername=' + object.name + '">';
 		text += 'Manage Adapter</a> | ';
-		text += ' <a href="http://localhost:8080/native/gui/lodlive/index.html?' + object.type + '">';
+		text += ' <a href="http://localhost:8080/native/gui/lodlive/index.html?' + object.type.replace("#", "%23") + '">';
 		text += 'Open visualization</a>';
+		
 		
 		text += '</form></div><div class="clear"></div></div><div class="resourceProperties">';
 		text += "Adapter Type: " + object.type + "</div>";
@@ -464,6 +540,8 @@ $("#resourceInstancesBox").html("");
 
 
 function guiRefreshList() {
+	
+	$("#resourceInstancesBox").html("");
 
 	for ( var index = 0; index < resourceInstances.length; ++index) {
 		var object = resourceInstances[index];
@@ -493,8 +571,8 @@ function guiRefreshList() {
 }
 
 function guiAddCreateBox(adapterParameters) {
-
-	$("#resourceInstancesBox").html("");
+	
+	$("#createResourceInstancesBox").html("");
 
 	var text = '<div class="resourceHeader"><h2>Create Resource Instance</h2>' + '<h3>Type: ' + adapterResourceName + '</h3>';
 	text += '<div class="resourceButtons">';
@@ -514,7 +592,7 @@ function guiAddCreateBox(adapterParameters) {
 	text += "</div>";
 
 	d = document.createElement('div');
-	$(d).addClass("resourceInstanceDiv").attr('id', 'createResourceInstanceBox').html(text).appendTo($("#resourceInstancesBox")); // main
+	$(d).addClass("resourceInstanceDiv").attr('id', 'createResourceInstanceBox').html(text).appendTo($("#createResourceInstancesBox")); // main
 }
 
 function releaseResourceInstance(instanceName) {
