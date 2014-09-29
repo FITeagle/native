@@ -32,48 +32,75 @@ cd core/repo && mvn clean verify wildfly:deploy && cd - && \
 cd core/bus && mvn clean verify wildfly:deploy && cd -
 ```
 
-Look at the manager
-------------------
-
-Open http://localhost:8080/native/gui/admin/manager.html
-
-Monitor, create, terminate and configure resource adapters.
 
 Look at the logger
 ------------------
 
-Open http://localhost:8080/native/gui/admin/console2.html
+To view a text version of the logger open:
 
-an enhanced version can be found at
+http://localhost:8080/native/gui/admin/log-viewer-text.html
 
-http://localhost:8080/native/gui/admin/logViewer.html
+A list version can be found at:
+
+http://localhost:8080/native/gui/admin/log-viewer-list.html
 
 
 Look at the repository
 ----------------------
 
-Open http://localhost:3030/ds/query?query=SELECT+*+{%3Fs+%3Fp+%3Fo}&output=text&stylesheet=
+To see all the content of the repository open the FUSEKI web interface:
 
-or better at
+http://localhost:3030/ds/query?query=SELECT+*+{%3Fs+%3Fp+%3Fo}&output=text&stylesheet=
+
+To see a graph visualization of the repository content open:
 
 http://localhost:8080/native/api/lodlive/query?output=json&format=application/json&timeout=0&query=Select%20*%20%7B?s%20?p%20?o%7D&callback=lodlive
 
-to get a readable version
+
+Run the Testbend adapter
+---------------------
+
+The testbed adapter is managing the testbed by keeping track of all deployed adapters. Deploy it first:
+
+```
+cd adapters/testbed && mvn clean verify wildfly:deploy
+```
 
 
 Run the Motor adapter
 ---------------------
 
+Now deploy all three dummy adapters:
 
 ```
 cd adapters/motor && mvn clean verify wildfly:deploy
 ```
+```
+cd adapters/stopwatch && mvn clean verify wildfly:deploy
+```
+```
+cd adapters/mightyrobot && mvn clean verify wildfly:deploy
+```
 
-After deployment of the adapter there should be new log entries in the console (adapter registering) and in FUSEKI.
+After deployment of the adapter there should be new log entries in the log viewer (adapter registering) and new resources in FUSEKI.
 
 
-Start experimenting
+Open the at the adapter manager
+------------------
+
+Open the adapter manager to see a list of the deployed adapters and manage them:
+
+http://localhost:8080/native/gui/admin/adapter-manager.html
+
+Monitor, create, terminate and configure resource adapters.
+
+
+Experimenting
 -------------------
+
+Experiments (create, configure, monitor, release) can be done via direct calls to the REST API with a tool such as curl or via the Adapter Manager Web GUI ( http://localhost:8080/native/gui/admin/adapter-manager.html ).
+
+
 
 Use the following test RDF files from the MotorAdapter directory.
 
