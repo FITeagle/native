@@ -27,6 +27,7 @@ Start Microservices
 -------------------
 
 ```
+cd api && mvn clean verify install && cd - && \
 cd native && mvn clean verify wildfly:deploy && cd - && \
 cd core/repo && mvn clean verify wildfly:deploy && cd - && \
 cd core/bus && mvn clean verify wildfly:deploy && cd -
