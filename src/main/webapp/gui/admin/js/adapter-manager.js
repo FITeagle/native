@@ -429,6 +429,7 @@ function processAdapterInstances(ttlString){
 function processAddNewInstances(ttlString, instancesToAdd) {
 
 	var currentResInstance = {};
+	var addedInstance = false;
 
 	var parser = N3.Parser();
 	parser.parse(ttlString, function(error, triple, prefixes) {
@@ -442,6 +443,7 @@ function processAddNewInstances(ttlString, instancesToAdd) {
 				
 				for ( var index = 0; index < instancesToAdd.length; ++index) {
 					if(instancesToAdd[index] == triple.subject){
+						addedInstance = true;
 						currentResInstance = {};
 						currentResInstance['name_full'] = triple.subject;
 						currentResInstance['name'] = triple.subject.slice(posPrefixSubj + 1);
@@ -460,7 +462,9 @@ function processAddNewInstances(ttlString, instancesToAdd) {
 			if(!finishedInit){
 				finishedInit = true;
 			}
-			guiRefreshList();
+			if(addedInstance){
+				guiRefreshList();
+			}
 		}
 	});
 }
