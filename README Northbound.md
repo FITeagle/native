@@ -108,20 +108,19 @@ Experimenting via curl REST calls
 Send a global discover message into the message bus. The first response will appear as the REST response, the other responses are visible via the Message Bus Logger:
 
 ```
-curl -i -X GET http://localhost:8080/native/api/resources/discover```
+curl -i -X GET http://localhost:8080/native/api/resources/discover
 ```
 
 Get all adapters and their type that are currently deployed in the testbed:
 
 ```
-curl -i -X GET http://localhost:8080/native/api/resources/```
+curl -i -X GET http://localhost:8080/native/api/resources/
 ```
 
 ### Example: Motor Adapter
 
 The example RDF files that are used in some calls can be found in the adapters/motor directory.
 
-Possible adapter names:
 
 * Create a single new motor instance using an attached, detailed RDF description:
   * ```curl -i -X PUT -d @createMotor.ttl http://localhost:8080/native/api/resources/ADeployedMotorAdapter1```
@@ -150,7 +149,7 @@ Possible adapter names:
   * ```curl -i -X POST -d @configureMotor.ttl http://localhost:8080/native/api/resources/ADeployedMotorAdapter1```
   * Response should be HTTP 200 + motor instance updated properties RDF description
 
-* Configure a two motor resource instances at the same time using attached RDF description:
+* Configure two motor resource instances at the same time using attached RDF description:
   * ```curl -i -X POST -d @configureManyMotors.ttl http://localhost:8080/native/api/resources/ADeployedMotorAdapter1 ```
   * Response should be HTTP 200 + motor instances updated properties RDF description
  
@@ -160,7 +159,7 @@ Possible adapter names:
   * A motor resource instance that is configured with the property isDynamic = true will randomly change its RPM property every 5 seconds and send a corresponding notification (fitealge:inform Message).
   * Open the log viewer to see those notifications. Alternatively keep requesting the motor instances details using GET (see above) to see the updated RPM values. Also keep refreshing the FUSEKI web interface to see the live updates made in the repository.
   
-* Configure "Motor1" instance so it it no longer dynamic:
+* Configure "Motor1" instance so it is no longer dynamic:
   * ```curl -i -X POST -d @configureDynamicMotorFalse.ttl http://localhost:8080/native/api/resources/ADeployedMotorAdapter1 ```
 
 
@@ -173,6 +172,40 @@ A stopwatch resource has three properties:
  * currentTime: The time since starting the stopwatch.
  * refreshInterval: The time between notifications of currenTime (while the stopwatch has been started and running).
  * isRunning: Set to true to start the stopwatch and false to stop it. 
+ 
+The example RDF files that are used in some calls can be found in the adapters/stopwatch directory.
+
+
+* Create a single new stopwatch instance named "watch1" using an attached, detailed RDF description:
+  * ```curl -i -X PUT -d @createStopwatch.ttl.ttl http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1```
+  * Response should be HTTP 201 + New stopwatch instance RDF description
+  
+  
+* Create four new stopwatch instances at once using an attached, detailed RDF description:
+  * ```curl -i -X PUT -d @createManyStopwatches.ttl http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1```
+  * Response should be HTTP 201 + New stopwatch instance RDF description
+   
+* Create a single new stopwatch resource instance named "watch10" with no attached RDF description and default parameters (just using the path):
+  * ```curl -i -X PUT http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1/watch19```
+  * Response should be HTTP 201 + New stopwatch instance RDF description
+
+* To get a description of all resources instances managed by the adapter:
+  * ```curl -i -X GET http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1```
+
+* To get a description of the properties of a single resource instance managed by the adapter:
+  * ```curl -i -X GET http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1/watch1```
+  
+* Release a single stopwatch resource instance (just using the path):
+  * ```curl -i -X DELETE http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1/watch1```
+  * Response should be HTTP 200 + stopwatch instance release RDF description
+  
+* Configure "watch1" instance so it starts running (the time):
+  * ```curl -i -X POST -d @configureStartStopwatch.ttl http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1 ```
+  * Response should be HTTP 200 + stopwatch instances updated properties RDF description
+  * A stopwatch resource instance that is configured with the property isRunning = true will start counting the time in the currentTime variable and update the message bus with a fiteagle:inform in a time interval specified via the variable refreshInterval
+  
+* Configure "watch1" instance so it stops:
+  * ```curl -i -X POST -d @configureStopStopwatch.ttl http://localhost:8080/native/api/resources/ADeployedStopwatchAdapter1 ```
 
 
 Experimenting via Adapter Manager Web GUI
