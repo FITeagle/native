@@ -353,7 +353,6 @@ public class NorthboundAPI {
             return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out, please try again").build();
         } else {
             if(successResponseStatus != null){
-                System.err.println(successResponseStatus);
                 return Response.status(successResponseStatus).entity(responseString).build();
             }
             return Response.ok(responseString, "text/turtle").build();
