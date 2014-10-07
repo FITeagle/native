@@ -1,6 +1,6 @@
 var REST_HOST = "http://localhost:8080/AdapterMotor/api/";
 
-var DRAW_CHART = false;
+var DRAW_CHART = true;
 
 var websocketCommand;
 var websocketLogger;
@@ -21,9 +21,9 @@ var chart;
 
 window.addEventListener("load", init, false);
 
-	//google.load('visualization', '1', {
-	//	packages : [ 'gauge' ]
-	//});
+	google.load('visualization', '1', {
+		packages : [ 'gauge' ]
+	});
 
 function writeToScreen(message, isIncoming) {
 	var pre = document.createElement("p");
@@ -153,7 +153,7 @@ function wsGetInstances() {
 
 function wsProvisionInstance() {
 	currentInstanceID = parseInt($("#wsInstanceNumber").val());
-	sendMessageViaWs("method_type:::type_create,,,instanceID:::" + currentInstanceID);
+	sendMessageViaWs("request:::provision,,,instanceID:::" + currentInstanceID);
 	currentInstanceID++;
 	refreshGUIInstanceIDs();
 }
