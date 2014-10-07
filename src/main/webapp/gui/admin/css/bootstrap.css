@@ -5050,6 +5050,7 @@ body.modal-open,
   left: 0;
   z-index: 1040;
 }
+
 .modal.fade .modal-dialog {
   -webkit-transform: translate(0, -25%);
   -ms-transform: translate(0, -25%);
@@ -5155,6 +5156,7 @@ body.modal-open,
 .modal-footer .btn-block + .btn-block {
   margin-left: 0;
 }
+
 @media screen and (min-width: 768px) {
   .modal-dialog {
     left: 50%;
@@ -5168,6 +5170,8 @@ body.modal-open,
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   }
 }
+
+
 .carousel {
   position: relative;
 }

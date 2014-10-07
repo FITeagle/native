@@ -28,19 +28,17 @@ import net.iharder.Base64;
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.core.config.preferences.InterfaceConfiguration;
-import org.fiteagle.proprietary.rest.UserPresenter.FiteagleWebApplicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.fiteagle.proprietary.rest.ObjectPresenter.FiteagleWebApplicationException;
+import org.jboss.logging.Logger;
 
 public class AuthenticationFilter implements Filter{
 
   public final static String COOKIE_NAME = "fiteagle_user_cookie";
   protected final static String SUBJECT_USERNAME_ATTRIBUTE = "subjectUsername";
-  protected final static String RESOURCE_USERNAME_ATTRIBUTE = "resourceUsername";
+  protected final static String RESOURCE_ATTRIBUTE = "resource";
   protected final static String ACTION_ATTRIBUTE = "action";
   
-  private Logger log = LoggerFactory.getLogger(getClass());
+  private final static Logger log = Logger.getLogger(AuthenticationFilter.class.toString());
   
   public AuthenticationFilter(){};
  
@@ -50,7 +48,6 @@ public class AuthenticationFilter implements Filter{
   private JMSContext context;
   @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
-  private final static int TIMEOUT_TIME_MS = 10000;
   
   protected HashMap<String, Cookie> cookies = new HashMap<>();
   
@@ -66,23 +63,31 @@ public class AuthenticationFilter implements Filter{
   @Override
   public void destroy() {}
   
+  protected static boolean requestDoesNotNeedAuth(String method, String requestURI){
+    if(method.equals("PUT") && requestURI.startsWith("/native/api/user") || 
+        method.equals("GET") && (requestURI.equals("/native/api/node") || requestURI.equals("/native/api/node/"))){
+      return true;
+    }
+    return false;
+  }
+  
   @Override
   public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException,
       ServletException {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) resp;
     
-//    if(!request.isSecure()){
-//      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
-//      return;   
-//    }
+    if(!request.isSecure()){
+      response.sendError(Response.Status.BAD_REQUEST.getStatusCode());      
+      return;   
+    }
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
-    if(request.getMethod().equals("PUT") && request.getRequestURI().startsWith("/native/api/user")){
+    if(requestDoesNotNeedAuth(request.getMethod(), request.getRequestURI())){
       chain.doFilter(request, response);
       return;
     }
     
-    request.setAttribute(RESOURCE_USERNAME_ATTRIBUTE, getTarget(request));
+    request.setAttribute(RESOURCE_ATTRIBUTE, getResource(request));
     if(authenticateWithSession(request) || authenticateWithCookie(request) || authenticateWithUsernamePassword(request, response)){
       addCookieOnLogin(request, response);
       createSession(request);
@@ -106,7 +111,7 @@ public class AuthenticationFilter implements Filter{
   private void addCookieOnLogin(HttpServletRequest request, HttpServletResponse response) {    
     boolean setCookie = Boolean.parseBoolean(request.getParameter("setCookie"));
     if(setCookie == true && getAuthCookieFromRequest(request) == null){      
-      response.addCookie(createNewCookie(getTarget(request)));      
+      response.addCookie(createNewCookie((String) request.getAttribute(SUBJECT_USERNAME_ATTRIBUTE))); 
     }
   }
 
@@ -186,12 +191,11 @@ public class AuthenticationFilter implements Filter{
       message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.VERIFY_CREDENTIALS);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-      context.createProducer().send(topic, message);
       
-      Message rcvMessage = context.createConsumer(topic, filter).receive(TIMEOUT_TIME_MS);
-      
-      if(rcvMessage == null){
-        throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
+      Message rcvMessage = null;
+      while(rcvMessage == null){
+        context.createProducer().send(topic, message);
+        rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
       }
       String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
       if(exceptionMessage != null){
@@ -254,10 +258,10 @@ public class AuthenticationFilter implements Filter{
     cookies.remove(addDomain(username));
   }
   
-  protected String getTarget(HttpServletRequest request) {
+  protected String getResource(HttpServletRequest request) {
     String path = request.getRequestURI();
-    String target = getTargetNameFromURI(path, "user");
-    return addDomain(target);
+    String resource = path.replaceFirst("/native/api/", "");
+    return resource;
   } 
   
   protected String[] decode(String auth) {
@@ -270,16 +274,6 @@ public class AuthenticationFilter implements Filter{
       return null;
     }
     return new String(decoded).split(":", 2);
-  }
-  
-  protected String getTargetNameFromURI(String path, String targetIdentifier) {
-    String[] splitted = path.split("/");
-    for (int i = 0; i < splitted.length - 1; i++) {
-      if (splitted[i].equals(targetIdentifier)) {
-        return splitted[i+1];
-      }
-    }
-    return "";
   }
   
   protected String createRandomAuthToken(String postfix) {

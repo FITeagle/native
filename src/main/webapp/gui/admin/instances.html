@@ -39,6 +39,7 @@
             <li><a href="index.html"><i class="fa fa-dashboard"></i> Dashboard</a></li>
             <li class="active"><a href="console.html"><i class="fa fa-wrench"></i> Admin Console</a></li>
 	    <li class="active"><a href="console2.html"><i class="fa fa-wrench"></i> Adapter Console</a></li>
+		<li class="active"><a href="instances.html"><i class="fa fa-wrench"></i> Adapter Instances</a></li>
             <li><a href="console.html"><i class="fa fa-down"></i> ------------</a></li>
             <li><a href="#"><i class="fa fa-bar-chart-o"></i> User Management</a></li>
             <li><a href="#"><i class="fa fa-table"></i> Testbed Management</a></li>
@@ -98,10 +99,10 @@
 
         <div class="row">
           <div class="col-lg-12">
-            <h1>Adapter Console <small>Built-In Admin Console</small></h1>
+            <h1>Motor Adapter<small>  Resource View</small></h1>
             <ol class="breadcrumb">
               <li><a href="index.html"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-              <li class="active"><i class="fa fa-wrench"></i> Adapter Console</li>
+              <li class="active"><i class="fa fa-wrench"></i> Motor Adapter Resource View</li>
             </ol>
           </div>
         </div><!-- /.row -->
@@ -109,68 +110,9 @@
         <div class="row">
           <div class="col-lg-12">
 
-            <div class="alert alert-success alert-dismissable">
-
-<div style="float:right;">
-
-ID: <input id="controlInstanceNumber" value="1" type="text" size="2">
-Property: 
-<select id="controlProperty" onChange="refreshControlValueType();">
-  <option value="rpm">RPM</option>
-  <option value="maxRpm">Max RPM</option>
-  <option value="throttle">Throttle</option>
-  <option value="isDynamic">is Dynamic</option>
-</select> 
-Value: <input id="controlValueInteger" value="1" type="text" size="10">
-<select id="controlValueBoolean">
-  <option value="true">true</option>
-  <option value="false">false</option>
-</select>
-<input onclick="generateControlCode();" value="Generate TTL Control Code" type="button">
-
-<br/>
-
-<textarea id="controlInput" cols="80" rows="4"></textarea>
-
-<input onclick="wsControlInstances();" value="Control" type="button">
-
-</div>
-
-Adapter: <input type="radio" name="adapter" checked="checked" value="TTL" onclick="setSerialization('TURTLE');" disabled="disabled"> Motor <input type="radio" name="adapter"
-						value="RDF" onclick="setSerialization('RDF/XML');" disabled="disabled"> Robot <input type="radio" name="adapter" value="N-TRIPLE" onclick="setSerialization('ntriple');" disabled="disabled">
-					Stopwatch | 
-
-
-					Serialization: <input type="radio" name="restSerialization" checked="checked" value="TTL" onclick="setSerialization('TURTLE');"> TTL <input type="radio" name="restSerialization"
-						value="RDF" onclick="setSerialization('RDF/XML');"> RDF <input type="radio" name="restSerialization" value="NTRIPLE" onclick="setSerialization('N-TRIPLE');">
-					NTRIPLE <br /><br />
-
-ID: <input id="wsInstanceNumber" value="1" type="text" size="2">
- <input onclick="wsGetDescription()" value="Discovery" type="button"> 
-
-					 <input onclick="wsProvisionInstance()" value="Provision" type="button">
- 
-<input onclick="wsGetInstances()" value="Instances" type="button">
-
-<input onclick="wsMonitorInstance()" value="Monitor" type="button"> 
-
-<input onclick="wsTerminateInstance()" value="Terminate" type="button">   
-
-
-
-<br/><br/>
-
-                <form action="">
-                Send custom message over JMS: 
-                <input id="textID" name="message" value="listResources" type="text">  <input onclick="send_message()" value="Send" type="button"><br>
-                </form>
-
-
-<div style="clear:both;"> </div>
-            </div>
-            <h2>Message Bus <small>live-view</small></h2>
-            <div class="alert alert-info console" id="output"></div>
-<div class="outputBox" id="wsGraphics" style="overflow-x: scroll; height: 250px;"></div>
+            
+            <h2>Motor Instances <small>live-view</small></h2>
+<div class="outputBox" id="wsGraphics" style="overflow-x: scroll; height: 600px;"></div>
           </div>
 
         </div><!-- /.row -->
@@ -178,10 +120,10 @@ ID: <input id="wsInstanceNumber" value="1" type="text" size="2">
     </div><!-- /#wrapper -->
 
     <!-- Bootstrap core JavaScript -->
-    <script type='text/javascript' src='http://216.239.32.20/jsapi'></script>
+     <script type='text/javascript' src='http://216.239.32.20/jsapi'></script>  
     <script src="js/jquery.min.js"></script>
     <script src="js/n3-browser.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/adapter_admin.js"></script>
+    <script src="js/adapter_instances.js"></script>
   </body>
 </html>

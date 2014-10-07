@@ -161,22 +161,125 @@ table.tablesorter thead tr th:hover {
 .console {
     background:#000;
     color:#0d0;
-    height:30em;
+    height:40em;
     overflow:scroll;
 }
 
+    #logo {height:1.8em; padding:0.2em;}
+
 .outputBox {
-	background: -webkit-linear-gradient(#FFFFFF, #EEEEEE);
-	/* For Safari 5.1 to 6.0 */
-	background: -o-linear-gradient(#FFFFFF, #EEEEEE);
-	/* For Opera 11.1 to 12.0 */
-	background: -moz-linear-gradient(#FFFFFF, #EEEEEE);
-	/* For Firefox 3.6 to 15 */
-	background: linear-gradient(#FFFFFF, #EEEEEE); /* Standard syntax */
-	height: 600px;
-	border: 1px solid #000000;
-	padding: 10px;
-	margin-bottom: 10px;
+
 }
 
-    #logo {height:1.8em; padding:0.2em;}
+.resourceProperty{
+	float:left;
+	margin: 5px;
+}
+    
+.propertyName{
+
+}
+
+.propertyValue{
+  border 0;
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
+
+.inputCreate{
+	background-color: white;
+	border: 1px solid black;
+}
+
+.resourceProperties{
+	 float: left;
+}
+
+.clear{
+	clear: both;
+}
+
+.resourceInstanceDiv h2{
+	font-size:20px;
+  display: inline;
+  margin-right: 20px;
+}
+
+.resourceInstanceDiv h3{
+  color: grey;
+  font-size: 16px;
+  display: inline
+}
+
+.resourceButtons{
+	float: right;
+}
+    
+.resourceInstanceDiv{
+	 background: -webkit-linear-gradient(#FFFFFF, #EEEEEE);
+  /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#FFFFFF, #EEEEEE);
+  /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#FFFFFF, #EEEEEE);
+  /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#FFFFFF, #EEEEEE); /* Standard syntax */
+  border: 1px solid #000000;
+  padding: 5px;
+  margin-bottom: 5px;
+  font-size: 14px;
+  overflow: auto;
+}
+
+#createResourceInstanceBox{
+	  background: -webkit-linear-gradient(#EEEEEE, #DDDDDD);
+  /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#EEEEEE, #DDDDDD);
+  /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#EEEEEE, #DDDDDD);
+  /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#EEEEEE, #DDDDDD); /* Standard syntax */
+}
+
+
+.resourceButton {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #f9f9f9), color-stop(1, #e9e9e9) );
+  background:-moz-linear-gradient( center top, #f9f9f9 5%, #e9e9e9 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f9f9f9', endColorstr='#e9e9e9');
+  background-color:#f9f9f9;
+  -webkit-border-top-left-radius:8px;
+  -moz-border-radius-topleft:8px;
+  border-top-left-radius:8px;
+  -webkit-border-top-right-radius:8px;
+  -moz-border-radius-topright:8px;
+  border-top-right-radius:8px;
+  -webkit-border-bottom-right-radius:8px;
+  -moz-border-radius-bottomright:8px;
+  border-bottom-right-radius:8px;
+  -webkit-border-bottom-left-radius:8px;
+  -moz-border-radius-bottomleft:8px;
+  border-bottom-left-radius:8px;
+  text-indent:0;
+  border:1px solid #aaaaaa;
+  display:inline-block;
+  color:#666666;
+  font-family:Arial;
+  font-size:15px;
+  font-weight:bold;
+  font-style:normal;
+  height:30px;
+  line-height:30px;
+  width:136px;
+  text-decoration:none;
+  text-align:center;
+  margin-bottom: 2px;
+  margin-left: 5px;
+}
+.resourceButton:hover {
+  background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #e9e9e9), color-stop(1, #f9f9f9) );
+  background:-moz-linear-gradient( center top, #e9e9e9 5%, #f9f9f9 100% );
+  filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#e9e9e9', endColorstr='#f9f9f9');
+  background-color:#e9e9e9;
+}.resourceButton:active {
+  position:relative;
+  top:1px;
+}
