@@ -122,13 +122,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), null);
+                return createRESTResponse(getResult(result), null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @GET
@@ -143,13 +143,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), null);
+                return createRESTResponse(getResult(result), null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @GET
@@ -164,13 +164,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), null);
+                return createRESTResponse(getResult(result), null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @GET
@@ -185,13 +185,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), null);
+                return createRESTResponse(getResult(result), null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @PUT
@@ -206,13 +206,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), Response.Status.CREATED);
+                return createRESTResponse(getResult(result), Response.Status.CREATED);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @PUT
@@ -227,12 +227,12 @@ public class NorthboundAPI {
             Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
             sendRequest(request);
             Message result = waitForResult(request);
-            return getRESTResponse(getResult(result), Response.Status.CREATED);
+            return createRESTResponse(getResult(result), Response.Status.CREATED);
         } catch (JMSException e) {
             e.printStackTrace();
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @POST
@@ -247,12 +247,12 @@ public class NorthboundAPI {
             Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
             sendRequest(request);
             Message result = waitForResult(request);
-            return getRESTResponse(getResult(result), null);
+            return createRESTResponse(getResult(result), null);
         } catch (JMSException e) {
             e.printStackTrace();
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     @DELETE
@@ -267,13 +267,13 @@ public class NorthboundAPI {
                 Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
                 sendRequest(request);
                 Message result = waitForResult(request);
-                return getRESTResponse(getResult(result), null);
+                return createRESTResponse(getResult(result), null);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
 
-        return getRESTResponse(null, null);
+        return createRESTResponse(null, null);
     }
 
     private Model getRequestModel(String adapterName, String instanceName) {
@@ -342,7 +342,7 @@ public class NorthboundAPI {
         return MessageBusMsgFactory.createMsgConfigure(rdfModel);
     }
 
-    private Response getRESTResponse(String responseString, Status successResponseStatus) {
+    private Response createRESTResponse(String responseString, Status successResponseStatus) {
         if (responseString == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
         } else if (responseString.equals(IMessageBus.STATUS_400)) {
@@ -425,7 +425,6 @@ public class NorthboundAPI {
     }
 
     private Message waitForResult(final Message message) throws JMSException {
-        NorthboundAPI.LOGGER.log(Level.INFO, "Waiting for an answer...");
         final String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
         final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
         return rcvMessage;
