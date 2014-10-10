@@ -17,7 +17,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.IResourceRepository;
 
 @Path("/rest")
 public class ResourceRepository {
@@ -112,7 +111,7 @@ public class ResourceRepository {
 		final Message message = this.context.createMessage();
 		message.setStringProperty(IMessageBus.TYPE, IMessageBus.REQUEST);
 		message.setStringProperty(IMessageBus.SERIALIZATION, serialization);
-		message.setStringProperty(IMessageBus.TARGET, IResourceRepository.SERVICE_NAME);
+		message.setStringProperty(IMessageBus.TARGET, IMessageBus.DATABASE_SERVICE_NAME);
 		message.setStringProperty(IMessageBus.QUERY, query);
 		message.setJMSCorrelationID(UUID.randomUUID().toString());
 		return message;
