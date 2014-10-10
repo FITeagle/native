@@ -5,7 +5,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
@@ -30,6 +29,7 @@ import org.fiteagle.api.core.MessageBusOntologyModel;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.SimpleSelector;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
@@ -41,7 +41,7 @@ public class NorthboundAPI {
 
     @Inject
     private JMSContext context;
-    @Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
+    @javax.annotation.Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
     private Topic topic;
 
     private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
@@ -62,7 +62,7 @@ public class NorthboundAPI {
 
         resetAdapterParameters();
 
-        Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
+        Model inputModel = createRequestModel("testbed", "FITEAGLE_Testbed");
 
         if (inputModel != null) {
             try {
@@ -109,13 +109,34 @@ public class NorthboundAPI {
             }
         }
     }
+    
+  @GET
+  @Path("/")
+  @Produces("text/turtle")
+  public Response getAllResourcesTTL() throws JMSException {
+    
+    Model inputModel = createRequestModel("testbed", "FITEAGLE_Testbed");
+    
+    if (inputModel != null) {
+      try {
+        Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+        sendRequest(request);
+        Message result = waitForResult(request);
+        return createRESTResponse(getResult(result), null);
+      } catch (JMSException e) {
+        e.printStackTrace();
+      }
+    }
+    
+    return createRESTResponse(null, null);
+  }
 
     @GET
     @Path("/discover")
     @Produces("text/turtle")
     public Response discoverAllTTL() throws JMSException {
 
-        Model inputModel = getDiscoverModel();
+        Model inputModel = createDiscoverModel();
 
         if (inputModel != null) {
             try {
@@ -132,32 +153,11 @@ public class NorthboundAPI {
     }
 
     @GET
-    @Path("/")
-    @Produces("text/turtle")
-    public Response requestTestbedAdapterListTTL() throws JMSException {
-
-        Model inputModel = getRequestModel("testbed", "FITEAGLE_Testbed");
-
-        if (inputModel != null) {
-            try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), null);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return createRESTResponse(null, null);
-    }
-
-    @GET
     @Path("/{adapterName}")
     @Produces("text/turtle")
     public Response requestAdapterResourceInstancesTTL(@PathParam("adapterName") String adapterName) throws JMSException {
 
-        Model inputModel = getRequestModel(adapterName, null);
+        Model inputModel = createRequestModel(adapterName, null);
 
         if (inputModel != null) {
             try {
@@ -178,7 +178,7 @@ public class NorthboundAPI {
     @Produces("text/turtle")
     public Response requestSingleResourceInstanceTTL(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        Model inputModel = getRequestModel(adapterName, instanceName);
+        Model inputModel = createRequestModel(adapterName, instanceName);
 
         if (inputModel != null) {
             try {
@@ -199,7 +199,7 @@ public class NorthboundAPI {
     @Produces("text/html")
     public Response createResourceInstance(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        Model inputModel = getCreateModel(adapterName, instanceName);
+        Model inputModel = createCreateModel(adapterName, instanceName);
 
         if (inputModel != null) {
             try {
@@ -221,7 +221,7 @@ public class NorthboundAPI {
     @Produces("text/html")
     public Response createResourceInstanceWithRDF(@PathParam("adapterName") String adapterName, String rdfInput) {
 
-        Model inputModel = getCreateModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+        Model inputModel = createCreateModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
         try {
             Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
@@ -241,7 +241,7 @@ public class NorthboundAPI {
     @Produces("text/html")
     public Response configureResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
 
-        Model inputModel = getConfigureModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+        Model inputModel = createConfigureModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
         try {
             Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
@@ -260,7 +260,7 @@ public class NorthboundAPI {
     @Produces("text/html")
     public Response adapterReleaseInstance(@PathParam("adapterName") String adapterName, @PathParam("instanceName") String instanceName) {
 
-        Model inputModel = getReleaseModel(adapterName, instanceName);
+        Model inputModel = createReleaseModel(adapterName, instanceName);
 
         if (inputModel != null) {
             try {
@@ -276,19 +276,19 @@ public class NorthboundAPI {
         return createRESTResponse(null, null);
     }
 
-    private Model getRequestModel(String adapterName, String instanceName) {
+    private Model createRequestModel(String adapterName, String instanceName) {
 
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
-            Model rdfModel = getDefaultModel();
+            Model rdfModel = createDefaultModel();
 
             if (instanceName != null) {
                 // If instance specified, request that resource instance
                 addInstanceToModel(rdfModel, adapterParams[1], instanceName);
             } else {
                 // If no instance specified, request whole adapter
-                rdfModel = getDefaultModel(adapterParams);
+                rdfModel = createDefaultModel(adapterParams);
             }
             setAdapterPrefix(rdfModel, adapterParams);
 
@@ -298,16 +298,16 @@ public class NorthboundAPI {
         return null;
     }
 
-    private Model getDiscoverModel() {
+    private Model createDiscoverModel() {
         return MessageBusMsgFactory.createMsgDiscover(null);
     }
 
-    private Model getReleaseModel(String adapterName, String instanceName) {
+    private Model createReleaseModel(String adapterName, String instanceName) {
 
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
-            Model rdfModel = getDefaultModel(adapterParams);
+            Model rdfModel = createDefaultModel(adapterParams);
 
             addInstanceToModel(rdfModel, adapterParams[1], instanceName);
             setAdapterPrefix(rdfModel, adapterParams);
@@ -318,12 +318,12 @@ public class NorthboundAPI {
         return null;
     }
 
-    private Model getCreateModel(String adapterName, String instanceName) {
+    private Model createCreateModel(String adapterName, String instanceName) {
 
         String[] adapterParams = getAdapterParams(adapterName);
 
         if (adapterParams != null) {
-            Model rdfModel = getDefaultModel(adapterParams);
+            Model rdfModel = createDefaultModel(adapterParams);
 
             addInstanceToModel(rdfModel, adapterParams[1], instanceName);
             setAdapterPrefix(rdfModel, adapterParams);
@@ -334,11 +334,11 @@ public class NorthboundAPI {
         return null;
     }
 
-    private Model getCreateModel(Model rdfModel) {
+    private Model createCreateModel(Model rdfModel) {
         return MessageBusMsgFactory.createMsgCreate(rdfModel);
     }
 
-    private Model getConfigureModel(Model rdfModel) {
+    private Model createConfigureModel(Model rdfModel) {
         return MessageBusMsgFactory.createMsgConfigure(rdfModel);
     }
 
@@ -379,8 +379,8 @@ public class NorthboundAPI {
     }
 
     private void addInstanceToModel(Model rdfModel, String instanceType, String instanceName) {
-        com.hp.hpl.jena.rdf.model.Resource resourceType = rdfModel.createResource(instanceType);
-        com.hp.hpl.jena.rdf.model.Resource resourceInstance = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
+        Resource resourceType = rdfModel.createResource(instanceType);
+        Resource resourceInstance = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
         resourceInstance.addProperty(RDF.type, resourceType);
     }
 
@@ -388,13 +388,13 @@ public class NorthboundAPI {
         rdfModel.setNsPrefix(adapterParams[2], adapterParams[3]);
     }
 
-    private Model getDefaultModel(String[] adapterParams) {
+    private Model createDefaultModel(String[] adapterParams) {
         Model rdfModel = ModelFactory.createDefaultModel();
         addInstanceToModel(rdfModel, adapterParams[0], adapterParams[4]);
         return rdfModel;
     }
 
-    private Model getDefaultModel() {
+    private Model createDefaultModel() {
         return ModelFactory.createDefaultModel();
     }
 
