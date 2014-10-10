@@ -115,17 +115,19 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
     
-    Model inputModel = createRequestModel("testbed", "FITEAGLE_Testbed");
+    Model requestModel = createDefaultModel();
+    Resource resource = requestModel.createResource();
+    resource.addProperty(RDFS.subClassOf, MessageBusOntologyModel.classAdapter);
     
-    if (inputModel != null) {
-      try {
-        Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-        sendRequest(request);
-        Message result = waitForResult(request);
-        return createRESTResponse(getResult(result), null);
-      } catch (JMSException e) {
-        e.printStackTrace();
-      }
+    requestModel = MessageBusMsgFactory.createMsgRequest(requestModel);
+    
+    try {
+      Message request = createRequest(MessageBusMsgFactory.serializeModel(requestModel), IMessageBus.TYPE_REQUEST);
+      sendRequest(request);
+      Message result = waitForResult(request);
+      return createRESTResponse(getResult(result), null);
+    } catch (JMSException e) {
+      e.printStackTrace();
     }
     
     return createRESTResponse(null, null);
@@ -140,7 +142,7 @@ public class NorthboundAPI {
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return createRESTResponse(getResult(result), null);
@@ -161,7 +163,7 @@ public class NorthboundAPI {
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return createRESTResponse(getResult(result), null);
@@ -182,7 +184,7 @@ public class NorthboundAPI {
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return createRESTResponse(getResult(result), null);
@@ -203,7 +205,7 @@ public class NorthboundAPI {
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
+                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return createRESTResponse(getResult(result), Response.Status.CREATED);
@@ -224,7 +226,7 @@ public class NorthboundAPI {
         Model inputModel = createCreateModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
         try {
-            Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
+            Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
             sendRequest(request);
             Message result = waitForResult(request);
             return createRESTResponse(getResult(result), Response.Status.CREATED);
@@ -244,7 +246,7 @@ public class NorthboundAPI {
         Model inputModel = createConfigureModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
         try {
-            Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
+            Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
             sendRequest(request);
             Message result = waitForResult(request);
             return createRESTResponse(getResult(result), null);
@@ -264,7 +266,7 @@ public class NorthboundAPI {
 
         if (inputModel != null) {
             try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
+                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
                 sendRequest(request);
                 Message result = waitForResult(request);
                 return createRESTResponse(getResult(result), null);
