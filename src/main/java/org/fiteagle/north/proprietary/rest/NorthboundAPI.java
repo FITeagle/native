@@ -117,7 +117,7 @@ public class NorthboundAPI {
     
     Model requestModel = createDefaultModel();
     Resource resource = requestModel.createResource();
-    resource.addProperty(RDFS.subClassOf, MessageBusOntologyModel.classAdapter);
+    resource.addProperty(RDFS.subClassOf, MessageBusOntologyModel.classResource);
     
     requestModel = MessageBusMsgFactory.createMsgRequest(requestModel);
     
