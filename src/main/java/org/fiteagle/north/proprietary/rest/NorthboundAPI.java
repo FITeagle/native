@@ -367,7 +367,6 @@ public class NorthboundAPI {
         } catch (JMSException e) {
           LOGGER.log(Level.SEVERE, e.getMessage());
         }
-
         return message;
     }
 
