@@ -30,7 +30,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.SimpleSelector;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.RDF;
@@ -73,21 +72,20 @@ public class NorthboundAPI {
 
             // Get contained adapter names
             // :FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
-            StmtIterator adapterIterator = response.listStatements(new SimpleSelector(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter));
+            StmtIterator adapterIterator = response.listStatements(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter);
             while (adapterIterator.hasNext()) {
                 String[] adapterSpecificParams = new String[5];
                 Statement currentAdapterTypeStatement = adapterIterator.next();
 
                 // Find out what resource this adapter implements
-                StmtIterator adapterImplementsIterator = response.listStatements(new SimpleSelector(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,
-                        (RDFNode) null));
+                StmtIterator adapterImplementsIterator = response.listStatements(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,(RDFNode) null);
                 while (adapterImplementsIterator.hasNext()) {
                     adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
                     adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
                 }
 
                 // Find out the name of the adapter instance and its namespace/prefix
-                StmtIterator adapterTypeIterator = response.listStatements(new SimpleSelector(null, RDF.type, currentAdapterTypeStatement.getSubject()));
+                StmtIterator adapterTypeIterator = response.listStatements(null, RDF.type, currentAdapterTypeStatement.getSubject());
                 while (adapterTypeIterator.hasNext()) {
                     Statement currentAdapterStatement = adapterTypeIterator.next();
 
