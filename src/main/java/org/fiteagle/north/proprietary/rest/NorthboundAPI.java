@@ -65,47 +65,43 @@ public class NorthboundAPI {
         Model inputModel = createRequestModel("testbed", "FITEAGLE_Testbed");
 
         if (inputModel != null) {
-            try {
-                Message request = this.createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-                sendRequest(request);
-                Message result = waitForResult(request);
+            Message request = this.createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+            sendRequest(request);
+            Message result = waitForResult(request);
 
-                Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));
+            Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));
 
-                // Get contained adapter names
-                // :FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
-                StmtIterator adapterIterator = response.listStatements(new SimpleSelector(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter));
-                while (adapterIterator.hasNext()) {
-                    String[] adapterSpecificParams = new String[5];
-                    Statement currentAdapterTypeStatement = adapterIterator.next();
+            // Get contained adapter names
+            // :FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
+            StmtIterator adapterIterator = response.listStatements(new SimpleSelector(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter));
+            while (adapterIterator.hasNext()) {
+                String[] adapterSpecificParams = new String[5];
+                Statement currentAdapterTypeStatement = adapterIterator.next();
 
-                    // Find out what resource this adapter implements
-                    StmtIterator adapterImplementsIterator = response.listStatements(new SimpleSelector(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,
-                            (RDFNode) null));
-                    while (adapterImplementsIterator.hasNext()) {
-                        adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
-                        adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
-                    }
-
-                    // Find out the name of the adapter instance and its namespace/prefix
-                    StmtIterator adapterTypeIterator = response.listStatements(new SimpleSelector(null, RDF.type, currentAdapterTypeStatement.getSubject()));
-                    while (adapterTypeIterator.hasNext()) {
-                        Statement currentAdapterStatement = adapterTypeIterator.next();
-
-                        String namespace = currentAdapterTypeStatement.getSubject().getNameSpace();
-                        int posPrefix = namespace.lastIndexOf("/");
-                        String prefix = namespace.substring(posPrefix + 1, namespace.length() - 1);
-                        String adapterName = currentAdapterStatement.getSubject().getLocalName();
-
-                        adapterSpecificParams[2] = prefix;
-                        adapterSpecificParams[3] = namespace;
-                        adapterSpecificParams[4] = adapterName;
-
-                        adapterSpecificParameters.put(adapterName, adapterSpecificParams);
-                    }
+                // Find out what resource this adapter implements
+                StmtIterator adapterImplementsIterator = response.listStatements(new SimpleSelector(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,
+                        (RDFNode) null));
+                while (adapterImplementsIterator.hasNext()) {
+                    adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
+                    adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
                 }
-            } catch (JMSException e) {
-                e.printStackTrace();
+
+                // Find out the name of the adapter instance and its namespace/prefix
+                StmtIterator adapterTypeIterator = response.listStatements(new SimpleSelector(null, RDF.type, currentAdapterTypeStatement.getSubject()));
+                while (adapterTypeIterator.hasNext()) {
+                    Statement currentAdapterStatement = adapterTypeIterator.next();
+
+                    String namespace = currentAdapterTypeStatement.getSubject().getNameSpace();
+                    int posPrefix = namespace.lastIndexOf("/");
+                    String prefix = namespace.substring(posPrefix + 1, namespace.length() - 1);
+                    String adapterName = currentAdapterStatement.getSubject().getLocalName();
+
+                    adapterSpecificParams[2] = prefix;
+                    adapterSpecificParams[3] = namespace;
+                    adapterSpecificParams[4] = adapterName;
+
+                    adapterSpecificParameters.put(adapterName, adapterSpecificParams);
+                }
             }
         }
     }
@@ -114,25 +110,17 @@ public class NorthboundAPI {
   @Path("/")
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
+    String query = "DESCRIBE ?resource WHERE {?resource <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://fiteagle.org/ontology#Resource>. }";
+    String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
+    final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST);
+    sendRequest(request);
     
-    Model requestModel = createDefaultModel();
-    Resource resource = requestModel.createResource();
-    resource.addProperty(RDFS.subClassOf, MessageBusOntologyModel.classResource);
-    
-    requestModel = MessageBusMsgFactory.createMsgRequest(requestModel);
-    
-    try {
-      Message request = createRequest(MessageBusMsgFactory.serializeModel(requestModel), IMessageBus.TYPE_REQUEST);
-      sendRequest(request);
-      Message result = waitForResult(request);
-      return createRESTResponse(getResult(result), null);
-    } catch (JMSException e) {
-      e.printStackTrace();
-    }
-    
-    return createRESTResponse(null, null);
+    Message rcvMessage = waitForResult(request);
+    String resultString = getResult(rcvMessage);
+    String result = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+    return createRESTResponse(result, null);
   }
-
+  
     @GET
     @Path("/discover")
     @Produces("text/turtle")
@@ -141,14 +129,10 @@ public class NorthboundAPI {
         Model inputModel = createDiscoverModel();
 
         if (inputModel != null) {
-            try {
-                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), null);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
+          Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
+          sendRequest(request);
+          Message result = waitForResult(request);
+          return createRESTResponse(getResult(result), null);
         }
 
         return createRESTResponse(null, null);
@@ -162,14 +146,10 @@ public class NorthboundAPI {
         Model inputModel = createRequestModel(adapterName, null);
 
         if (inputModel != null) {
-            try {
-                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), null);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
+            Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+            sendRequest(request);
+            Message result = waitForResult(request);
+            return createRESTResponse(getResult(result), null);
         }
 
         return createRESTResponse(null, null);
@@ -183,14 +163,10 @@ public class NorthboundAPI {
         Model inputModel = createRequestModel(adapterName, instanceName);
 
         if (inputModel != null) {
-            try {
-                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), null);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
+          Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
+          sendRequest(request);
+          Message result = waitForResult(request);
+          return createRESTResponse(getResult(result), null);
         }
 
         return createRESTResponse(null, null);
@@ -204,14 +180,10 @@ public class NorthboundAPI {
         Model inputModel = createCreateModel(adapterName, instanceName);
 
         if (inputModel != null) {
-            try {
-                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), Response.Status.CREATED);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
+            Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
+            sendRequest(request);
+            Message result = waitForResult(request);
+            return createRESTResponse(getResult(result), Response.Status.CREATED);
         }
 
         return createRESTResponse(null, null);
@@ -225,16 +197,10 @@ public class NorthboundAPI {
 
         Model inputModel = createCreateModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
-        try {
-            Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            return createRESTResponse(getResult(result), Response.Status.CREATED);
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
-
-        return createRESTResponse(null, null);
+        Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
+        sendRequest(request);
+        Message result = waitForResult(request);
+        return createRESTResponse(getResult(result), Response.Status.CREATED);
     }
 
     @POST
@@ -245,16 +211,10 @@ public class NorthboundAPI {
 
         Model inputModel = createConfigureModel(MessageBusMsgFactory.parseSerializedModel(rdfInput));
 
-        try {
-            Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
-            sendRequest(request);
-            Message result = waitForResult(request);
-            return createRESTResponse(getResult(result), null);
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
-
-        return createRESTResponse(null, null);
+        Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
+        sendRequest(request);
+        Message result = waitForResult(request);
+        return createRESTResponse(getResult(result), null);
     }
 
     @DELETE
@@ -265,14 +225,10 @@ public class NorthboundAPI {
         Model inputModel = createReleaseModel(adapterName, instanceName);
 
         if (inputModel != null) {
-            try {
-                Message request = createRequest(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
-                sendRequest(request);
-                Message result = waitForResult(request);
-                return createRESTResponse(getResult(result), null);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
+            Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
+            sendRequest(request);
+            Message result = waitForResult(request);
+            return createRESTResponse(getResult(result), null);
         }
 
         return createRESTResponse(null, null);
@@ -396,38 +352,51 @@ public class NorthboundAPI {
         return rdfModel;
     }
 
-    private Model createDefaultModel() {
+    private static Model createDefaultModel() {
         return ModelFactory.createDefaultModel();
     }
 
-    private Message createRequest(final String rdfInput, final String methodType) throws JMSException {
+    private Message createRDFMessage(final String rdfInput, final String methodType) {
         final Message message = this.context.createMessage();
 
-        message.setStringProperty(IMessageBus.METHOD_TYPE, methodType);
-        message.setStringProperty(IMessageBus.SERIALIZATION, IMessageBus.SERIALIZATION_DEFAULT);
-        message.setStringProperty(IMessageBus.RDF, rdfInput);
-        message.setJMSCorrelationID(UUID.randomUUID().toString());
+        try {
+          message.setStringProperty(IMessageBus.METHOD_TYPE, methodType);
+          message.setStringProperty(IMessageBus.SERIALIZATION, IMessageBus.SERIALIZATION_DEFAULT);
+          message.setStringProperty(IMessageBus.RDF, rdfInput);
+          message.setJMSCorrelationID(UUID.randomUUID().toString());
+        } catch (JMSException e) {
+          LOGGER.log(Level.SEVERE, e.getMessage());
+        }
 
         return message;
     }
 
-    private String getResult(final Message result) throws JMSException {
+    private String getResult(final Message result) {
         String resources = IMessageBus.STATUS_408;
 
-        NorthboundAPI.LOGGER.log(Level.INFO, "Received resources via MDB...");
+        NorthboundAPI.LOGGER.log(Level.INFO, "Received reply.");
         if (null != result) {
-            resources = result.getStringProperty(IMessageBus.RDF);
+            try {
+              resources = result.getStringProperty(IMessageBus.RDF);
+            } catch (JMSException e) {
+              LOGGER.log(Level.SEVERE, e.getMessage());
+            }
         }
         return resources;
     }
 
     private void sendRequest(final Message message) {
-        NorthboundAPI.LOGGER.log(Level.INFO, "Getting resources via MDB...");
+        NorthboundAPI.LOGGER.log(Level.INFO, "Sending request...");
         this.context.createProducer().send(this.topic, message);
     }
 
-    private Message waitForResult(final Message message) throws JMSException {
-        final String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
+    private Message waitForResult(final Message message) {
+        String filter = null;
+        try {
+          filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
+        } catch (JMSException e) {
+          LOGGER.log(Level.SEVERE, e.getMessage());
+        }
         final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
         return rcvMessage;
     }
