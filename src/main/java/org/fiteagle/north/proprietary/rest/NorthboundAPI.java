@@ -61,31 +61,33 @@ public class NorthboundAPI {
 
         resetAdapterParameters();
 
-        Model inputModel = createRequestModel("testbed", "FITEAGLE_Testbed");
+        String query = "DESCRIBE * {?s ?p ?o}";
+        String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
+        final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST);
+        sendRequest(request);
+        
+        Message rcvMessage = waitForResult(request);
+        String resultString = getResult(rcvMessage);
+        String modelString = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+        Model responseModel = MessageBusMsgFactory.parseSerializedModel(modelString);
 
-        if (inputModel != null) {
-            Message request = this.createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_REQUEST);
-            sendRequest(request);
-            Message result = waitForResult(request);
-
-            Model response = MessageBusMsgFactory.parseSerializedModel(getResult(result));
+        if (responseModel != null) {
 
             // Get contained adapter names
-            // :FITEAGLE_Testbed fiteagle:containsAdapter :ADeployedMotorAdapter1.
-            StmtIterator adapterIterator = response.listStatements(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter);
+            StmtIterator adapterIterator = responseModel.listStatements(null, RDFS.subClassOf, MessageBusOntologyModel.classAdapter);
             while (adapterIterator.hasNext()) {
                 String[] adapterSpecificParams = new String[5];
                 Statement currentAdapterTypeStatement = adapterIterator.next();
 
                 // Find out what resource this adapter implements
-                StmtIterator adapterImplementsIterator = response.listStatements(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,(RDFNode) null);
+                StmtIterator adapterImplementsIterator = responseModel.listStatements(currentAdapterTypeStatement.getSubject(), MessageBusOntologyModel.propertyFiteagleImplements,(RDFNode) null);
                 while (adapterImplementsIterator.hasNext()) {
                     adapterSpecificParams[0] = currentAdapterTypeStatement.getSubject().toString();
                     adapterSpecificParams[1] = adapterImplementsIterator.next().getResource().toString();
                 }
 
                 // Find out the name of the adapter instance and its namespace/prefix
-                StmtIterator adapterTypeIterator = response.listStatements(null, RDF.type, currentAdapterTypeStatement.getSubject());
+                StmtIterator adapterTypeIterator = responseModel.listStatements(null, RDF.type, currentAdapterTypeStatement.getSubject());
                 while (adapterTypeIterator.hasNext()) {
                     Statement currentAdapterStatement = adapterTypeIterator.next();
 
