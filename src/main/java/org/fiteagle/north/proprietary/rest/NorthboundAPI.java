@@ -50,6 +50,8 @@ public class NorthboundAPI {
 
     private void resetAdapterParameters() {
         adapterSpecificParameters.clear();
+        
+        //TODO: make dynamic or remove!
         String[] testbedAdapterParams = { "http://fiteagle.org/ontology#Testbed", "http://fiteagle.org/ontology#Testbed", "fiteagle", "http://fiteagle.org/ontology#", "FITEAGLE_Testbed" };
         adapterSpecificParameters.put("testbed", testbedAdapterParams);
     }
