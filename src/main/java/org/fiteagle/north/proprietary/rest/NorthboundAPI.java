@@ -303,12 +303,14 @@ public class NorthboundAPI {
     private Response createRESTResponse(String responseString, Status successResponseStatus) {
         if (responseString == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Adapter not found").build();
-        } else if (responseString.equals(IMessageBus.STATUS_400)) {
+        } else if (responseString.equals(Response.Status.BAD_REQUEST.name())) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Resource not processed").build();
-        } else if (responseString.equals(IMessageBus.STATUS_404)) {
+        } else if (responseString.equals(Response.Status.NOT_FOUND.name())) {
             return Response.status(Response.Status.NOT_FOUND).entity("Resource not found").build();
-        } else if (responseString.equals(IMessageBus.STATUS_408)) {
+        } else if (responseString.equals(Response.Status.REQUEST_TIMEOUT.name())) {
             return Response.status(Response.Status.REQUEST_TIMEOUT).entity("Time out, please try again").build();
+        } else if (responseString.equals(Response.Status.CONFLICT.name())) {
+          return Response.status(Response.Status.CONFLICT).entity("Conflict").build();
         } else {
             if(successResponseStatus != null){
                 return Response.status(successResponseStatus).entity(responseString).build();
@@ -371,7 +373,7 @@ public class NorthboundAPI {
     }
 
     private String getResult(final Message result) {
-        String resources = IMessageBus.STATUS_408;
+        String resources = Response.Status.REQUEST_TIMEOUT.name();
 
         NorthboundAPI.LOGGER.log(Level.INFO, "Received reply.");
         if (null != result) {
