@@ -120,6 +120,11 @@ public class NorthboundAPI {
     Message rcvMessage = waitForResult(request);
     String resultString = getResult(rcvMessage);
     String result = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+    
+    Model resultModel = MessageBusMsgFactory.parseSerializedModel(result);
+    MessageBusMsgFactory.setCommonPrefixes(resultModel);
+    result = MessageBusMsgFactory.serializeModel(resultModel);
+    
     return createRESTResponse(result, null);
   }
   
