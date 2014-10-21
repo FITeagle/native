@@ -72,7 +72,7 @@ public class ObjectPresenter {
     return result;
   }
 
-  protected void checkForExceptions(Message message){
+  protected static void checkForExceptions(Message message){
     if(message == null){
       log.error("JMS: timeout while waiting for response");
       throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
@@ -108,7 +108,7 @@ public class ObjectPresenter {
           throw new FiteagleWebApplicationException(422, exceptionMessage);    
         }
         else{
-          log.error(exceptionMessage);
+          log.error("Unknown Error: "+exceptionMessage);
           throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exceptionMessage);
         }
       }

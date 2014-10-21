@@ -158,7 +158,7 @@ public class UserPresenter extends ObjectPresenter{
     Message rcvMessage = sendMessage(message, UserManager.DELETE_USER);
     
     checkForExceptions(rcvMessage);
-    return Response.status(200).build();
+    return Response.status(200).header(AuthenticationFilter.LOGOUT_HEADER, true).build();
   }
   
   @POST
@@ -191,7 +191,7 @@ public class UserPresenter extends ObjectPresenter{
   @Path("{username}/cookie")
   public Response deleteCookie(@PathParam("username") String username){
     AuthenticationFilter.getInstance().deleteCookie(username);
-    return Response.status(200).build();
+    return Response.status(200).header(AuthenticationFilter.LOGOUT_HEADER, true).build();
   }
   
   @GET

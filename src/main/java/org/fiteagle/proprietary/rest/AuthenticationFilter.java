@@ -38,6 +38,8 @@ public class AuthenticationFilter implements Filter{
   protected final static String RESOURCE_ATTRIBUTE = "resource";
   protected final static String ACTION_ATTRIBUTE = "action";
   
+  protected final static String LOGOUT_HEADER = "logout";
+  
   private final static Logger log = Logger.getLogger(AuthenticationFilter.class.toString());
   
   public AuthenticationFilter(){};
@@ -116,7 +118,7 @@ public class AuthenticationFilter implements Filter{
   }
 
   private void deleteSessionAndCookieOnLogout(HttpServletRequest request, HttpServletResponse response) {
-    if(request.getMethod().equals("DELETE") && request.getRequestURI().endsWith("/cookie")){
+    if(response.containsHeader(LOGOUT_HEADER) && response.getHeader(LOGOUT_HEADER).equals(true)){
       request.getSession().invalidate();      
       addNullCookies(request, response);
     }
@@ -202,6 +204,7 @@ public class AuthenticationFilter implements Filter{
       if(exceptionMessage != null){
         return false;
       }
+      ObjectPresenter.checkForExceptions(rcvMessage);
       return rcvMessage.getBooleanProperty(IMessageBus.TYPE_RESULT);
     }catch(JMSException e) {
       throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "JMS Error: "+e.getMessage());    
