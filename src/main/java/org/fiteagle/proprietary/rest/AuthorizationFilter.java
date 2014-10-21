@@ -74,7 +74,7 @@ public class AuthorizationFilter implements Filter {
       while(rcvMessage == null){
         log.info("Sending Request..");
         context.createProducer().send(topic, message);
-        rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
+        rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.SHORT_TIMEOUT);
       }
       ObjectPresenter.checkForExceptions(rcvMessage);
       Boolean result = rcvMessage.getBooleanProperty(IMessageBus.TYPE_RESULT);
