@@ -194,6 +194,12 @@ public class UserPresenter extends ObjectPresenter{
     return Response.status(200).header(AuthenticationFilter.LOGOUT_HEADER, true).build();
   }
   
+  @DELETE
+  @Path("session")
+  public Response deleteSession(){
+    return Response.status(200).header(AuthenticationFilter.LOGOUT_HEADER, true).build();
+  }
+  
   @GET
   @Path("{username}/classes")
   @Produces(MediaType.APPLICATION_JSON)
