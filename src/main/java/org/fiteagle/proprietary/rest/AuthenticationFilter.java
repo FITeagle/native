@@ -67,7 +67,9 @@ public class AuthenticationFilter implements Filter{
   
   protected static boolean requestDoesNotNeedAuth(String method, String requestURI){
     if(method.equals("PUT") && requestURI.startsWith("/native/api/user") || 
-        method.equals("GET") && (requestURI.equals("/native/api/node") || requestURI.equals("/native/api/node/"))){
+        method.equals("GET") && (requestURI.equals("/native/api/node") || 
+        requestURI.equals("/native/api/node/") ||
+        requestURI.equals("/native/api/session"))){
       return true;
     }
     return false;
