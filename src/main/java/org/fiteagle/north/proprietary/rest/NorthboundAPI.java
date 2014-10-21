@@ -122,7 +122,6 @@ public class NorthboundAPI {
     String result = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
     
     Model resultModel = MessageBusMsgFactory.parseSerializedModel(result);
-    MessageBusMsgFactory.setCommonPrefixes(resultModel);
     result = MessageBusMsgFactory.serializeModel(resultModel);
     
     return createRESTResponse(result, null);
