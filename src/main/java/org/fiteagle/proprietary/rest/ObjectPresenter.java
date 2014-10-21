@@ -54,6 +54,7 @@ public class ObjectPresenter {
     }
     Message rcvMessage = null;
     while(rcvMessage == null){
+      log.info("Sending Request..");
       context.createProducer().send(topic, message);
       rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
     }
