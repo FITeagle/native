@@ -50,10 +50,6 @@ public class NorthboundAPI {
 
     private void resetAdapterParameters() {
         adapterSpecificParameters.clear();
-        
-        //TODO: make dynamic or remove!
-        String[] testbedAdapterParams = { "http://fiteagle.org/ontology#Testbed", "http://fiteagle.org/ontology#Testbed", "fiteagle", "http://fiteagle.org/ontology#", "FITEAGLE_Testbed" };
-        adapterSpecificParameters.put("testbed", testbedAdapterParams);
     }
 
     /**
@@ -112,7 +108,7 @@ public class NorthboundAPI {
   @Path("/")
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
-    String query = "DESCRIBE ?resource WHERE {?resource <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://fiteagle.org/ontology#Resource>. }";
+    String query = "DESCRIBE ?resource WHERE {?resource <http://www.w3.org/2000/01/rdf-schema#subClassOf> <"+MessageBusOntologyModel.classResource+">. }";
     String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
     final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST);
     sendRequest(request);
@@ -346,7 +342,7 @@ public class NorthboundAPI {
 
     private void addInstanceToModel(Model rdfModel, String instanceType, String instanceName) {
         Resource resourceType = rdfModel.createResource(instanceType);
-        Resource resourceInstance = rdfModel.createResource("http://fiteagleinternal#" + instanceName);
+        Resource resourceInstance = rdfModel.createResource("http://federation.av.tu-berlin.de/about#" + instanceName);
         resourceInstance.addProperty(RDF.type, resourceType);
     }
 

@@ -1,7 +1,6 @@
 package org.fiteagle.north.proprietary.rest;
 
 import java.util.UUID;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +16,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.fiteagle.api.core.IMessageBus;
+import org.fiteagle.api.core.MessageBusOntologyModel;
 
 @Path("/rest")
 public class ResourceRepository {
@@ -71,7 +71,7 @@ public class ResourceRepository {
 			throws JMSException {
 		
 		//todo: update as soon as we have a proper ontology
-		final Message request = this.createRequest("DESCRIBE ?s WHERE { ?s a <http://fiteagle.org/ontology#resource> }", serialization);
+		final Message request = this.createRequest("DESCRIBE ?s WHERE { ?s a <"+MessageBusOntologyModel.classResource+"> }", serialization);
 		sendRequest(request);
 		final Message result = waitForResult(request);
 		final String resources = getResult(result);

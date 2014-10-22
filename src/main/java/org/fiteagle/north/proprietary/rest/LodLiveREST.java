@@ -47,8 +47,6 @@ public class LodLiveREST {
         message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleRequest);
         message.addProperty(MessageBusOntologyModel.propertySparqlQuery, sparqlQuery);
 
-        rdfModel.setNsPrefix("", "http://fiteagleinternal#");
-        rdfModel.setNsPrefix("fiteagle", "http://fiteagle.org/ontology#");
         String response = "";
         String resultSet = "";
         try {
