@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -268,7 +269,7 @@ public class UserPresenter extends ObjectPresenter{
     if(newUser == null){
       throw new FiteagleWebApplicationException(422, "user data could not be parsed");
     }
-    List<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());   
+    Set<UserPublicKey> publicKeys = createPublicKeys(newUser.getPublicKeys());   
     String[] passwordHashAndSalt = PasswordUtil.generatePasswordHashAndSalt(newUser.getPassword());
     User user = null;
     try{
@@ -279,11 +280,11 @@ public class UserPresenter extends ObjectPresenter{
     return user;
   }
   
-  private ArrayList<UserPublicKey> createPublicKeys(List<UserPublicKey> keys) {
+  private Set<UserPublicKey> createPublicKeys(Set<UserPublicKey> keys) {
     if(keys == null){
       return null;
     }
-    ArrayList<UserPublicKey> publicKeys = new ArrayList<>();
+    Set<UserPublicKey> publicKeys = new HashSet<>();
     for(UserPublicKey key : keys){
       try {
         publicKeys.add(new UserPublicKey(KeyManagement.getInstance().decodePublicKey(key.getPublicKeyString()), key.getDescription(), key.getPublicKeyString()));
