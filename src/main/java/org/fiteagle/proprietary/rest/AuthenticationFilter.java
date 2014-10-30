@@ -66,10 +66,9 @@ public class AuthenticationFilter implements Filter{
   public void destroy() {}
   
   protected static boolean requestDoesNotNeedAuth(String method, String requestURI){
-    if(method.equals("PUT") && requestURI.startsWith("/native/api/user") || 
-        method.equals("GET") && (requestURI.equals("/native/api/node") || 
-        requestURI.equals("/native/api/node/") ||
-        requestURI.equals("/native/api/session"))){
+    if((method.equals("PUT") && requestURI.startsWith("/native/api/user")) || 
+        (method.equals("GET") && (requestURI.equals("/native/api/node/") || requestURI.equals("/native/api/node/"))) || 
+        requestURI.equals("/native/api/user/session") || requestURI.equals("/native/api/user/session/")){
       return true;
     }
     return false;
@@ -88,6 +87,7 @@ public class AuthenticationFilter implements Filter{
     request.setAttribute(ACTION_ATTRIBUTE, request.getMethod());
     if(requestDoesNotNeedAuth(request.getMethod(), request.getRequestURI())){
       chain.doFilter(request, response);
+      deleteSessionAndCookieOnLogout(request, response);
       return;
     }
     
@@ -120,7 +120,7 @@ public class AuthenticationFilter implements Filter{
   }
 
   private void deleteSessionAndCookieOnLogout(HttpServletRequest request, HttpServletResponse response) {
-    if(response.containsHeader(LOGOUT_HEADER) && response.getHeader(LOGOUT_HEADER).equals(true)){
+    if(response.containsHeader(LOGOUT_HEADER) && response.getHeader(LOGOUT_HEADER).equals(Boolean.TRUE.toString())){
       request.getSession().invalidate();      
       addNullCookies(request, response);
     }
@@ -151,6 +151,7 @@ public class AuthenticationFilter implements Filter{
     }
     String subjectUsername = session.getAttribute("username").toString();
     request.setAttribute(SUBJECT_USERNAME_ATTRIBUTE, subjectUsername);
+    log.info("Authenticated with session");
     return true;
   }
 
@@ -168,6 +169,7 @@ public class AuthenticationFilter implements Filter{
     }    
     
     request.setAttribute(SUBJECT_USERNAME_ATTRIBUTE, subjectUsername);
+    log.info("Authenticated with cookie");
     return true;
   }
   
@@ -183,6 +185,7 @@ public class AuthenticationFilter implements Filter{
       return false;
     }
     request.setAttribute(SUBJECT_USERNAME_ATTRIBUTE, subjectUsername);
+    log.info("Authenticated with username and password");
     return true;
   }
   
