@@ -80,7 +80,7 @@ public class ClassPresenter extends ObjectPresenter {
   @Produces(MediaType.TEXT_PLAIN)
   public long addTask(@PathParam("id") long id, Task task) throws JMSException, JsonProcessingException {    
     Message message = context.createMessage();
-    String taskJSON = objectMapper.writeValueAsString(new Task(task.getName(), task.getDescription()));  
+    String taskJSON = objectMapper.writeValueAsString(new Task(task.getName(), task.getDescription(), task.getResources()));
     message.setLongProperty(UserManager.TYPE_PARAMETER_CLASS_ID, id);      
     message.setStringProperty(UserManager.TYPE_PARAMETER_TASK_JSON, taskJSON);
     Message rcvMessage = sendMessage(message, UserManager.ADD_TASK);
