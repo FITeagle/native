@@ -384,6 +384,12 @@ public class NorthboundAPI {
             } catch (JMSException e) {
               LOGGER.log(Level.SEVERE, e.getMessage());
             }
+            
+            Model resultModel = MessageBusMsgFactory.parseSerializedModel(resources);
+            if(resultModel != null && resultModel.size() != 0){
+              resultModel.removeAll(resultModel.getResource(MessageBusOntologyModel.internalMessage.getURI()), null, null);
+              resources = MessageBusMsgFactory.serializeModel(resultModel);
+            }
         }
         return resources;
     }
