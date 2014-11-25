@@ -195,8 +195,8 @@ public class NorthboundAPI {
   private String getResult(final Message result) {
     String resources = Response.Status.REQUEST_TIMEOUT.name();
     
-    NorthboundAPI.LOGGER.log(Level.INFO, "Received reply.");
     if (null != result) {
+      NorthboundAPI.LOGGER.log(Level.INFO, "Received reply.");
       try {
         resources = result.getStringProperty(IMessageBus.RDF);
       } catch (JMSException e) {
@@ -208,7 +208,7 @@ public class NorthboundAPI {
   
   private void sendRequest(final Message message) {
     NorthboundAPI.LOGGER.log(Level.INFO, "Sending request...");
-    this.context.createProducer().send(this.topic, message);
+    this.context.createProducer().send(topic, message);
   }
   
   private Message waitForResult(final Message message) {
@@ -218,7 +218,7 @@ public class NorthboundAPI {
     } catch (JMSException e) {
       LOGGER.log(Level.SEVERE, e.getMessage());
     }
-    final Message rcvMessage = this.context.createConsumer(this.topic, filter).receive(IMessageBus.TIMEOUT);
+    final Message rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
     return rcvMessage;
   }
   
