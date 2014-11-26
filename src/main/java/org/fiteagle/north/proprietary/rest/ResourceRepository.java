@@ -85,7 +85,7 @@ public class ResourceRepository {
 		ResourceRepository.LOGGER.log(Level.INFO,
 				"Received resources via MDB...");
 		if (null != result) {
-			resources = result.getStringProperty(IMessageBus.RESULT);
+			resources = result.getStringProperty(IMessageBus.TYPE_RESULT);
 		}
 		return resources;
 	}
@@ -111,7 +111,6 @@ public class ResourceRepository {
 		final Message message = this.context.createMessage();
 		message.setStringProperty(IMessageBus.TYPE, IMessageBus.REQUEST);
 		message.setStringProperty(IMessageBus.SERIALIZATION, serialization);
-		message.setStringProperty(IMessageBus.TARGET, IMessageBus.DATABASE_SERVICE_NAME);
 		message.setStringProperty(IMessageBus.QUERY, query);
 		message.setJMSCorrelationID(UUID.randomUUID().toString());
 		return message;
