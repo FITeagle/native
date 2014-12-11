@@ -97,10 +97,10 @@ public class NorthboundAPI {
   }
   
   @PUT
-  @Path("/{adapterName}")
+  @Path("")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
-  public Response createResourceInstanceWithRDF(@PathParam("adapterName") String adapterName, String rdfInput) {
+  public Response createResourceInstanceWithRDF(String rdfInput) {
     
     Model inputModel = MessageBusMsgFactory.createMsgCreate(MessageBusMsgFactory.parseSerializedModel(rdfInput));
     
