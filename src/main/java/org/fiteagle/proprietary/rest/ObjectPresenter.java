@@ -78,7 +78,7 @@ public class ObjectPresenter {
       throw new FiteagleWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "timeout while waiting for answer from JMS message bus");    
     }
     try {
-      String exceptionMessage = message.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+      String exceptionMessage = message.getStringProperty(IMessageBus.TYPE_ERROR);
       if(exceptionMessage != null){
         if(exceptionMessage.startsWith(UserNotFoundException.class.getSimpleName())){
           throw new FiteagleWebApplicationException(Response.Status.NOT_FOUND.getStatusCode(), exceptionMessage);    

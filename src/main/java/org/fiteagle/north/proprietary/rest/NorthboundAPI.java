@@ -192,22 +192,26 @@ public class NorthboundAPI {
     return message;
   }
   
-  private String getResult(final Message result) {
-    String resources = Response.Status.REQUEST_TIMEOUT.name();
-    
-    if (null != result) {
-      NorthboundAPI.LOGGER.log(Level.INFO, "Received reply.");
+  private String getResult(final Message receivedMessage) {
+    String result = null;
+    if (receivedMessage == null) {
+      result = Response.Status.REQUEST_TIMEOUT.name();
+    } else {
+      LOGGER.log(Level.INFO, "Received reply");
       try {
-        resources = result.getStringProperty(IMessageBus.RDF);
+        result = receivedMessage.getStringProperty(IMessageBus.RDF);
+        if (result == null) {
+          result = receivedMessage.getStringProperty(IMessageBus.TYPE_ERROR);
+        }
       } catch (JMSException e) {
         LOGGER.log(Level.SEVERE, e.getMessage());
       }
     }
-    return resources;
+    return result;
   }
   
   private void sendRequest(final Message message) {
-    NorthboundAPI.LOGGER.log(Level.INFO, "Sending request...");
+    LOGGER.log(Level.INFO, "Sending request...");
     this.context.createProducer().send(topic, message);
   }
   

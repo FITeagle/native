@@ -205,7 +205,7 @@ public class AuthenticationFilter implements Filter{
         context.createProducer().send(topic, message);
         rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.SHORT_TIMEOUT);
       }
-      String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_EXCEPTION);
+      String exceptionMessage = rcvMessage.getStringProperty(IMessageBus.TYPE_ERROR);
       if(exceptionMessage != null){
         return false;
       }
