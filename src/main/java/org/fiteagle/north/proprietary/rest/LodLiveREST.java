@@ -53,7 +53,10 @@ public class LodLiveREST {
     Message resultMessage = MessageUtil.waitForResult(request, context, topic);
     
     response = MessageUtil.getRDFResult(resultMessage);
-    
+    if(response == null){
+      LOGGER.log(Level.SEVERE, MessageUtil.getError(resultMessage));
+      return "";
+    }
     Model modelAnswer = MessageUtil.parseSerializedModel(response);
     
     StmtIterator iter = modelAnswer.listStatements(null, RDF.type, MessageBusOntologyModel.propertyFiteagleInform);
