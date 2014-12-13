@@ -51,7 +51,12 @@ public class NorthboundAPI {
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
     String resultString = MessageUtil.getRDFResult(rcvMessage);
-    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    if(resultString == null){
+      resultString = MessageUtil.getError(rcvMessage);
+    }
+    else{
+      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    }
     
     return createRESTResponse(resultString, null);
   }
@@ -67,7 +72,12 @@ public class NorthboundAPI {
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
     String resultString = MessageUtil.getRDFResult(rcvMessage);
-    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    if(resultString == null){
+      resultString = MessageUtil.getError(rcvMessage);
+    }
+    else{
+      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    }
     
     return createRESTResponse(resultString, null);
   }
@@ -90,7 +100,12 @@ public class NorthboundAPI {
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
     String resultString = MessageUtil.getRDFResult(rcvMessage);
-    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    if(resultString == null){
+      resultString = MessageUtil.getError(rcvMessage);
+    }
+    else{
+      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+    }
     
     return createRESTResponse(resultString, null);
   }
@@ -105,8 +120,13 @@ public class NorthboundAPI {
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.SERIALIZATION_DEFAULT, context);
     context.createProducer().send(topic, request);
-    Message result = MessageUtil.waitForResult(request, context, topic);
-    return createRESTResponse(MessageUtil.getRDFResult(result), Response.Status.CREATED);
+    
+    Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(receivedMessage);
+    if(resultString == null ){
+      resultString = MessageUtil.getError(receivedMessage);
+    }
+    return createRESTResponse(resultString, Response.Status.CREATED);
   }
   
   @POST
@@ -119,8 +139,13 @@ public class NorthboundAPI {
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.SERIALIZATION_DEFAULT, context);
     context.createProducer().send(topic, request);
-    Message result = MessageUtil.waitForResult(request, context, topic);
-    return createRESTResponse(MessageUtil.getRDFResult(result), null);
+    
+    Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(receivedMessage);
+    if(resultString == null ){
+      resultString = MessageUtil.getError(receivedMessage);
+    }
+    return createRESTResponse(resultString, null);
   }
   
   @DELETE
@@ -134,8 +159,13 @@ public class NorthboundAPI {
     if (inputModel != null) {
       Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, context);
       context.createProducer().send(topic, request);
-      Message result = MessageUtil.waitForResult(request, context, topic);
-      return createRESTResponse(MessageUtil.getRDFResult(result), null);
+      
+      Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+      String resultString = MessageUtil.getRDFResult(receivedMessage);
+      if(resultString == null ){
+        resultString = MessageUtil.getError(receivedMessage);
+      }
+      return createRESTResponse(resultString, null);
     }
     
     return createRESTResponse(null, null);
@@ -152,8 +182,12 @@ public class NorthboundAPI {
       Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, context);
       context.createProducer().send(topic, request);
       //TODO: needs to be refactored, currenty gets just result from 1 adapter
-      Message result = MessageUtil.waitForResult(request, context, topic);
-      return createRESTResponse(MessageUtil.getRDFResult(result), null);
+      Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+      String resultString = MessageUtil.getRDFResult(receivedMessage);
+      if(resultString == null ){
+        resultString = MessageUtil.getError(receivedMessage);
+      }
+      return createRESTResponse(resultString, null);
     }
     
     return createRESTResponse(null, null);
