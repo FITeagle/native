@@ -1,7 +1,5 @@
 package org.fiteagle.north.proprietary.rest;
 
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
@@ -17,6 +15,7 @@ import javax.ws.rs.Produces;
 
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.MessageBusOntologyModel;
+import org.fiteagle.api.core.MessageUtil;
 
 @Path("/rest")
 public class ResourceRepository {
@@ -26,8 +25,8 @@ public class ResourceRepository {
 	@Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
 	private Topic topic;
 
-	private static Logger LOGGER = Logger
-			.getLogger(ResourceRepository.class.toString());
+	@SuppressWarnings("unused")
+  private static Logger LOGGER = Logger.getLogger(ResourceRepository.class.toString());
 
 	@GET
 	@Path("/resources")
@@ -57,62 +56,29 @@ public class ResourceRepository {
 		return this.getResource(resource, IMessageBus.SERIALIZATION_JSONLD);
 	}
 
-	private String getResource(String resource, String serialization) throws JMSException {
-		//@todo: find a good solution for the namespace naming
-		final Message request = this.createRequest("DESCRIBE <http://mynamespace/"+resource+">", serialization);
-		sendRequest(request);
-		final Message result = waitForResult(request);
-		final String resources = getResult(result);
+  private String getResource(String resource, String serialization) throws JMSException {
+    // TODO: find a good solution for the namespace naming
+    
+    String query = "DESCRIBE <" + NorthboundAPI.INSTANCE_PREFIX + resource + ">";
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, context);
+    context.createProducer().send(topic, request);
+    
+    final Message result = MessageUtil.waitForResult(request, context, topic);
+    final String resources = MessageUtil.getRDFResult(result);
+    
+    return resources;
+  }
 
-		return resources;
-	}
-
-	private String listResources(final String serialization)
-			throws JMSException {
+	private String listResources(final String serialization) {
 		
-		//todo: update as soon as we have a proper ontology
-		final Message request = this.createRequest("DESCRIBE ?s WHERE { ?s a <"+MessageBusOntologyModel.classResource+"> }", serialization);
-		sendRequest(request);
-		final Message result = waitForResult(request);
-		final String resources = getResult(result);
+	  String query = "DESCRIBE ?s WHERE { ?s a <"+MessageBusOntologyModel.classResource+"> }";
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, context);
+    context.createProducer().send(topic, request);
+		final Message result = MessageUtil.waitForResult(request, context, topic);
+		final String resources = MessageUtil.getRDFResult(result);
 
 		return resources;
-	}
-
-	private String getResult(final Message result) throws JMSException {
-		String resources = "timeout";
-		
-		ResourceRepository.LOGGER.log(Level.INFO,
-				"Received resources via MDB...");
-		if (null != result) {
-			resources = result.getStringProperty(IMessageBus.TYPE_RESULT);
-		}
-		return resources;
-	}
-
-	private void sendRequest(final Message message) {
-		ResourceRepository.LOGGER.log(Level.INFO,
-				"Getting resources via MDB...");
-		this.context.createProducer().send(this.topic, message);
-	}
-
-	private Message waitForResult(final Message message) throws JMSException {
-		ResourceRepository.LOGGER.log(Level.INFO,
-				"Waiting for an answer...");
-		final String filter = "JMSCorrelationID='"
-				+ message.getJMSCorrelationID() + "'";
-		final Message rcvMessage = this.context.createConsumer(this.topic,
-				filter).receive(IMessageBus.TIMEOUT);
-		return rcvMessage;
-	}
-
-	private Message createRequest(final String query, final String serialization)
-			throws JMSException {
-		final Message message = this.context.createMessage();
-		message.setStringProperty(IMessageBus.TYPE, IMessageBus.REQUEST);
-		message.setStringProperty(IMessageBus.SERIALIZATION, serialization);
-		message.setStringProperty(IMessageBus.QUERY, query);
-		message.setJMSCorrelationID(UUID.randomUUID().toString());
-		return message;
 	}
 }

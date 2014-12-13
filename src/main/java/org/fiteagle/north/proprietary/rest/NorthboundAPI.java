@@ -1,7 +1,5 @@
 package org.fiteagle.north.proprietary.rest;
 
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -22,8 +20,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.MessageBusMsgFactory;
 import org.fiteagle.api.core.MessageBusOntologyModel;
+import org.fiteagle.api.core.MessageUtil;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -36,23 +34,24 @@ public class NorthboundAPI {
   @javax.annotation.Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
   
+  @SuppressWarnings("unused")
   private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
   
   //TODO: make dynamic
-  private final static String INSTANCE_PREFIX = "http://federation.av.tu-berlin.de/about#";
+  public final static String INSTANCE_PREFIX = "http://federation.av.tu-berlin.de/about#";
   
   @GET
   @Path("/")
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
     String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ MessageBusOntologyModel.classResource + ">. }";
-    String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
-    final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST);
-    sendRequest(request);
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
+    context.createProducer().send(topic, request);
     
-    Message rcvMessage = waitForResult(request);
-    String resultString = getResult(rcvMessage);
-    resultString = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(rcvMessage);
+    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
     
     return createRESTResponse(resultString, null);
   }
@@ -62,13 +61,13 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response describeResource(@PathParam("resourceName") String resourceName) throws JMSException {
     String query = "DESCRIBE <"+INSTANCE_PREFIX+resourceName+">";
-    String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
-    final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST); 
-    sendRequest(request);
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
+    context.createProducer().send(topic, request);
     
-    Message rcvMessage = waitForResult(request);
-    String resultString = getResult(rcvMessage);
-    resultString = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(rcvMessage);
+    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
     
     return createRESTResponse(resultString, null);
   }
@@ -85,13 +84,13 @@ public class NorthboundAPI {
         + "<"+INSTANCE_PREFIX+adapterName+"> a ?adapterType}";
     
     
-    String requestModel = MessageBusMsgFactory.createSerializedSPARQLQueryModel(query);
-    final Message request = createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST); 
-    sendRequest(request);
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
+    context.createProducer().send(topic, request);
     
-    Message rcvMessage = waitForResult(request);
-    String resultString = getResult(rcvMessage);
-    resultString = MessageBusMsgFactory.getTTLResultModelFromSerializedModel(resultString);
+    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(rcvMessage);
+    resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
     
     return createRESTResponse(resultString, null);
   }
@@ -102,12 +101,12 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response createResourceInstanceWithRDF(String rdfInput) {
     
-    Model inputModel = MessageBusMsgFactory.createMsgCreate(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+    Model inputModel = MessageUtil.createMsgCreate(MessageUtil.parseSerializedModel(rdfInput));
     
-    Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CREATE);
-    sendRequest(request);
-    Message result = waitForResult(request);
-    return createRESTResponse(getResult(result), Response.Status.CREATED);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.SERIALIZATION_DEFAULT, context);
+    context.createProducer().send(topic, request);
+    Message result = MessageUtil.waitForResult(request, context, topic);
+    return createRESTResponse(MessageUtil.getRDFResult(result), Response.Status.CREATED);
   }
   
   @POST
@@ -116,12 +115,12 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response configureResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
     
-    Model inputModel = MessageBusMsgFactory.createMsgConfigure(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+    Model inputModel = MessageUtil.createMsgConfigure(MessageUtil.parseSerializedModel(rdfInput));
     
-    Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_CONFIGURE);
-    sendRequest(request);
-    Message result = waitForResult(request);
-    return createRESTResponse(getResult(result), null);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.SERIALIZATION_DEFAULT, context);
+    context.createProducer().send(topic, request);
+    Message result = MessageUtil.waitForResult(request, context, topic);
+    return createRESTResponse(MessageUtil.getRDFResult(result), null);
   }
   
   @DELETE
@@ -130,13 +129,13 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response releaseResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
     
-    Model inputModel = MessageBusMsgFactory.createMsgRelease(MessageBusMsgFactory.parseSerializedModel(rdfInput));
+    Model inputModel = MessageUtil.createMsgRelease(MessageUtil.parseSerializedModel(rdfInput));
     
     if (inputModel != null) {
-      Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_RELEASE);
-      sendRequest(request);
-      Message result = waitForResult(request);
-      return createRESTResponse(getResult(result), null);
+      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, context);
+      context.createProducer().send(topic, request);
+      Message result = MessageUtil.waitForResult(request, context, topic);
+      return createRESTResponse(MessageUtil.getRDFResult(result), null);
     }
     
     return createRESTResponse(null, null);
@@ -147,14 +146,14 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response discoverAllTTL() throws JMSException {
     
-    Model inputModel =  MessageBusMsgFactory.createMsgDiscover(null);
+    Model inputModel =  MessageUtil.createMsgDiscover(null);
     
     if (inputModel != null) {
-      Message request = createRDFMessage(MessageBusMsgFactory.serializeModel(inputModel), IMessageBus.TYPE_DISCOVER);
-      sendRequest(request);
+      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, context);
+      context.createProducer().send(topic, request);
       //TODO: needs to be refactored, currenty gets just result from 1 adapter
-      Message result = waitForResult(request);
-      return createRESTResponse(getResult(result), null);
+      Message result = MessageUtil.waitForResult(request, context, topic);
+      return createRESTResponse(MessageUtil.getRDFResult(result), null);
     }
     
     return createRESTResponse(null, null);
@@ -177,53 +176,6 @@ public class NorthboundAPI {
       }
       return Response.ok(responseString, "text/turtle").build();
     }
-  }
-  
-  private Message createRDFMessage(final String rdfInput, final String methodType) {
-    final Message message = this.context.createMessage();
-    try {
-      message.setStringProperty(IMessageBus.METHOD_TYPE, methodType);
-      message.setStringProperty(IMessageBus.SERIALIZATION, IMessageBus.SERIALIZATION_DEFAULT);
-      message.setStringProperty(IMessageBus.RDF, rdfInput);
-      message.setJMSCorrelationID(UUID.randomUUID().toString());
-    } catch (JMSException e) {
-      LOGGER.log(Level.SEVERE, e.getMessage());
-    }
-    return message;
-  }
-  
-  private String getResult(final Message receivedMessage) {
-    String result = null;
-    if (receivedMessage == null) {
-      result = Response.Status.REQUEST_TIMEOUT.name();
-    } else {
-      LOGGER.log(Level.INFO, "Received reply");
-      try {
-        result = receivedMessage.getStringProperty(IMessageBus.RDF);
-        if (result == null) {
-          result = receivedMessage.getStringProperty(IMessageBus.TYPE_ERROR);
-        }
-      } catch (JMSException e) {
-        LOGGER.log(Level.SEVERE, e.getMessage());
-      }
-    }
-    return result;
-  }
-  
-  private void sendRequest(final Message message) {
-    LOGGER.log(Level.INFO, "Sending request...");
-    this.context.createProducer().send(topic, message);
-  }
-  
-  private Message waitForResult(final Message message) {
-    String filter = null;
-    try {
-      filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
-    } catch (JMSException e) {
-      LOGGER.log(Level.SEVERE, e.getMessage());
-    }
-    final Message rcvMessage = context.createConsumer(topic, filter).receive(IMessageBus.TIMEOUT);
-    return rcvMessage;
   }
   
 }
