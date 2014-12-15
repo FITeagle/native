@@ -45,57 +45,60 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
     String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ MessageBusOntologyModel.classResource + ">. }";
-    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
-    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
-    context.createProducer().send(topic, request);
-    
-    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(rcvMessage);
-    if(resultString == null){
-      resultString = MessageUtil.getError(rcvMessage);
-    }
-    else{
-      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
-    }
-    
-    return createRESTResponse(resultString, null);
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+  }
+  
+  @GET
+  @Path("/")
+  @Produces("application/ld+json")
+  public Response getAllResourcesJSON() throws JMSException {
+    String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ MessageBusOntologyModel.classResource + ">. }";
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
   }
   
   @GET
   @Path("/{resourceName}")
   @Produces("text/turtle")
-  public Response describeResource(@PathParam("resourceName") String resourceName) throws JMSException {
+  public Response describeResourceTTL(@PathParam("resourceName") String resourceName) throws JMSException {
     String query = "DESCRIBE <"+INSTANCE_PREFIX+resourceName+">";
-    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
-    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
-    context.createProducer().send(topic, request);
-    
-    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(rcvMessage);
-    if(resultString == null){
-      resultString = MessageUtil.getError(rcvMessage);
-    }
-    else{
-      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
-    }
-    
-    return createRESTResponse(resultString, null);
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+  }
+  
+  @GET
+  @Path("/{resourceName}")
+  @Produces("application/ld+json")
+  public Response describeResourceJSON(@PathParam("resourceName") String resourceName) throws JMSException {
+    String query = "DESCRIBE <"+INSTANCE_PREFIX+resourceName+">";
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
   }
   
   @GET
   @Path("/{adapterName}/instances")
   @Produces("text/turtle")
-  public Response describeAdapterManagedInstances(@PathParam("adapterName") String adapterName) throws JMSException {
-    
+  public Response describeAdapterManagedInstancesTTL(@PathParam("adapterName") String adapterName) throws JMSException {
     String query = "DESCRIBE ?resource "
         + "WHERE {"
         + "?resource a ?resourceType .  "
         + "?resourceType <http://open-multinet.info/ontology/omn#implementedBy> ?adapterType . "
         + "<"+INSTANCE_PREFIX+adapterName+"> a ?adapterType}";
-    
-    
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+  }
+  
+  @GET
+  @Path("/{adapterName}/instances")
+  @Produces("application/ld+json")
+  public Response describeAdapterManagedInstancesJSON(@PathParam("adapterName") String adapterName) throws JMSException {
+    String query = "DESCRIBE ?resource "
+        + "WHERE {"
+        + "?resource a ?resourceType .  "
+        + "?resourceType <http://open-multinet.info/ontology/omn#implementedBy> ?adapterType . "
+        + "<"+INSTANCE_PREFIX+adapterName+"> a ?adapterType}";
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
+  }
+  
+  private Response processQuery(String query, String serialization){
     String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
-    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_DEFAULT, context);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, context);
     context.createProducer().send(topic, request);
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
@@ -104,9 +107,15 @@ public class NorthboundAPI {
       resultString = MessageUtil.getError(rcvMessage);
     }
     else{
-      resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+      switch(serialization){
+        case IMessageBus.SERIALIZATION_TURTLE:
+          resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
+          break;
+        case IMessageBus.SERIALIZATION_JSONLD:
+          resultString = MessageUtil.getJSONResultModelFromSerializedModel(resultString);
+          break;
+      }
     }
-    
     return createRESTResponse(resultString, null);
   }
   
@@ -153,7 +162,6 @@ public class NorthboundAPI {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
   public Response releaseResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
-    
     Model inputModel = MessageUtil.createMsgRelease(MessageUtil.parseSerializedModel(rdfInput));
     
     if (inputModel != null) {
@@ -175,7 +183,6 @@ public class NorthboundAPI {
   @Path("/discover")
   @Produces("text/turtle")
   public Response discoverAllTTL() throws JMSException {
-    
     Model inputModel =  MessageUtil.createMsgDiscover(null);
     
     if (inputModel != null) {
