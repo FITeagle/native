@@ -36,7 +36,7 @@ Resource Repository
     
 #### Get all resource instances managed by an adapater
  
-    curl -H "Accept: text/turtlen" http://localhost:8080/native/api/resources/MotorGarage-1/instances
+    curl -H "Accept: text/turtle" http://localhost:8080/native/api/resources/MotorGarage-1/instances
     curl -H "Accept: application/ld+json" http://localhost:8080/native/api/resources/MotorGarage-1/instances
     
 #### Create new resources
