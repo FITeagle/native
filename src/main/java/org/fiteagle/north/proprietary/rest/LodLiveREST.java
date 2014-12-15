@@ -19,8 +19,6 @@ import org.fiteagle.api.core.MessageUtil;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 @Path("/lodlive")
@@ -46,7 +44,6 @@ public class LodLiveREST {
     message.addProperty(MessageBusOntologyModel.propertySparqlQuery, sparqlQuery);
     
     String response = "";
-    String resultSet = "";
     Message request = MessageUtil.createRDFMessage(rdfModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, context);
     
     this.context.createProducer().send(topic, request);
@@ -57,22 +54,7 @@ public class LodLiveREST {
       LOGGER.log(Level.SEVERE, MessageUtil.getError(resultMessage));
       return "";
     }
-    Model modelAnswer = MessageUtil.parseSerializedModel(response);
-    
-    StmtIterator iter = modelAnswer.listStatements(null, RDF.type, MessageBusOntologyModel.propertyFiteagleInform);
-    Statement rdfsComment = null;
-    
-    while (iter.hasNext()) {
-      Statement currentStatement = iter.nextStatement();
-      currentStatement.toString();
-      rdfsComment = currentStatement.getSubject().getProperty(MessageBusOntologyModel.propertyJsonResult);
-      if (rdfsComment != null) {
-        resultSet = rdfsComment.getObject().toString();
-        break;
-      }
-    }
-    
-    return resultSet;
+    return MessageUtil.getJSONResultModelFromSerializedModel(response);
   }
   
 }
