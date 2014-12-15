@@ -6,7 +6,7 @@ Native FITeagle Interfaces
 Installation
 ------------
 
-    mvn clean wildfly:deploy
+    mvn clean install wildfly:deploy
 
 
 Graphical User Interface
@@ -17,26 +17,47 @@ Graphical User Interface
 Resource Repository
 -------------------
 
-Requirements
+### Requirements
 
     The 'api' module must be available
-    The 'resourcerepository' core module must be deployed.
+    The 'repo' core module and the modules of the adapters you want to use must be deployed.
 
-List resources via REST API
+### API Calls
 
-    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/rest/resources
-    curl -H "Accept: text/turtle" http://localhost:8080/native/api/rest/resources
-    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/rest/resources/testMe
-    curl -H "Accept: text/turtle" http://localhost:8080/native/api/rest/resources/anotherTest
+#### List all resources
+
+    curl -H "Accept: text/turtle" http://localhost:8080/native/api/resources
+    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/resources
+    
+#### Describe a specific resource
+    
+    curl -H "Accept: text/turtle" http://localhost:8080/native/api/resources/MotorGarage-1
+    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/resources/MotorGarage-1
+    
+#### Get all resource instances managed by an adapater
+ 
+    curl -H "Accept: text/turtlen" http://localhost:8080/native/api/resources/MotorGarage-1/instances
+    curl -H "Accept: application/ld+json" http://localhost:8080/native/api/resources/MotorGarage-1/instances
+    
+#### Create new resources
+
+    curl -k -v --request PUT --data @instancesDescription.ttl https://localhost:8443/native/api/resources/
+    
+#### Configure resources
+
+    curl -k -v --request POST --data @instancesConfigureDescription.ttl https://localhost:8443/native/api/resources/MotorGarage-1
+
+#### Release resources
+  
+    curl -k -v --request DELETE --data @instancesToDelete.ttl https://localhost:8443/native/api/resources/MotorGarage-1
     
 Usermanagement
 -------------------
 
 ### Requirements
 
-  The 'api' module must be available.
-
-  The 'usermanagement', 'aaa' and 'config' core modules must be deployed.
+  The 'api', 'aaa' and 'config' modules must be available.
+  The 'usermanagement' module must be deployed.
 
 ### API Calls
 
