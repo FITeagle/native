@@ -139,10 +139,10 @@ public class NorthboundAPI {
   }
   
   @POST
-  @Path("/{adapterName}")
+  @Path("")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
-  public Response configureResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
+  public Response configureResourceInstance(String rdfInput) {
     
     Model inputModel = MessageUtil.createMsgConfigure(MessageUtil.parseSerializedModel(rdfInput));
     
@@ -158,10 +158,10 @@ public class NorthboundAPI {
   }
   
   @DELETE
-  @Path("/{adapterName}")
+  @Path("")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
-  public Response releaseResourceInstance(@PathParam("adapterName") String adapterName, String rdfInput) {
+  public Response releaseResourceInstance(String rdfInput) {
     Model inputModel = MessageUtil.createMsgRelease(MessageUtil.parseSerializedModel(rdfInput));
     
     if (inputModel != null) {
