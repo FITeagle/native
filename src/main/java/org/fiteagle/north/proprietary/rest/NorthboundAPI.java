@@ -97,7 +97,7 @@ public class NorthboundAPI {
   }
   
   private Response processQuery(String query, String serialization){
-    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query);
+    String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query, serialization);
     final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, context);
     context.createProducer().send(topic, request);
     
@@ -105,16 +105,6 @@ public class NorthboundAPI {
     String resultString = MessageUtil.getRDFResult(rcvMessage);
     if(resultString == null){
       resultString = MessageUtil.getError(rcvMessage);
-    }
-    else{
-      switch(serialization){
-        case IMessageBus.SERIALIZATION_TURTLE:
-          resultString = MessageUtil.getTTLResultModelFromSerializedModel(resultString);
-          break;
-        case IMessageBus.SERIALIZATION_JSONLD:
-          resultString = MessageUtil.getJSONResultModelFromSerializedModel(resultString);
-          break;
-      }
     }
     return createRESTResponse(resultString, null);
   }

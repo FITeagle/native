@@ -13,13 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
-
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.vocabulary.RDF;
 
 @Path("/lodlive")
 public class LodLiveREST {
@@ -37,24 +31,19 @@ public class LodLiveREST {
   public String handleLodLiveRequest(@QueryParam("query") String sparqlQuery) {
     LOGGER.log(Level.INFO, "Query from Lodlive: " + sparqlQuery);
     
-    Model rdfModel = ModelFactory.createDefaultModel();
+    String serializedRequest = MessageUtil.createSerializedSPARQLQueryModel(sparqlQuery, IMessageBus.SERIALIZATION_JSONLD);  
     
-    Resource message = rdfModel.createResource(MessageBusOntologyModel.internalMessage.getURI());
-    message.addProperty(RDF.type, MessageBusOntologyModel.propertyFiteagleRequest);
-    message.addProperty(MessageBusOntologyModel.propertySparqlQuery, sparqlQuery);
-    
-    String response = "";
-    Message request = MessageUtil.createRDFMessage(rdfModel, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, context);
+    Message request = MessageUtil.createRDFMessage(serializedRequest, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, context);
     
     this.context.createProducer().send(topic, request);
     Message resultMessage = MessageUtil.waitForResult(request, context, topic);
     
-    response = MessageUtil.getRDFResult(resultMessage);
+    String response = MessageUtil.getRDFResult(resultMessage);
     if(response == null){
       LOGGER.log(Level.SEVERE, MessageUtil.getError(resultMessage));
       return "";
     }
-    return MessageUtil.getJSONResultModelFromSerializedModel(response);
+    return response;
   }
   
 }
