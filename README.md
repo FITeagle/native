@@ -45,11 +45,11 @@ Resource Repository
     
 #### Configure resources
 
-    curl -k -v --request POST --data @instancesConfigureDescription.ttl https://localhost:8443/native/api/resources/MotorGarage-1
+    curl -k -v --request POST --data @instancesConfigureDescription.ttl https://localhost:8443/native/api/resources/
 
 #### Release resources
   
-    curl -k -v --request DELETE --data @instancesToDelete.ttl https://localhost:8443/native/api/resources/MotorGarage-1
+    curl -k -v --request DELETE --data @instancesToDelete.ttl https://localhost:8443/native/api/resources/
     
 Usermanagement
 -------------------
