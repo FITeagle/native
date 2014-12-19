@@ -98,7 +98,7 @@ public class NorthboundAPI {
   
   private Response processQuery(String query, String serialization){
     String requestModel = MessageUtil.createSerializedSPARQLQueryModel(query, serialization);
-    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, context);
+    final Message request = MessageUtil.createRDFMessage(requestModel, IMessageBus.TYPE_REQUEST, serialization, null, context);
     context.createProducer().send(topic, request);
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
@@ -117,7 +117,7 @@ public class NorthboundAPI {
     
     Model inputModel = MessageUtil.createMsgCreate(MessageUtil.parseSerializedModel(rdfInput));
     
-    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.SERIALIZATION_DEFAULT, context);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
     
     Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
@@ -136,7 +136,7 @@ public class NorthboundAPI {
     
     Model inputModel = MessageUtil.createMsgConfigure(MessageUtil.parseSerializedModel(rdfInput));
     
-    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.SERIALIZATION_DEFAULT, context);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
     
     Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
@@ -155,7 +155,7 @@ public class NorthboundAPI {
     Model inputModel = MessageUtil.createMsgRelease(MessageUtil.parseSerializedModel(rdfInput));
     
     if (inputModel != null) {
-      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, context);
+      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
       context.createProducer().send(topic, request);
       
       Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
@@ -176,7 +176,7 @@ public class NorthboundAPI {
     Model inputModel =  MessageUtil.createMsgDiscover(null);
     
     if (inputModel != null) {
-      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, context);
+      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, null, context);
       context.createProducer().send(topic, request);
       //TODO: needs to be refactored, currenty gets just result from 1 adapter
       Message receivedMessage = MessageUtil.waitForResult(request, context, topic);

@@ -33,7 +33,7 @@ public class LodLiveREST {
     
     String serializedRequest = MessageUtil.createSerializedSPARQLQueryModel(sparqlQuery, IMessageBus.SERIALIZATION_JSONLD);  
     
-    Message request = MessageUtil.createRDFMessage(serializedRequest, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, context);
+    Message request = MessageUtil.createRDFMessage(serializedRequest, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, null, context);
     
     this.context.createProducer().send(topic, request);
     Message resultMessage = MessageUtil.waitForResult(request, context, topic);
