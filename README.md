@@ -6,8 +6,14 @@ Native FITeagle Interfaces
 Installation
 ------------
 
-    mvn clean install wildfly:deploy
+The repository contains the LodLive lib as a git submodule which should be checked out:
 
+    git submodule init
+    git submodule update
+
+Afterwards, to deploy into the J2EE Container:
+
+    mvn clean install wildfly:deploy
 
 Graphical User Interface
 ------------------------
