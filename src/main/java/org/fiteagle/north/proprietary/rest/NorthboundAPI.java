@@ -24,6 +24,8 @@ import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
 
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 @Path("/resources")
@@ -115,7 +117,8 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response createResourceInstanceWithRDF(String rdfInput) {
     
-    Model inputModel = MessageUtil.createMsgCreate(MessageUtil.parseSerializedModel(rdfInput));
+    Model inputModel =MessageUtil.parseSerializedModel(rdfInput);
+    inputModel.add(MessageBusOntologyModel.internalMessage, RDF.type, MessageBusOntologyModel.propertyFiteagleCreate);
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
@@ -134,7 +137,8 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response configureResourceInstance(String rdfInput) {
     
-    Model inputModel = MessageUtil.createMsgConfigure(MessageUtil.parseSerializedModel(rdfInput));
+    Model inputModel =MessageUtil.parseSerializedModel(rdfInput);
+    inputModel.add(MessageBusOntologyModel.internalMessage, RDF.type, MessageBusOntologyModel.propertyFiteagleConfigure);
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
@@ -152,42 +156,36 @@ public class NorthboundAPI {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
   public Response releaseResourceInstance(String rdfInput) {
-    Model inputModel = MessageUtil.createMsgRelease(MessageUtil.parseSerializedModel(rdfInput));
+    Model inputModel = MessageUtil.parseSerializedModel(rdfInput);
+    inputModel.add(MessageBusOntologyModel.internalMessage, RDF.type, MessageBusOntologyModel.propertyFiteagleRelease);
     
-    if (inputModel != null) {
-      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
-      context.createProducer().send(topic, request);
-      
-      Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
-      String resultString = MessageUtil.getRDFResult(receivedMessage);
-      if(resultString == null ){
-        resultString = MessageUtil.getError(receivedMessage);
-      }
-      return createRESTResponse(resultString, null);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_RELEASE, IMessageBus.SERIALIZATION_DEFAULT, null, context);
+    context.createProducer().send(topic, request);
+    
+    Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(receivedMessage);
+    if(resultString == null ){
+      resultString = MessageUtil.getError(receivedMessage);
     }
-    
-    return createRESTResponse(null, null);
+    return createRESTResponse(resultString, null);
   }
   
   @GET
   @Path("/discover")
   @Produces("text/turtle")
   public Response discoverAllTTL() throws JMSException {
-    Model inputModel =  MessageUtil.createMsgDiscover(null);
+    Model inputModel = ModelFactory.createDefaultModel();
+    inputModel.add(MessageBusOntologyModel.internalMessage, RDF.type, MessageBusOntologyModel.propertyFiteagleDiscover);
     
-    if (inputModel != null) {
-      Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, null, context);
-      context.createProducer().send(topic, request);
-      //TODO: needs to be refactored, currenty gets just result from 1 adapter
-      Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
-      String resultString = MessageUtil.getRDFResult(receivedMessage);
-      if(resultString == null ){
-        resultString = MessageUtil.getError(receivedMessage);
-      }
-      return createRESTResponse(resultString, null);
+    Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DISCOVER, IMessageBus.SERIALIZATION_DEFAULT, null, context);
+    context.createProducer().send(topic, request);
+    //TODO: needs to be refactored, currenty gets just result from 1 adapter
+    Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
+    String resultString = MessageUtil.getRDFResult(receivedMessage);
+    if(resultString == null ){
+      resultString = MessageUtil.getError(receivedMessage);
     }
-    
-    return createRESTResponse(null, null);
+    return createRESTResponse(resultString, null);
   }
   
   private Response createRESTResponse(String responseString, Status successResponseStatus) {
