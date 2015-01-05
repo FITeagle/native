@@ -6,13 +6,26 @@ Native FITeagle Interfaces
 Installation
 ------------
 
-    mvn clean install wildfly:deploy
+The repository contains the LodLive lib as a git submodule which should be checked out:
 
+    git submodule init
+    git submodule update
+
+Afterwards, to deploy into the J2EE Container:
+
+    mvn clean install wildfly:deploy
 
 Graphical User Interface
 ------------------------
 
     http://localhost:8080/native/gui/admin
+
+LodLive Visualisation
+---------------------
+
+To view e.g. the visualisation starting from the resource "http://federation.av.tu-berlin.de/about#MotorGarage-1":
+
+    http://localhost:8080/native/gui/lodlive/index.html?http://federation.av.tu-berlin.de/about%23MotorGarage-1
 
 Resource Repository
 -------------------
@@ -56,8 +69,8 @@ Usermanagement
 
 ### Requirements
 
-  The 'api', 'aaa' and 'config' modules must be available.
-  The 'usermanagement' module must be deployed.
+    The 'api', 'aaa' and 'config' modules must be available.
+    The 'usermanagement' module must be deployed.
 
 ### API Calls
 
