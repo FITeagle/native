@@ -65,8 +65,8 @@ public class AuthorizationFilter implements Filter {
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_SUBJECT_USERNAME, subjectUsername);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_RESOURCE, resource);
       message.setStringProperty(PolicyEnforcementPoint.TYPE_PARAMETER_ACTION, action);
-      message.setStringProperty(IMessageBus.TYPE_TARGET, PolicyEnforcementPoint.TARGET);
-      message.setStringProperty(IMessageBus.TYPE_REQUEST, PolicyEnforcementPoint.IS_REQUEST_AUTHORIZED);
+      message.setStringProperty(IMessageBus.METHOD_TARGET, PolicyEnforcementPoint.TARGET);
+      message.setStringProperty(IMessageBus.TYPE_GET, PolicyEnforcementPoint.IS_REQUEST_AUTHORIZED);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
       

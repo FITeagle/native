@@ -194,8 +194,8 @@ public class AuthenticationFilter implements Filter{
       Message message = context.createMessage();
       message.setStringProperty(UserManager.TYPE_PARAMETER_USERNAME, username);
       message.setStringProperty(UserManager.TYPE_PARAMETER_PASSWORD, password);
-      message.setStringProperty(IMessageBus.TYPE_TARGET, UserManager.TARGET);
-      message.setStringProperty(IMessageBus.TYPE_REQUEST, UserManager.VERIFY_CREDENTIALS);
+      message.setStringProperty(IMessageBus.METHOD_TARGET, UserManager.TARGET);
+      message.setStringProperty(IMessageBus.TYPE_GET, UserManager.VERIFY_CREDENTIALS);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       String filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
       

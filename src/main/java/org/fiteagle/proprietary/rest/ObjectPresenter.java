@@ -45,8 +45,8 @@ public class ObjectPresenter {
   protected Message sendMessage(Message message, String requestType){
     String filter = "";
     try {
-      message.setStringProperty(IMessageBus.TYPE_REQUEST, requestType);
-      message.setStringProperty(IMessageBus.TYPE_TARGET, UserManager.TARGET);
+      message.setStringProperty(IMessageBus.TYPE_GET, requestType);
+      message.setStringProperty(IMessageBus.METHOD_TARGET, UserManager.TARGET);
       message.setJMSCorrelationID(UUID.randomUUID().toString());
       filter = "JMSCorrelationID='" + message.getJMSCorrelationID() + "'";
     } catch (JMSException e) {

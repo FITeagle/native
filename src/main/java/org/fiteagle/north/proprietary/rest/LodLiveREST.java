@@ -31,9 +31,7 @@ public class LodLiveREST {
   public String handleLodLiveRequest(@QueryParam("query") String sparqlQuery) {
     LOGGER.log(Level.INFO, "Query from Lodlive: " + sparqlQuery);
     
-    String serializedRequest = MessageUtil.createSerializedSPARQLQueryModel(sparqlQuery, IMessageBus.SERIALIZATION_JSONLD);  
-    
-    Message request = MessageUtil.createRDFMessage(serializedRequest, IMessageBus.TYPE_REQUEST, IMessageBus.SERIALIZATION_JSONLD, null, context);
+    Message request = MessageUtil.createSPARQLQueryMessage(sparqlQuery, IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER, IMessageBus.SERIALIZATION_JSONLD, context);
     
     this.context.createProducer().send(topic, request);
     Message resultMessage = MessageUtil.waitForResult(request, context, topic);
