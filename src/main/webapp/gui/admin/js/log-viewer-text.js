@@ -21,21 +21,25 @@ window.addEventListener("load", init, false);
 function writeToScreen(message) {
 	var pre = document.createElement("p");
 	pre.style.wordWrap = "break-word";	
-		
-		pre.innerHTML = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />");
+
+	pre.innerHTML = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, "<br />");
 	
-		output.appendChild(pre);
-	
-		// Insert separator line
-		var preSeparator = document.createElement("p");
-		preSeparator.style.wordWrap = "break-word";
-		preSeparator.innerHTML = "-------------------------------------------------------------------------------------";
-	
-		output.appendChild(preSeparator);
-		// Scroll automatically
-		output.scrollTop = output.scrollHeight;
+	output.appendChild(pre);
+
+	// Scroll automatically
+	output.scrollTop = output.scrollHeight;
 }
 
+function writeSeperator() {
+	var preSeparator = document.createElement("p");
+	preSeparator.style.wordWrap = "break-word";
+	preSeparator.innerHTML = "-------------------------------------------------------------------------------------";
+
+	output.appendChild(preSeparator);
+	
+	// Scroll automatically
+	output.scrollTop = output.scrollHeight;
+}
 
 String.prototype.escape = function() {
 	var tagsToReplace = {
@@ -68,13 +72,13 @@ function init() {
 		writeToScreen("Logger: disconnected", false);
 	};
 	websocketLogger.onmessage = function(evt) {
-		
 		var json = $.parseJSON(evt.data);
-
-		if (json.hasOwnProperty("rdf") && json.hasOwnProperty("method_type")) {
-			writeToScreen(json.rdf);
+		if (json.hasOwnProperty("METHOD_TYPE")) {
+			writeToScreen(json.METHOD_TYPE);
+			writeToScreen("Target: "+json.METHOD_TARGET);
+			writeToScreen(json.body);
+			writeSeperator();
 		}
-	
 	};
 }
 
