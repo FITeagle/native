@@ -36,11 +36,7 @@ public class LodLiveREST {
     this.context.createProducer().send(topic, request);
     Message resultMessage = MessageUtil.waitForResult(request, context, topic);
     
-    String response = MessageUtil.getRDFResult(resultMessage);
-    if(response == null){
-      LOGGER.log(Level.SEVERE, MessageUtil.getError(resultMessage));
-      return "";
-    }
+    String response = MessageUtil.getStringBody(resultMessage);
     return response;
   }
   

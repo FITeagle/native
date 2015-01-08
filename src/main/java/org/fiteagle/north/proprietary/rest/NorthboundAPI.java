@@ -24,7 +24,6 @@ import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
 
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 @Path("/resources")
@@ -102,10 +101,7 @@ public class NorthboundAPI {
     context.createProducer().send(topic, request);
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(rcvMessage);
-    if(resultString == null){
-      resultString = MessageUtil.getError(rcvMessage);
-    }
+    String resultString = MessageUtil.getStringBody(rcvMessage);
     return createRESTResponse(resultString, null);
   }
   
@@ -115,16 +111,13 @@ public class NorthboundAPI {
   @Produces("text/html")
   public Response createResourceInstanceWithRDF(String rdfInput) {
     
-    Model inputModel =MessageUtil.parseSerializedModel(rdfInput);
+    Model inputModel =MessageUtil.parseSerializedModel(rdfInput, IMessageBus.SERIALIZATION_TURTLE);
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CREATE, IMessageBus.TARGET_ORCHESTRATOR, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
     
     Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(receivedMessage);
-    if(resultString == null ){
-      resultString = MessageUtil.getError(receivedMessage);
-    }
+    String resultString = MessageUtil.getStringBody(receivedMessage);
     return createRESTResponse(resultString, Response.Status.CREATED);
   }
   
@@ -133,16 +126,13 @@ public class NorthboundAPI {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
   public Response configureResourceInstance(String rdfInput) {
-    Model inputModel =MessageUtil.parseSerializedModel(rdfInput);
+    Model inputModel =MessageUtil.parseSerializedModel(rdfInput, IMessageBus.SERIALIZATION_TURTLE);
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_CONFIGURE, IMessageBus.TARGET_ORCHESTRATOR, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
     
     Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(receivedMessage);
-    if(resultString == null ){
-      resultString = MessageUtil.getError(receivedMessage);
-    }
+    String resultString = MessageUtil.getStringBody(receivedMessage);
     return createRESTResponse(resultString, null);
   }
   
@@ -151,16 +141,13 @@ public class NorthboundAPI {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces("text/html")
   public Response releaseResourceInstance(String rdfInput) {
-    Model inputModel = MessageUtil.parseSerializedModel(rdfInput);
+    Model inputModel = MessageUtil.parseSerializedModel(rdfInput, IMessageBus.SERIALIZATION_TURTLE);
     
     Message request = MessageUtil.createRDFMessage(inputModel, IMessageBus.TYPE_DELETE, IMessageBus.TARGET_ORCHESTRATOR, IMessageBus.SERIALIZATION_DEFAULT, null, context);
     context.createProducer().send(topic, request);
     
     Message receivedMessage = MessageUtil.waitForResult(request, context, topic);
-    String resultString = MessageUtil.getRDFResult(receivedMessage);
-    if(resultString == null ){
-      resultString = MessageUtil.getError(receivedMessage);
-    }
+    String resultString = MessageUtil.getStringBody(receivedMessage);
     return createRESTResponse(resultString, null);
   }
   
