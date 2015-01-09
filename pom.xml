@@ -28,7 +28,7 @@
 			<version>0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-      <groupId>org.fiteagle</groupId>
+      <groupId>org.fiteagle.core</groupId>
       <artifactId>aaa</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
