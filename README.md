@@ -33,7 +33,7 @@ Resource Repository
 ### Requirements
 
     The 'api' module must be available
-    The 'repo' core module and the modules of the adapters you want to use must be deployed.
+    The 'aaa' core module must be available
 
 ### API Calls
 
