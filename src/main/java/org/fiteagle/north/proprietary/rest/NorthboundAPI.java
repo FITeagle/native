@@ -1,5 +1,7 @@
 package org.fiteagle.north.proprietary.rest;
 
+import info.openmultinet.ontology.vocabulary.Omn;
+
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -44,7 +46,7 @@ public class NorthboundAPI {
   @Path("/")
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
-    String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ MessageBusOntologyModel.classResource + ">. }";
+    String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ Omn.Resource + ">. }";
     return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
   }
   
@@ -52,7 +54,7 @@ public class NorthboundAPI {
   @Path("/")
   @Produces("application/ld+json")
   public Response getAllResourcesJSON() throws JMSException {
-    String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ MessageBusOntologyModel.classResource + ">. }";
+    String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ Omn.Resource + ">. }";
     return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
   }
   
