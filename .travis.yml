@@ -17,4 +17,4 @@ env:
     secure: "BMw/eNUCwg5weW5biii3rzg0XkXSE95Gj3uf0LEsLIQCzj5LM7tiE504HDFHZfT+FdsvKFEF4LKOPC+1zFJ9G6yQKP5Vgs9fWc2IaMUz+eH7wBkwnfPzkuXsQp+nR9KlldCklxva9mNDxZ+Sb8/RKOrHU2NxRkKcA3uHm5Yhyis="
 after_success:
   - mvn clean test jacoco:report coveralls:report
-  - curl -X POST -u $HTTP_USER:HTTP_PASS -F "fileToUpload=@/home/travis/build/FITeagle/native/target/native.war" https://services.av.tu-berlin.de/travis-upload/upload.php
+  - curl -X POST -u $HTTP_USER:$HTTP_PASS -F "fileToUpload=@/home/travis/build/FITeagle/native/target/native.war" https://services.av.tu-berlin.de/travis-upload/upload.php
