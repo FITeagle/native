@@ -19,4 +19,3 @@ after_success:
   - mvn clean test jacoco:report coveralls:report
   - curl -X POST -u $HTTP_USER:$HTTP_PASS -F "fileToUpload=@/home/travis/.m2/repository/org/fiteagle/native/0.1-SNAPSHOT/native-0.1-SNAPSHOT.war" https://services.av.tu-berlin.de/travis-upload/upload.php
 
-
