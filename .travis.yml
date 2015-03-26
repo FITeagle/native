@@ -1,21 +1,25 @@
 language: java
 jdk:
-  - oraclejdk7
+- oraclejdk7
 script:
-  - travis_retry mvn clean install site
+- travis_retry mvn clean install site
 notifications:
-  slack: av-fitt:FmLx2wj2Td3cNfmrjaQXUXBO
+  slack:
+    secure: M0RwmZIRQjLHJgJsVHr2EZUxd+gbGt0T7C3zz8nPeN7+ppap5+bBrE6A3TVzAfR8ZOl6CoxfRi5JnazqzQJmC9/h9kiEPuxBFjB5I2p/AlKRzRrYAOjqHf8JmtCTGzKJTLaDdJzBy5lH2ipys2XO9sPSf6ivfDAG3QzHpUbKCDE=
   email:
-    - alexander.willner@tu-berlin.de
-    - fiteagle.dev@av.tu-berlin.de
+  - alexander.willner@tu-berlin.de
+  - fiteagle.dev@av.tu-berlin.de
 cache:
   directories:
   - $HOME/.m2
 env:
   global:
-    - secure: "Iv6sjTI8NC3NlTIARMBiepCgW8L0FuEKMizs4TPfJVswkDxajhx5YBn0+ZYmMVzQHXB6TmovKDj+uFknO6UlDUD16W+XSMNeAPoNi6rHxGFV5OzU0vIRoiVyZduZWMZTSGCNaJfdm63yMxO5texk8dtLEY/w25QcJjqGKAJQYBs="
-    - secure: "BMw/eNUCwg5weW5biii3rzg0XkXSE95Gj3uf0LEsLIQCzj5LM7tiE504HDFHZfT+FdsvKFEF4LKOPC+1zFJ9G6yQKP5Vgs9fWc2IaMUz+eH7wBkwnfPzkuXsQp+nR9KlldCklxva9mNDxZ+Sb8/RKOrHU2NxRkKcA3uHm5Yhyis="
+  - secure: Iv6sjTI8NC3NlTIARMBiepCgW8L0FuEKMizs4TPfJVswkDxajhx5YBn0+ZYmMVzQHXB6TmovKDj+uFknO6UlDUD16W+XSMNeAPoNi6rHxGFV5OzU0vIRoiVyZduZWMZTSGCNaJfdm63yMxO5texk8dtLEY/w25QcJjqGKAJQYBs=
+  - secure: BMw/eNUCwg5weW5biii3rzg0XkXSE95Gj3uf0LEsLIQCzj5LM7tiE504HDFHZfT+FdsvKFEF4LKOPC+1zFJ9G6yQKP5Vgs9fWc2IaMUz+eH7wBkwnfPzkuXsQp+nR9KlldCklxva9mNDxZ+Sb8/RKOrHU2NxRkKcA3uHm5Yhyis=
+  - secure: By07ogJ9IbxLsBv3+LomvqVsJE5wqTfxpKsb0PHTf7c4FevqFbX54xbfC+QqrNYNwyguSj4QfQv4+tMBaA2elOOY5z1Z97zJH4Wfilm9rrdbnJAq02RtjRENaY9PBE8u8cgAUxNIO7H6dW3BUGMf1zh+wy4kDYTl8uFs0thWIkU=
+  - secure: ZU1XqnVXmX5xszLbPHVgV7i9YMNAs3ZNDxjIw2+gwYUW/t2PBIIlIfrZwc6jCMbm7epIfzfCqd5O5tGooMvlwUbm2VJbO4vvmzonxcdqu98Ygwbv2mOpPOyWv1eT8nzmf7G8BInMWcvnUSeHQommp/ESw3lxBz2Blp5iCdnGzAw=
 after_success:
-  - mvn clean test jacoco:report coveralls:report
-  - curl -X POST -u $HTTP_USER:$HTTP_PASS -F "fileToUpload=@/home/travis/.m2/repository/org/fiteagle/native/0.1-SNAPSHOT/native-0.1-SNAPSHOT.war" https://services.av.tu-berlin.de/travis-upload/upload.php
-
+- mvn clean test jacoco:report coveralls:report
+- mvn deploy --settings .travis/settings.xml
+- curl -X POST -u $HTTP_USER:$HTTP_PASS -F "fileToUpload=@/home/travis/.m2/repository/org/fiteagle/native/0.1-SNAPSHOT/native-0.1-SNAPSHOT.war"
+  https://services.av.tu-berlin.de/travis-upload/upload.php
