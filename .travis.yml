@@ -14,12 +14,8 @@ cache:
   - $HOME/.m2
 env:
   global:
-  - secure: Iv6sjTI8NC3NlTIARMBiepCgW8L0FuEKMizs4TPfJVswkDxajhx5YBn0+ZYmMVzQHXB6TmovKDj+uFknO6UlDUD16W+XSMNeAPoNi6rHxGFV5OzU0vIRoiVyZduZWMZTSGCNaJfdm63yMxO5texk8dtLEY/w25QcJjqGKAJQYBs=
-  - secure: BMw/eNUCwg5weW5biii3rzg0XkXSE95Gj3uf0LEsLIQCzj5LM7tiE504HDFHZfT+FdsvKFEF4LKOPC+1zFJ9G6yQKP5Vgs9fWc2IaMUz+eH7wBkwnfPzkuXsQp+nR9KlldCklxva9mNDxZ+Sb8/RKOrHU2NxRkKcA3uHm5Yhyis=
-  - secure: By07ogJ9IbxLsBv3+LomvqVsJE5wqTfxpKsb0PHTf7c4FevqFbX54xbfC+QqrNYNwyguSj4QfQv4+tMBaA2elOOY5z1Z97zJH4Wfilm9rrdbnJAq02RtjRENaY9PBE8u8cgAUxNIO7H6dW3BUGMf1zh+wy4kDYTl8uFs0thWIkU=
-  - secure: ZU1XqnVXmX5xszLbPHVgV7i9YMNAs3ZNDxjIw2+gwYUW/t2PBIIlIfrZwc6jCMbm7epIfzfCqd5O5tGooMvlwUbm2VJbO4vvmzonxcdqu98Ygwbv2mOpPOyWv1eT8nzmf7G8BInMWcvnUSeHQommp/ESw3lxBz2Blp5iCdnGzAw=
+  - secure: OitPkbOYWCDS/g6VSmGIdfq8h24KXErs8wMe/0EsULCrAoteveRqwp1TVRk4NTj9Jqo5kMxowuFqKrRauk9/9lKfCcGJZYV8VZxnUOoIzySBvsAm27QOkl4AVT2PqIhUs1qdPpfIQ5sKJbr7Kmj1xyiI6ltXzbbi8jisEFcblCg=
+  - secure: QhyOAAQ0s410bWOIsB1r86yi81szxT4LqDOpiJtUVMcj77YmCSS7JoXIk0xo1aN/IRNRgkkFWXhNnsVTpid1/XK9Sp8FhKi1WU2c1q54ZmKgb+y67x1slm0bOcAzRYUdiMs/InkJcUIm2A/8DVJ1brnlRTzbb/FAzOzg0PYIyHU=
 after_success:
 - mvn clean test jacoco:report coveralls:report
 - mvn deploy --settings .travis/settings.xml
-- curl -X POST -u $HTTP_USER:$HTTP_PASS -F "fileToUpload=@/home/travis/.m2/repository/org/fiteagle/native/0.1-SNAPSHOT/native-0.1-SNAPSHOT.war"
-  https://services.av.tu-berlin.de/travis-upload/upload.php
