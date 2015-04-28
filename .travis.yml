@@ -2,7 +2,7 @@ language: java
 jdk:
 - oraclejdk7
 script:
-- travis_retry mvn clean install site
+- travis_retry mvn clean install site deploy --settings .travis/settings.xml
 notifications:
   slack:
     secure: M0RwmZIRQjLHJgJsVHr2EZUxd+gbGt0T7C3zz8nPeN7+ppap5+bBrE6A3TVzAfR8ZOl6CoxfRi5JnazqzQJmC9/h9kiEPuxBFjB5I2p/AlKRzRrYAOjqHf8JmtCTGzKJTLaDdJzBy5lH2ipys2XO9sPSf6ivfDAG3QzHpUbKCDE=
@@ -18,5 +18,4 @@ env:
   - secure: QhyOAAQ0s410bWOIsB1r86yi81szxT4LqDOpiJtUVMcj77YmCSS7JoXIk0xo1aN/IRNRgkkFWXhNnsVTpid1/XK9Sp8FhKi1WU2c1q54ZmKgb+y67x1slm0bOcAzRYUdiMs/InkJcUIm2A/8DVJ1brnlRTzbb/FAzOzg0PYIyHU=
 after_success:
 - mvn clean test jacoco:report coveralls:report
-- mvn deploy --settings .travis/settings.xml
 - curl http://trescimo.av.tu-berlin.de/static/trigger.php?c=fiteagle
