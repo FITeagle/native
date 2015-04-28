@@ -3,7 +3,7 @@ jdk:
 - oraclejdk7
 script:
 - travis_retry mvn clean install site
-- "[ ${TRAVIS_PULL_REQUEST} = 'false' ] &amp;&amp; mvn clean deploy--settings .travis/settings.xml"
+- "[ ${TRAVIS_PULL_REQUEST} = 'false' ] && mvn clean deploy--settings .travis/settings.xml"
 notifications:
   slack:
     secure: M0RwmZIRQjLHJgJsVHr2EZUxd+gbGt0T7C3zz8nPeN7+ppap5+bBrE6A3TVzAfR8ZOl6CoxfRi5JnazqzQJmC9/h9kiEPuxBFjB5I2p/AlKRzRrYAOjqHf8JmtCTGzKJTLaDdJzBy5lH2ipys2XO9sPSf6ivfDAG3QzHpUbKCDE=
