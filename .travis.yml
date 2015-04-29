@@ -19,4 +19,4 @@ env:
   - secure: QhyOAAQ0s410bWOIsB1r86yi81szxT4LqDOpiJtUVMcj77YmCSS7JoXIk0xo1aN/IRNRgkkFWXhNnsVTpid1/XK9Sp8FhKi1WU2c1q54ZmKgb+y67x1slm0bOcAzRYUdiMs/InkJcUIm2A/8DVJ1brnlRTzbb/FAzOzg0PYIyHU=
 after_success:
 - mvn clean test jacoco:report coveralls:report
-- curl http://trescimo.av.tu-berlin.de/static/trigger.php?c=fiteagle
+- curl http://demo.fiteagle.org/trigger.php?c=fiteagle
