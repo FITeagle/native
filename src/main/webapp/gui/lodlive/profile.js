@@ -5,18 +5,18 @@
 $.jStorage.set('profile', {
     // parametri di connessione agli endpoint
     'connection' : {
-        /*matching all the requested URIs*/
-        'http://' : {
+        'http://FITEAGLE,http://localhost,http://federation.av.tu-berlin.de,file:///opt,http://demo.fiteagle.org/resource' : {
             description : {
-                en : 'just a test'
+                en : 'DEMO FITeagle'
             },
             useForInverseSameAs : true,
-            endpoint : 'http://localhost:8080/native/api/lodlive/query',
+            endpoint : 'http://demo.fiteagle.org:8080/openrdf-sesame/repositories/fiteagle',
+            endpointType : 'sesame',
             examples : [{
-                uri : 'http://fiteagleinternal%23FITEAGLE_Testbed',
-                label : 'Fiteagle Testbed'
+                label : 'MotorGarage-1',
+                uri : 'http://localhost/resource/MotorGarage-1'
             }]
-        }
+        },
     },
     arrows : {
         'http://www.w3.org/2002/07/owl#sameAs' : 'isSameAs',
