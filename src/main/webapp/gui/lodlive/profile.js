@@ -10,7 +10,8 @@ $.jStorage.set('profile', {
                 en : 'DEMO FITeagle'
             },
             useForInverseSameAs : true,
-            endpoint : 'http://demo.fiteagle.org:8080/openrdf-sesame/repositories/fiteagle',
+            //endpoint : 'http://demo.fiteagle.org:8080/openrdf-sesame/repositories/fiteagle',
+            endpoint : '/openrdf-sesame/repositories/fiteagle',
             endpointType : 'sesame',
             examples : [{
                 label : 'MotorGarage-1',
