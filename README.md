@@ -24,9 +24,12 @@ Graphical User Interface
 LodLive Visualisation
 ---------------------
 
-To view e.g. the visualisation starting from the resource "http://federation.av.tu-berlin.de/about#MotorGarage-1":
-
-    http://localhost:8080/native/gui/lodlive/index.html?http://federation.av.tu-berlin.de/about%23MotorGarage-1
+To View the visualisation 
+ * point your browser to "http://localhost:8080/native/gui/lodlive"
+ * select "find recources"
+ * select class "http://open-multinet.info/ontology/resource/motorgarage#MotorGarage"
+ * enter "Moto" in search field and press "search >>"
+ * The "MotorGarage-1" should have been found -> press "start >>" button
 
 Resource Repository
 -------------------
