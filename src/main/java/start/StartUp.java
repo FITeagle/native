@@ -43,7 +43,7 @@ public class StartUp {
 	
 	
 	@PreDestroy
-	public void deleteSfaApi() {
+	public void deleteNativeApi() {
 		try{	
 	    TripletStoreAccessor.deleteModel(defaultModel);
 		} catch (ResourceRepositoryException e) {
