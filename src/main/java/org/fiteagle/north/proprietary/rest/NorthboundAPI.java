@@ -2,6 +2,7 @@ package org.fiteagle.north.proprietary.rest;
 
 import info.openmultinet.ontology.vocabulary.Omn;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -24,8 +25,14 @@ import javax.ws.rs.core.Response.Status;
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
+import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor;
+import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 @Path("/resources")
@@ -35,7 +42,7 @@ public class NorthboundAPI {
   private JMSContext context;
   @javax.annotation.Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
-  
+    
   @SuppressWarnings("unused")
   private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
   
@@ -47,15 +54,32 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response getAllResourcesTTL() throws JMSException {
     String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ Omn.Resource + ">. }";
-    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE,IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
   @GET
+  @Path("/testbed")
+  @Produces("text/turtle")
+  public Response getVersion() throws JMSException, ResourceRepositoryException {
+	  	String answerString = processQuery("");
+	  	
+	  	Model model = TripletStoreAccessor.getAPIs();
+		StmtIterator stmtIterator = model.listStatements();
+		String apis = new String("APIs:"+"\n");
+		while(stmtIterator.hasNext()){
+			  Statement statement = stmtIterator.nextStatement();	          
+			  apis += statement.getSubject() + ": " + "\"" + statement.getObject() + "\"" + "\n";
+		  }
+		answerString += apis;
+	  	return createRESTResponse(answerString, null);
+	}
+  
+@GET
   @Path("/")
   @Produces("application/ld+json")
   public Response getAllResourcesJSON() throws JMSException {
     String query = "DESCRIBE ?resource WHERE {?resource <"+RDFS.subClassOf.getURI()+"> <"+ Omn.Resource + ">. }";
-    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD, IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
   @GET
@@ -63,7 +87,7 @@ public class NorthboundAPI {
   @Produces("text/turtle")
   public Response describeResourceTTL(@PathParam("resourceName") String resourceName) throws JMSException {
     String query = "DESCRIBE <"+INSTANCE_PREFIX+resourceName+">";
-    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE, IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
   @GET
@@ -71,7 +95,7 @@ public class NorthboundAPI {
   @Produces("application/ld+json")
   public Response describeResourceJSON(@PathParam("resourceName") String resourceName) throws JMSException {
     String query = "DESCRIBE <"+INSTANCE_PREFIX+resourceName+">";
-    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD, IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
   @GET
@@ -83,7 +107,7 @@ public class NorthboundAPI {
         + "?resource a ?resourceType .  "
         + "?resourceType <http://open-multinet.info/ontology/omn#implementedBy> ?adapterType . "
         + "<"+INSTANCE_PREFIX+adapterName+"> a ?adapterType}";
-    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE);
+    return processQuery(query, IMessageBus.SERIALIZATION_TURTLE,IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
   @GET
@@ -95,17 +119,26 @@ public class NorthboundAPI {
         + "?resource a ?resourceType .  "
         + "?resourceType <http://open-multinet.info/ontology/omn#implementedBy> ?adapterType . "
         + "<"+INSTANCE_PREFIX+adapterName+"> a ?adapterType}";
-    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD);
+    return processQuery(query, IMessageBus.SERIALIZATION_JSONLD,IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER);
   }
   
-  private Response processQuery(String query, String serialization){
-    Message request = MessageUtil.createSPARQLQueryMessage(query, IMessageBus.TARGET_RESOURCE_ADAPTER_MANAGER, serialization, context);
+  private Response processQuery(String query, String serialization, String destination){
+    Message request = MessageUtil.createSPARQLQueryMessage(query, destination, serialization, context);
     context.createProducer().send(topic, request);
     
     Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
     String resultString = MessageUtil.getStringBody(rcvMessage);
     return createRESTResponse(resultString, null);
   }
+  
+  private String processQuery(String query){
+	    Message request = MessageUtil.createSPARQLQueryMessage(query, IMessageBus.TARGET_FEDERATION_MANAGER, IMessageBus.SERIALIZATION_TURTLE, context);
+	    context.createProducer().send(topic, request);
+	    
+	    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+	    String resultString = MessageUtil.getStringBody(rcvMessage);
+	    return resultString;
+	  }
   
   @PUT
   @Path("")
