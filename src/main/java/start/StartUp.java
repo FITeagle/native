@@ -71,7 +71,6 @@ public class StartUp {
 		@Override
 		public Void call() throws ResourceRepositoryException {
 			if (defaultModel == null) {
-				setDefaultModel();
 				TripletStoreAccessor.addResource(setDefaultModel().getResource(
 						"http://localhost/resource/Native"));
 			} else {
