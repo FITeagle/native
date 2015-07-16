@@ -30,10 +30,10 @@ public class StartUp {
 		TimerHelper timer = new TimerHelper(new NativeAPI());
 	}
 
-	@PreDestroy
-	public void deleteNativeApi() {
-		TimerHelper timer = new TimerHelper(new DeleteNativeAPI());
-	}
+//	@PreDestroy
+//	public void deleteNativeApi() {
+//		TimerHelper timer = new TimerHelper(new DeleteNativeAPI());
+//	}
 
 	private Model setDefaultModel() {
 		Model model = ModelFactory.createDefaultModel();
