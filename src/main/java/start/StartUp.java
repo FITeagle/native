@@ -11,8 +11,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
 import org.fiteagle.api.core.TimerHelper;
-import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor;
-import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
+import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor;
+import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;

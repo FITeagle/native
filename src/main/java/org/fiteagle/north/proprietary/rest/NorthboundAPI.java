@@ -25,8 +25,8 @@ import javax.ws.rs.core.Response.Status;
 import org.fiteagle.api.core.IMessageBus;
 import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
-import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor;
-import org.fiteagle.core.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
+import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor;
+import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
