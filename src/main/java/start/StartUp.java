@@ -1,14 +1,11 @@
 package start;
 
-import info.openmultinet.ontology.exceptions.InvalidModelException;
 import info.openmultinet.ontology.vocabulary.Omn_resource;
 
-import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
@@ -36,10 +33,8 @@ public class StartUp {
 
 	Model defaultModel;
 	private int failureCounter = 0;
-	private static String resourceUri = "http://localhost/resource/Native"; 
+	private static String resourceUri = "http://localhost/resource/Native";
 
-	
-	
 	@PostConstruct
 	public void addNativeApi() {
 		setDefaultModel();
@@ -48,8 +43,7 @@ public class StartUp {
 
 	private Model setDefaultModel() {
 		Model model = ModelFactory.createDefaultModel();
-		Resource resource = model
-				.createResource(resourceUri);
+		Resource resource = model.createResource(resourceUri);
 		resource.addProperty(Omn_resource.hasInterface, "/native/api/lodlive");
 		resource.addProperty(Omn_resource.hasInterface, "/native/api/resources");
 		resource.addProperty(Omn_resource.hasInterface,
@@ -66,11 +60,11 @@ public class StartUp {
 	@Timeout
 	public void timerMethod(Timer timer) {
 		LOGGER.log(Level.SEVERE, "TIMER METHOD");
-		if(failureCounter < 10){
+		if (failureCounter < 10) {
 			try {
 				if (defaultModel == null) {
-					TripletStoreAccessor.addResource(setDefaultModel().getResource(
-							resourceUri));
+					TripletStoreAccessor.addResource(setDefaultModel()
+							.getResource(resourceUri));
 					timer.cancel();
 				} else {
 					TripletStoreAccessor.addResource(defaultModel
@@ -81,10 +75,11 @@ public class StartUp {
 				failureCounter++;
 			} catch (HttpException e) {
 				failureCounter++;
-			}	
-		}else{
-			 LOGGER.log(Level.SEVERE,
-			 "Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
+			}
+		} else {
+			LOGGER.log(
+					Level.SEVERE,
+					"Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
 		}
 
 	}
