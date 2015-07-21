@@ -4,13 +4,19 @@ import info.openmultinet.ontology.exceptions.InvalidModelException;
 import info.openmultinet.ontology.vocabulary.Omn_resource;
 
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 
-import org.fiteagle.api.core.TimerHelper;
+import org.apache.jena.atlas.web.HttpException;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
@@ -22,23 +28,28 @@ import com.hp.hpl.jena.rdf.model.Resource;
 @Singleton
 public class StartUp {
 
-	private Model defaultModel;
+	private static final Logger LOGGER = Logger.getLogger(StartUp.class
+			.getName());
 
+	@javax.annotation.Resource
+	private TimerService timerService;
+
+	Model defaultModel;
+	private int failureCounter = 0;
+	private static String resourceUri = "http://localhost/resource/Native"; 
+
+	
+	
 	@PostConstruct
 	public void addNativeApi() {
 		setDefaultModel();
-		TimerHelper timer = new TimerHelper(new NativeAPI());
+		timerService.createIntervalTimer(0, 5000, new TimerConfig());
 	}
-
-//	@PreDestroy
-//	public void deleteNativeApi() {
-//		TimerHelper timer = new TimerHelper(new DeleteNativeAPI());
-//	}
 
 	private Model setDefaultModel() {
 		Model model = ModelFactory.createDefaultModel();
 		Resource resource = model
-				.createResource("http://localhost/resource/Native");
+				.createResource(resourceUri);
 		resource.addProperty(Omn_resource.hasInterface, "/native/api/lodlive");
 		resource.addProperty(Omn_resource.hasInterface, "/native/api/resources");
 		resource.addProperty(Omn_resource.hasInterface,
@@ -52,32 +63,29 @@ public class StartUp {
 		return model;
 	}
 
-	class DeleteNativeAPI implements Callable<Void> {
-
-		@Override
-		public Void call() throws ResourceRepositoryException,
-				InvalidModelException {
-			if (defaultModel == null) {
-				TripletStoreAccessor.deleteModel(setDefaultModel());
-			} else {
-				TripletStoreAccessor.deleteModel(defaultModel);
-			}
-			return null;
+	@Timeout
+	public void timerMethod(Timer timer) {
+		LOGGER.log(Level.SEVERE, "TIMER METHOD");
+		if(failureCounter < 10){
+			try {
+				if (defaultModel == null) {
+					TripletStoreAccessor.addResource(setDefaultModel().getResource(
+							resourceUri));
+					timer.cancel();
+				} else {
+					TripletStoreAccessor.addResource(defaultModel
+							.getResource(resourceUri));
+					timer.cancel();
+				}
+			} catch (ResourceRepositoryException e) {
+				failureCounter++;
+			} catch (HttpException e) {
+				failureCounter++;
+			}	
+		}else{
+			 LOGGER.log(Level.SEVERE,
+			 "Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
 		}
-	}
 
-	class NativeAPI implements Callable<Void> {
-
-		@Override
-		public Void call() throws ResourceRepositoryException {
-			if (defaultModel == null) {
-				TripletStoreAccessor.addResource(setDefaultModel().getResource(
-						"http://localhost/resource/Native"));
-			} else {
-				TripletStoreAccessor.addResource(defaultModel
-						.getResource("http://localhost/resource/Native"));
-			}
-			return null;
-		}
 	}
 }
