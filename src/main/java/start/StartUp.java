@@ -59,7 +59,6 @@ public class StartUp {
 
 	@Timeout
 	public void timerMethod(Timer timer) {
-		LOGGER.log(Level.SEVERE, "TIMER METHOD");
 		if (failureCounter < 10) {
 			try {
 				if (defaultModel == null) {
@@ -72,8 +71,12 @@ public class StartUp {
 					timer.cancel();
 				}
 			} catch (ResourceRepositoryException e) {
+				LOGGER.log(Level.INFO,
+						 "Errored while adding something to Database - will try again");
 				failureCounter++;
 			} catch (HttpException e) {
+				LOGGER.log(Level.INFO,
+						 "Couldn't find RDF Database - will try again");
 				failureCounter++;
 			}
 		} else {
