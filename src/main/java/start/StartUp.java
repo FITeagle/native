@@ -2,6 +2,7 @@ package start;
 
 import info.openmultinet.ontology.vocabulary.Omn_resource;
 
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,8 +13,10 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import javax.inject.Inject;
 
 import org.apache.jena.atlas.web.HttpException;
+import org.fiteagle.api.core.TimerHelper;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
@@ -30,6 +33,9 @@ public class StartUp {
 
 	@javax.annotation.Resource
 	private TimerService timerService;
+	
+//	@Inject
+//	private TimerHelper helper;
 
 	Model defaultModel;
 	private int failureCounter = 0;
@@ -39,12 +45,14 @@ public class StartUp {
 	public void addNativeApi() {
 		setDefaultModel();
 		timerService.createIntervalTimer(0, 5000, new TimerConfig());
+//		helper.setNewTimer(new NativeAPI());
+		
 	}
 
 	private Model setDefaultModel() {
 		Model model = ModelFactory.createDefaultModel();
 		Resource resource = model.createResource(resourceUri);
-		resource.addProperty(Omn_resource.hasInterface, "/native/api/lodlive");
+		resource.addProperty(Omn_resource.hasInterface, "/native/api/lodliveTEST");
 		resource.addProperty(Omn_resource.hasInterface, "/native/api/resources");
 		resource.addProperty(Omn_resource.hasInterface,
 				"/native/api/resources/testbed");
@@ -86,4 +94,21 @@ public class StartUp {
 		}
 
 	}
+	
+//	class NativeAPI implements Callable<Void> {
+//		 
+//				@Override
+//				public Void call() throws ResourceRepositoryException {
+//					if (defaultModel == null) {
+//						TripletStoreAccessor.addResource(setDefaultModel().getResource(
+//								"http://localhost/resource/Native"));
+//					} else {
+//						TripletStoreAccessor.addResource(defaultModel
+//								.getResource("http://localhost/resource/Native"));
+//					}
+//					return null;
+//				}
+//	}
+				
+				
 }

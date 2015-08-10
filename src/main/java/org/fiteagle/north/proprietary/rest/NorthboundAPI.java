@@ -1,8 +1,10 @@
 package org.fiteagle.north.proprietary.rest;
 
+import info.openmultinet.ontology.exceptions.InvalidModelException;
 import info.openmultinet.ontology.vocabulary.Omn;
 
-import java.util.logging.Level;
+import java.io.UnsupportedEncodingException;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -21,18 +23,21 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.bind.JAXBException;
 
 import org.fiteagle.api.core.IMessageBus;
-import org.fiteagle.api.core.MessageBusOntologyModel;
 import org.fiteagle.api.core.MessageUtil;
+import org.fiteagle.api.core.usermanagement.User;
+import org.fiteagle.api.core.usermanagement.UserManager;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor;
 import org.fiteagle.api.tripletStoreAccessor.TripletStoreAccessor.ResourceRepositoryException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 @Path("/resources")
@@ -42,6 +47,8 @@ public class NorthboundAPI {
   private JMSContext context;
   @javax.annotation.Resource(mappedName = IMessageBus.TOPIC_CORE_NAME)
   private Topic topic;
+  
+  ObjectMapper objectMapper = new ObjectMapper();
     
   @SuppressWarnings("unused")
   private static Logger LOGGER = Logger.getLogger(NorthboundAPI.class.toString());
@@ -58,7 +65,7 @@ public class NorthboundAPI {
   }
   
   @GET
-  @Path("/testbed")
+  @Path("/testbed/getVersion")
   @Produces("text/turtle")
   public Response getVersion() throws JMSException, ResourceRepositoryException {
 	  	String answerString = processQuery("");
@@ -73,6 +80,62 @@ public class NorthboundAPI {
 		answerString += apis;
 	  	return createRESTResponse(answerString, null);
 	}
+  
+  @GET
+  @Path("/testbed/listResources")
+//  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  public Response listResources(/*List<?> parameter*/) throws JMSException, ResourceRepositoryException, UnsupportedEncodingException, JAXBException, InvalidModelException {
+	  ListResourcesProcessor listResourcesProcessor = new ListResourcesProcessor(/*parameter*/);
+//	    HashMap<String, Object> result = new HashMap<>();
+
+//	  listResourcesProcessor.handleCredentials(0);
+//	    listResourcesProcessor.parseOptionsParameters();
+	    listResourcesProcessor.setSender(Native_MDBSender.getInstance());
+	    Model topologyModel = listResourcesProcessor.listResources();
+	    
+	  	return createRESTResponse(MessageUtil.serializeModel(topologyModel, IMessageBus.SERIALIZATION_TURTLE), null);
+	}
+  
+  @GET
+  @Path("/testbed/getCredentials")
+  public String getCredentials() throws JMSException, ResourceRepositoryException, UnsupportedEncodingException, JAXBException, InvalidModelException {
+	  Message request = MessageUtil.createDefaultMessage(IMessageBus.TYPE_GET, IMessageBus.TARGET_USERMANAGEMENT, IMessageBus.SERIALIZATION_DEFAULT, null, context);
+	
+	  Random random = new Random();
+	  String pw = String.valueOf(random.nextInt());
+	  String username = String.valueOf(random.nextInt());
+	  
+	  	User user = User.createDefaultUser(username, pw, String.valueOf(random.nextLong()));
+	    request.setStringProperty(IMessageBus.TYPE_GET, UserManager.ADD_USER);
+	    try {
+			request.setStringProperty(UserManager.TYPE_PARAMETER_USER_JSON, objectMapper.writeValueAsString(user));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    context.createProducer().send(topic, request);
+	    
+	    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+	    String resultString = "Your new Credentials: \nUsername: "+username + "\nPassword: "+ pw;
+	    
+	  	return resultString;
+	}
+  
+//  @GET
+//  @Path("/testbed/getUsers")
+//  public String getUsers() throws JMSException, ResourceRepositoryException, UnsupportedEncodingException, JAXBException, InvalidModelException {
+//	  Model model = ModelFactory.createDefaultModel(); 
+//	  Message request = MessageUtil.createRDFMessage(model, IMessageBus.TYPE_GET, "usermanagement", IMessageBus.SERIALIZATION_DEFAULT, null, context);
+//	    request.setStringProperty(IMessageBus.TYPE_GET, UserManager.GET_ALL_USERS);
+//	    
+//	    context.createProducer().send(topic, request);
+//	    
+//	    Message rcvMessage = MessageUtil.waitForResult(request, context, topic);
+//	    String resultString = rcvMessage.getStringProperty(IMessageBus.TYPE_RESULT);
+//	    
+//	  	return resultString;
+//	}
+
   
 @GET
   @Path("/")
