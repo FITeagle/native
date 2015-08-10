@@ -85,57 +85,8 @@ public class ListResourcesProcessor {
 		}
 	}
 
-	public void createResponse(final HashMap<String, Object> result,
-			Model topologyModel) throws JAXBException, InvalidModelException,
-			UnsupportedEncodingException {
-		
-		String testbedResources = "";
-		AdvertisementConverter converter = new AdvertisementConverter();
-		testbedResources = converter.getRSpec(topologyModel);
-		result.put(VALUE, testbedResources);
-	}
-
 	public void setSender(Native_MDBSender instance) {
 this.sender = instance;		
 	}
-
-	// public boolean checkSupportedVersions() {
-	// if(!(GENI.equals(this.delegate.getRspecType()) &&
-	// VERSION_3.equals(this.delegate.getRspecVersion())) &&
-	// !"omn".equals(this.delegate.getRspecType()))
-	// return false;
-	// else
-	// return true;
-	//
-	// }
-
-	// public void parseOptionsParameters() {
-	// String query = "";
-	//
-	// @SuppressWarnings("unchecked")
-	// final Map<String, ?> param2 = (Map<String, ?>) parameter.get(1);
-	//
-	// if (param2.containsKey(IGeni.GENI_QUERY)) {
-	// query = param2.get(IGeni.GENI_QUERY).toString();
-	// } else {
-	// query = "";
-	// }
-	//
-	// if (param2.containsKey(IGeni.GENI_COMPRESSED)) {
-	// this.delegate.setCompressed((Boolean) param2.get(IGeni.GENI_COMPRESSED));
-	// }
-	// if (param2.containsKey(IGeni.GENI_AVAILABLE)) {
-	// this.delegate.setAvailable((Boolean) param2.get(IGeni.GENI_AVAILABLE));
-	// }
-	//
-	// if(param2.containsKey(IGeni.GENI_RSPEC_VERSION)){
-	// if(param2.get(IGeni.GENI_RSPEC_VERSION) instanceof Map<?, ?>){
-	// final Map<String, ?> geniRSpecVersion = (Map<String, ?>)
-	// param2.get(IGeni.GENI_RSPEC_VERSION);
-	// this.delegate.setRspecType((String) geniRSpecVersion.get(TYPE));
-	// this.delegate.setRspecVersion( (String) geniRSpecVersion.get(VERSION));
-	// }
-	// }
-	// }
 
 }

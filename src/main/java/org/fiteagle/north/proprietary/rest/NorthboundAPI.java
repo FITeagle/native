@@ -83,13 +83,8 @@ public class NorthboundAPI {
   
   @GET
   @Path("/testbed/listResources")
-//  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response listResources(/*List<?> parameter*/) throws JMSException, ResourceRepositoryException, UnsupportedEncodingException, JAXBException, InvalidModelException {
-	  ListResourcesProcessor listResourcesProcessor = new ListResourcesProcessor(/*parameter*/);
-//	    HashMap<String, Object> result = new HashMap<>();
-
-//	  listResourcesProcessor.handleCredentials(0);
-//	    listResourcesProcessor.parseOptionsParameters();
+  public Response listResources() throws JMSException, ResourceRepositoryException, UnsupportedEncodingException, JAXBException, InvalidModelException {
+	  ListResourcesProcessor listResourcesProcessor = new ListResourcesProcessor();
 	    listResourcesProcessor.setSender(Native_MDBSender.getInstance());
 	    Model topologyModel = listResourcesProcessor.listResources();
 	    
