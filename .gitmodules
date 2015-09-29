@@ -1,3 +1,6 @@
 [submodule "lodlive"]
       path = src/main/webapp/gui/lodlive/lib
       url = https://github.com/FITeagle/LodLive
+[submodule "src/main/webapp/gui/fed4fire/lib"]
+	path = src/main/webapp/gui/fed4fire/lib
+	url = https://github.com/FITeagle/LodLive
