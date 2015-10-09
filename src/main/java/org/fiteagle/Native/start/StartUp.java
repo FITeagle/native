@@ -28,73 +28,75 @@ import com.hp.hpl.jena.rdf.model.Resource;
 @Singleton
 public class StartUp {
 
-	private static final Logger LOGGER = Logger.getLogger(StartUp.class
-			.getName());
+    private static final Logger LOGGER = Logger.getLogger(StartUp.class
+            .getName());
 
-	@javax.annotation.Resource
-	private TimerService timerService;
-	
+    @javax.annotation.Resource
+    private TimerService timerService;
+
 //	@Inject
 //	private TimerHelper helper;
 
-	Model defaultModel;
-	private int failureCounter = 0;
-	private static String resourceUri = "http://localhost/resource/Native";
+    Model defaultModel;
+    private int failureCounter = 0;
+    private static String resourceUri = "http://localhost/resource/Native";
 
-	@PostConstruct
-	public void addNativeApi() {
-		setDefaultModel();
-		timerService.createIntervalTimer(0, 5000, new TimerConfig());
+    @PostConstruct
+    public void addNativeApi() {
+        setDefaultModel();
+        timerService.createIntervalTimer(0, 5000, new TimerConfig());
 //		helper.setNewTimer(new NativeAPI());
-		
-	}
 
-	private Model setDefaultModel() {
-		Model model = ModelFactory.createDefaultModel();
-		Resource resource = model.createResource(resourceUri);
-		resource.addProperty(Omn_resource.hasInterface, "/native/api/lodliveTEST");
-		resource.addProperty(Omn_resource.hasInterface, "/native/api/resources");
-		resource.addProperty(Omn_resource.hasInterface,
-				"/native/api/resources/testbed");
-		resource.addProperty(Omn_resource.hasInterface,
-				"/native/api/resources/${resourceName}");
-		resource.addProperty(Omn_resource.hasInterface,
-				"/native/api/resources/${adapterName}/instances");
-		defaultModel = model;
+    }
 
-		return model;
-	}
+    private Model setDefaultModel() {
+        Model model = ModelFactory.createDefaultModel();
+        Resource resource = model.createResource(resourceUri);
+        resource.addProperty(Omn_resource.hasInterface, "/native/api/lodliveTEST");
+        resource.addProperty(Omn_resource.hasInterface, "/native/api/resources");
+        resource.addProperty(Omn_resource.hasInterface,
+                "/native/api/resources/testbed");
+        resource.addProperty(Omn_resource.hasInterface,
+                "/native/api/resources/${resourceName}");
+        resource.addProperty(Omn_resource.hasInterface,
+                "/native/api/resources/${adapterName}/instances");
+        defaultModel = model;
 
-	@Timeout
-	public void timerMethod(Timer timer) {
-		if (failureCounter < 10) {
-			try {
-				if (defaultModel == null) {
-					TripletStoreAccessor.addResource(setDefaultModel()
-							.getResource(resourceUri));
-					timer.cancel();
-				} else {
-					TripletStoreAccessor.addResource(defaultModel
-							.getResource(resourceUri));
-					timer.cancel();
-				}
-			} catch (ResourceRepositoryException e) {
-				LOGGER.log(Level.INFO,
-						 "Errored while adding something to Database - will try again");
-				failureCounter++;
-			} catch (HttpException e) {
-				LOGGER.log(Level.INFO,
-						 "Couldn't find RDF Database - will try again");
-				failureCounter++;
-			}
-		} else {
-			LOGGER.log(
-					Level.SEVERE,
-					"Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
-		}
+        return model;
+    }
 
-	}
-	
+    @Timeout
+    public void timerMethod(Timer timer) {
+        if (failureCounter < 100) {
+            try {
+                if (defaultModel == null) {
+                    TripletStoreAccessor.addResource(setDefaultModel()
+                            .getResource(resourceUri));
+                    timer.cancel();
+                } else {
+                    TripletStoreAccessor.addResource(defaultModel
+                            .getResource(resourceUri));
+                    timer.cancel();
+                }
+            } catch (ResourceRepositoryException e) {
+                LOGGER.log(Level.INFO,
+                        "Errored while adding something to Database - will try again");
+                failureCounter++;
+            } catch (HttpException e) {
+                LOGGER.log(Level.INFO,
+                        "Couldn't find RDF Database - will try again");
+                failureCounter++;
+            }
+        } else {
+            LOGGER.log(
+                    Level.SEVERE,
+                    "Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
+
+            timer.cancel();
+        }
+
+    }
+
 //	class NativeAPI implements Callable<Void> {
 //		 
 //				@Override
@@ -109,6 +111,6 @@ public class StartUp {
 //					return null;
 //				}
 //	}
-				
-				
+
+
 }
