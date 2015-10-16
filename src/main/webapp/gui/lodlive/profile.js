@@ -5,12 +5,11 @@
 $.jStorage.set('profile', {
     // parametri di connessione agli endpoint
     'connection' : {
-        'http://FITEAGLE,http://localhost,http://federation.av.tu-berlin.de,file:///opt,http://demo.fiteagle.org/resource' : {
+        'http://fiteagle,http://localhost,http://federation.av.tu-berlin.de,file:///opt,http://demo.fiteagle.org/resource,http://open-multinet.info' : {
             description : {
-                en : 'DEMO FITeagle'
+                en : 'FITeagle Database'
             },
             useForInverseSameAs : true,
-            //endpoint : 'http://demo.fiteagle.org:8080/openrdf-sesame/repositories/fiteagle',
             endpoint : '/openrdf-sesame/repositories/fiteagle',
             endpointType : 'sesame',
             examples : [{
