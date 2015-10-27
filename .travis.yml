@@ -13,9 +13,6 @@ notifications:
   - fiteagle.dev@av.tu-berlin.de
 before_install:
   - sed -i.bak -e 's|https://nexus.codehaus.org/snapshots/|https://oss.sonatype.org/content/repositories/codehaus-snapshots/|g' ~/.m2/settings.xml
-cache:
-  directories:
-  - $HOME/.m2
 env:
   global:
   - secure: OitPkbOYWCDS/g6VSmGIdfq8h24KXErs8wMe/0EsULCrAoteveRqwp1TVRk4NTj9Jqo5kMxowuFqKrRauk9/9lKfCcGJZYV8VZxnUOoIzySBvsAm27QOkl4AVT2PqIhUs1qdPpfIQ5sKJbr7Kmj1xyiI6ltXzbbi8jisEFcblCg=
