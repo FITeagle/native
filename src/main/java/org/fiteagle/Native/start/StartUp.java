@@ -84,9 +84,9 @@ public class StartUp {
                 LOGGER.log(Level.INFO,
                         "Errored while adding something to Database - will try again");
                 failureCounter++;
-            } catch (HttpException e) {
-                LOGGER.log(Level.INFO,
-                        "Couldn't find RDF Database - will try again");
+            } catch(Exception e){
+                LOGGER.warning(
+                        "Errored while working with Database - will try again");
                 failureCounter++;
             }
         } else {
