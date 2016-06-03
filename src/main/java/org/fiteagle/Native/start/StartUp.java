@@ -2,6 +2,7 @@ package org.fiteagle.Native.start;
 
 import info.openmultinet.ontology.vocabulary.Omn_resource;
 
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,6 +15,8 @@ import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.apache.jena.atlas.web.HttpException;
 import org.fiteagle.api.core.TimerHelper;
@@ -33,6 +36,10 @@ public class StartUp {
 
     @javax.annotation.Resource
     private TimerService timerService;
+    
+    private Boolean rdfReady;
+    private Boolean allreadySearchingForTripletStore;
+    private InitialContext initialContext;
 
 //	@Inject
 //	private TimerHelper helper;
@@ -44,6 +51,14 @@ public class StartUp {
     @PostConstruct
     public void addNativeApi() {
         setDefaultModel();
+        
+		try {
+			initialContext = new InitialContext();
+			refreshGlobalVariables();
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	TimerConfig config = new TimerConfig();
 		config.setPersistent(false);
         timerService.createIntervalTimer(0, 5000, config);
@@ -69,35 +84,53 @@ public class StartUp {
 
     @Timeout
     public void timerMethod(Timer timer) {
-        if (failureCounter < 100) {
-            try {
+    	refreshGlobalVariables();
+
+        
+    	if(!rdfReady && allreadySearchingForTripletStore){
+         	LOGGER.log(Level.SEVERE,"Someone is allready searching for Database - I'll drink a coffe");
+    	}else if(rdfReady){
+        	
+    		
+    		LOGGER.log(Level.SEVERE,"Someone found Database"); 
+          	try{
                 if (defaultModel == null) {
                     TripletStoreAccessor.addResource(setDefaultModel()
                             .getResource(resourceUri));
-                    timer.cancel();
-                } else {
+                    Iterator<Timer> timerIterator = timerService.getAllTimers().iterator();
+                    while(timerIterator.hasNext()){
+                    	timerIterator.next().cancel();
+                    	}
+                    }else {
                     TripletStoreAccessor.addResource(defaultModel
                             .getResource(resourceUri));
-                    timer.cancel();
-                }
-            } catch (ResourceRepositoryException e) {
-                LOGGER.log(Level.INFO,
-                        "Errored while adding something to Database - will try again");
-                failureCounter++;
-            } catch(Exception e){
-                LOGGER.warning(
-                        "Errored while working with Database - will try again");
-                failureCounter++;
-            }
-        } else {
-            LOGGER.log(
-                    Level.SEVERE,
-                    "Tried to add something to Database several times, but failed. Please check the OpenRDF-Database");
-
-            timer.cancel();
+                    Iterator<Timer> timerIterator = timerService.getAllTimers().iterator();
+                    while(timerIterator.hasNext()){
+                    	timerIterator.next().cancel();
+                    	}
+                    }
+            	
+        	}catch (ResourceRepositoryException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+          	
+    	
+    	}else{
+        	LOGGER.log(Level.SEVERE,"Database is not ready and noone is searching for it - Please check the deployment of FederationManager!"); 
         }
-
     }
+    
+    public void refreshGlobalVariables(){
+    	try {
+			rdfReady = (Boolean) initialContext.lookup("java:global/RDF-Database-Ready");
+	     	allreadySearchingForTripletStore = (Boolean) initialContext.lookup("java:global/RDF-Database-Testing");
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
 
 //	class NativeAPI implements Callable<Void> {
 //		 
